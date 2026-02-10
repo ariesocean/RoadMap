@@ -15,10 +15,12 @@ metadata:
 ### Creating Tasks
 
 1. **Analyze the prompt** using semantic understanding to determine if this should be a main task or subtask
-2. **Identify parent context** by examining existing tasks in roadmap.md
-3. **Insert at appropriate hierarchy level** with proper markdown formatting
-4. **Add timestamp** in `YYYY-MM-DD HH:MM` format
-5. **Update the "Last Updated" timestamp** at the bottom of roadmap.md
+2. **Literally convert user prompt** to task content without modification or derivation
+3. **Identify parent context** by examining existing tasks in roadmap.md
+4. **Add main task timestamp** with `[created: YYYY-MM-DD HH:MM]`
+5. **Subtasks have no timestamp**
+6. **Insert at appropriate hierarchy level** with proper markdown formatting
+7. **Update the "Last Updated" timestamp** at the bottom of each main task section
 
 ### Completing Tasks
 
@@ -82,14 +84,14 @@ date "+%Y-%m-%d %H:%M"
 
 ```
 # Main Task Title [created: YYYY-MM-DD HH:MM]
-> Main task short description
+> Original user prompt verbatim
 
 ## Subtask Level 1
-* [ ] Subtask 1 [created: YYYY-MM-DD HH:MM]
-* [ ] Subtask 2 [created: YYYY-MM-DD HH:MM]
+* [ ] Subtask 1
+* [ ] Subtask 2
 
 ### Subtask Level 2
-* [ ] Nested subtask 2.1 [created: YYYY-MM-DD HH:MM]
+* [ ] Nested subtask 2.1
 
 ---
 
@@ -100,11 +102,11 @@ date "+%Y-%m-%d %H:%M"
 
 ```
 # Archived Main Task [completed: YYYY-MM-DD HH:MM]
-> Main task short description
+> Original user prompt verbatim
 
 ## Completed Subtasks
-* [x] Subtask 1 [created: YYYY-MM-DD HH:MM]
-* [x] Subtask 2 [created: YYYY-MM-DD HH:MM]
+* [x] Subtask 1
+* [x] Subtask 2
 
 ---
 
@@ -117,24 +119,19 @@ date "+%Y-%m-%d %H:%M"
 
 ```
 User: "Build a new website"
-Action: Creates new main task "# Build a new website [created: 2026-02-10 14:30]"
+Action: Creates "# Build a new website [created: 2026-02-10 14:30]\n> Build a new website"
 ```
 
 ```
 User: "Research React frameworks"
-Action: Creates new main task "# Research React frameworks [created: 2026-02-10 14:31]"
+Action: Creates "# Research React frameworks [created: 2026-02-10 14:31]\n> Research React frameworks"
 ```
 
 ### Creating Subtasks
 
 ```
 User: "Add user authentication to the website project"
-Action: Creates subtask under "website" main task with proper nesting
-```
-
-```
-User: "Set up CI/CD pipeline for the API"
-Action: Creates subtask under "API" or creates new main task if no parent found
+Action: Creates subtask "* [ ] Add user authentication to the website project" under website main task
 ```
 
 ### Completing Tasks
