@@ -17,6 +17,166 @@
 
 ---
 
+## UI Design Specification
+
+### Design Philosophy
+Microsoft To Do-inspired design with:
+- Minimalist aesthetics with generous whitespace
+- Card-based layout for tasks
+- Smooth micro-interactions and animations
+- Clean, comfortable color scheme
+
+### Color Palette
+
+| Element | Color | Usage |
+|---------|-------|-------|
+| Primary | #0078D4 | Accent elements, completed checkboxes |
+| Background | #FFFFFF | Main app background |
+| Secondary Background | #F8F9FA | Input areas, subtle backgrounds |
+| Card Background | #FFFFFF | Task cards |
+| Primary Text | #323130 | Main text content |
+| Secondary Text | #605E5C | Subtitles, metadata |
+| Placeholder Text | #A19F9D | Input placeholders |
+| Border Color | #E1DFDD | Input borders, dividers |
+| Shadow | rgba(0, 0, 0, 0.08) | Card shadows |
+| Hover Shadow | rgba(0, 0, 0, 0.12) | Card hover state |
+
+### Typography
+- Font Family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell
+- Font Sizes:
+  - Title: text-xl (20px), font-semibold
+  - Body: text-sm (14px)
+  - Caption: text-xs (12px)
+- Line Height: Relaxed for readability
+
+### Spacing System
+- Card Padding: 16px (1rem)
+- Card Margin Bottom: 12px
+- Section Padding: 24px
+- Input Padding: 12px-16px
+- Gap Between Elements: 8px-12px
+
+### Border Radius
+- Cards: 8px
+- Inputs: 8px
+- Buttons: 4px-8px
+- Checkboxes: 4px
+
+### Shadows
+- Card Default: box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08)
+- Card Hover: box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12)
+- Input Focus: ring-1, ring-primary
+
+### Component Specifications
+
+#### Header
+- Height: 56px (py-4)
+- Border: Bottom border, 1px solid #E1DFDD
+- Layout: Flex row, space-between
+- Logo: 32x32px, rounded corners
+- Search Input: 192px (w-48), rounded-md
+
+#### Task Card
+- Padding: 16px
+- Border Radius: 8px
+- Border: 1px solid #F3F2F1
+- Hover Effect: Slight lift (translateY -2px), shadow increase
+- Content Order:
+  1. Task Title (bold)
+  2. Original Prompt (secondary color)
+  3. Metadata row (created date, subtask count)
+  4. Expand/Collapse button
+
+#### Expand Button
+- Size: 20x20px (w-5 h-5)
+- Icon: Chevron arrow
+- Animation: Rotate 180° on expand
+
+#### Checkbox
+- Size: 20x20px (w-5 h-5)
+- Border: 2px solid #E1DFDD
+- Checked State: Fill #0078D4, white checkmark
+- Animation: Scale bounce, checkmark draw
+
+#### Subtask List
+- Indentation: 24px (ml-6) for nested
+- Vertical Spacing: 4px-8px between items
+- Hover Effect: Light gray background (#F8F9FA)
+
+#### Input Area
+- Position: Fixed bottom
+- Height: ~60-70px
+- Border: Top border, 1px solid #E1DFDD
+- Shadow: 0 -2px 8px rgba(0, 0, 0, 0.05)
+- Input Width: Full, max 800px centered
+- Placeholder: "➕ Enter a prompt to create or update tasks..."
+
+#### Empty State
+- Icon: Task list illustration (gray)
+- Primary Text: "No tasks yet"
+- Secondary Text: "Enter a prompt below to create your first task"
+
+### Animations (Framer Motion)
+
+#### Card Entry Animation
+- Type: slideIn
+- Duration: 0.3s
+- From: y: 20, opacity: 0
+- To: y: 0, opacity: 1
+- Stagger: 0.1s between cards
+
+#### Checkbox Animation
+- Type: spring
+- Stiffness: 500
+- Damping: 30
+- Checkmark: scale 0 → 1, rotate -45° → 0
+
+#### Expand/Collapse
+- Type: height fade
+- Duration: 0.2s
+- Layout: smooth height transition
+
+#### Loading Spinner
+- Type: rotate
+- Duration: 1s
+- Easing: linear, infinite
+
+#### Pulse Effect
+- Scale: 1 → 1.05 → 1
+- Opacity: 0.5 → 0.8 → 0.5
+- Duration: 1s, infinite
+
+### Layout Structure
+
+```
+┌─────────────────────────────────────────┐
+│              Header (56px)              │ ← Fixed top
+├─────────────────────────────────────────┤
+│                                         │
+│           Task List Area                │ ← Scrollable
+│         (with bottom padding)           │
+│                                         │
+│                                         │
+├─────────────────────────────────────────┤
+│            Input Area (~70px)           │ ← Fixed bottom
+│         (max-width: 800px)              │
+└─────────────────────────────────────────┘
+```
+
+### Responsive Behavior
+- Minimum Width: 600px
+- Maximum Width: 1200px (centered on larger screens)
+- Padding: 24px left/right
+- Scrollbar: Thin styled (#E1DFDD)
+
+### Accessibility
+- Focus states on all interactive elements
+- Keyboard navigation support
+- Clear visual hierarchy
+- Readable contrast ratios
+
+---
+
 ## Phase 1: Project Foundation
 
 ### Task 1: Create Project Directory Structure
