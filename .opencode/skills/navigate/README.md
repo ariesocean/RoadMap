@@ -13,13 +13,13 @@ The skill is located in your project's `.opencode/skills/navigate/` directory.
 cd /path/to/your/project
 
 # Create a new task
-python -m opencode.skills.navigate.main "Build a new website"
+PYTHONPATH=.opencode python .opencode/skills/navigate/main.py "Build a new website"
 
 # Add a subtask
-python -m opencode.skills.navigate.main "Add user login to the website"
+PYTHONPATH=.opencode python .opencode/skills/navigate/main.py "Add user login"
 
 # Mark task as complete
-python -m opencode.skills.navigate.main "Done with user login"
+PYTHONPATH=.opencode python .opencode/skills/navigate/main.py "Done with user login"
 
 # View current roadmap
 cat roadmap.md
@@ -28,7 +28,7 @@ cat roadmap.md
 ## CLI Usage
 
 ```bash
-python -m opencode.skills.navigate.main "<your natural language request>"
+PYTHONPATH=.opencode python .opencode/skills/navigate/main.py "<your natural language request>"
 ```
 
 ### Options
@@ -44,16 +44,16 @@ python -m opencode.skills.navigate.main "<your natural language request>"
 
 ```bash
 # Create main task
-python -m opencode.skills.navigate.main "Build a new mobile app"
+PYTHONPATH=.opencode python .opencode/skills/navigate/main.py "Build a new mobile app"
 
 # Add subtask (auto-detected from context)
-python -m opencode.skills.navigate.main "Add push notifications to the mobile app"
+PYTHONPATH=.opencode python .opencode/skills/navigate/main.py "Add push notifications"
 
 # Complete a task
-python -m opencode.skills.navigate.main "Done with push notifications"
+PYTHONPATH=.opencode python .opencode/skills/navigate/main.py "Done with push notifications"
 
 # View current roadmap
-python -m opencode.skills.navigate.main --view
+cat roadmap.md
 ```
 
 ## Workflow Examples
