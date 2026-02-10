@@ -22,37 +22,61 @@ class NavigateSkill:
         Process user prompt and return response
         Returns response message to user
         """
-        existing_tasks = self.task_state_manager.tasks
-        intent_result = self.semantic_analyzer.analyze_intent(prompt, existing_tasks)
-
-        if intent_result["confidence"] < 0.7:
-            return intent_result["content"]
-
-        action = intent_result["action"]
-        response = ""
-
-        if action == "create_main_task":
-            title = prompt
-            description = ""
-            self.task_state_manager.create_main_task(title, description)
-            response = f"Created main task: '{title}'"
-
-        elif action == "create_subtask":
-            target_id = intent_result["target_task_id"]
-            content = prompt
-            self.task_state_manager.create_subtask(target_id, content)
-            response = f"Added subtask to existing task: '{content}'"
-
-        elif action == "mark_complete":
-            target_id = intent_result["target_task_id"]
-            self.task_state_manager.mark_task_complete(target_id)
-            response = f"Marked task as complete"
-
-        elif action == "archive":
-            target_id = intent_result["target_task_id"]
-            response = f"Would you like to archive this completed task? (Reply 'yes' to confirm)"
-
-        markdown_content = self.markdown_formatter.format_tasks(self.task_state_manager.tasks)
-        self.file_manager.write_roadmap(markdown_content)
-
-        return response
+        try:
+            if not prompt.strip():
+                return "Please provide a task description."
+            
+            if len(prompt) > 1000:
+                return "Task description is too long. Please simplify."
+            
+            existing_tasks = self.task_state_manager.tasks
+            intent_result = self.semantic_analyzer.analyze_intent(prompt, existing_tasks)
+            
+            if intent_result["confidence"] < 0.7:
+                return intent_result["content"]
+            
+            action = intent_result["action"]
+            response = ""
+            
+            if action == "create_main_task":
+                title = prompt
+                description = ""
+                success = self.task_state_manager.create_main_task(title, description)
+                if not success:
+                    return "Error creating main task. Please try again."
+                response = f"Created main task: '{title}'"
+            
+            elif action == "create_subtask":
+                target_id = intent_result.get("target_task_id")
+                if not target_id:
+                    return "Could not find the parent task. Please specify which project this subtask belongs to."
+                content = prompt
+                success = self.task_state_manager.create_subtask(target_id, content)
+                if not success:
+                    return "Error creating subtask. Please try again."
+                response = f"Added subtask to existing task: '{content}'"
+            
+            elif action == "mark_complete":
+                target_id = intent_result.get("target_task_id")
+                if not target_id:
+                    return "Could not find the task to complete. Please specify which task is done."
+                success = self.task_state_manager.mark_task_complete(target_id)
+                if not success:
+                    return "Error marking task as complete. Please try again."
+                response = f"Marked task as complete"
+            
+            elif action == "archive":
+                target_id = intent_result.get("target_task_id")
+                if not target_id:
+                    return "Could not find the task to archive. Please specify which completed task to archive."
+                response = f"Would you like to archive this completed task? (Reply 'yes' to confirm)"
+            
+            markdown_content = self.markdown_formatter.format_tasks(self.task_state_manager.tasks)
+            write_success = self.file_manager.write_roadmap(markdown_content)
+            if not write_success:
+                response += "\nWarning: Task created but roadmap file could not be saved."
+            
+            return response
+        
+        except Exception as e:
+            return f"Error processing your request: {str(e)}. Please try again."
