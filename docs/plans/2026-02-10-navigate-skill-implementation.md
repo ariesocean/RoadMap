@@ -31,7 +31,12 @@ mkdir -p /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate
 **Step 3: Create basic SKILL.md structure**
 
 ```markdown
-# Skill: navigate
+---
+name: navigate
+description: Personal task management system using semantic analysis to manage roadmap.md with natural language input
+license: MIT
+compatibility: opencode
+---
 
 # Personal Task Management System
 
@@ -40,17 +45,36 @@ mkdir -p /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate
 Intelligent task management system that uses semantic analysis to manage `roadmap.md` and `achievements.md` files with natural language input.
 
 ## Core Components
-- File Manager: Handles reading/writing markdown files
-- Semantic Intent Analyzer: Determines action type and task hierarchy
-- Task State Manager: Maintains current task structure
-- Markdown Formatter: Converts tasks to proper markdown format
+- **File Manager**: Handles reading/writing markdown files
+- **Semantic Intent Analyzer**: Determines action type and task hierarchy
+- **Task State Manager**: Maintains current task structure
+- **Markdown Formatter**: Converts tasks to proper markdown format
 
 ## Usage
+
 Natural language prompts for task management:
-- "Build a new website" → creates main task
-- "Add login to website project" → creates subtask
-- "Done with login feature" → marks as complete
-- "Archive website project" → moves to achievements (with confirmation)
+- `"Build a new website"` → creates main task
+- `"Add login to website project"` → creates subtask
+- `"Done with login feature"` → marks as complete
+- `"Archive website project"` → moves to achievements (with confirmation)
+
+## Examples
+
+**Creating tasks:**
+- `"Build a new mobile app"` → Creates main task: "Build a new mobile app"
+- `"Add user login to the mobile app"` → Creates subtask: "Add user login"
+
+**Completing tasks:**
+- `"Done with user login"` → Marks "Add user login" as complete
+
+**Archiving:**
+- `"Archive the mobile app project"` → Confirms and moves to achievements.md
+
+## File Structure
+
+Creates and manages two files:
+- `roadmap.md`: Active tasks with hierarchical structure
+- `achievements.md`: Archived completed projects
 ```
 
 **Step 4: Commit initial structure**
@@ -661,7 +685,12 @@ class NavigateSkill:
 **Step 4: Update SKILL.md with complete documentation**
 
 ```markdown
-# Skill: navigate
+---
+name: navigate
+description: Personal task management system using semantic analysis to manage roadmap.md with natural language input
+license: MIT
+compatibility: opencode
+---
 
 # Personal Task Management System
 
@@ -670,35 +699,39 @@ class NavigateSkill:
 Intelligent task management system that uses semantic analysis to manage `roadmap.md` and `achievements.md` files with natural language input.
 
 ## Core Components
-- File Manager: Handles reading/writing markdown files
-- Semantic Intent Analyzer: Determines action type and task hierarchy  
-- Task State Manager: Maintains current task structure
-- Markdown Formatter: Converts tasks to proper markdown format
+
+- **File Manager**: Handles reading/writing markdown files
+- **Semantic Intent Analyzer**: Determines action type and task hierarchy
+- **Task State Manager**: Maintains current task structure
+- **Markdown Formatter**: Converts tasks to proper markdown format
 
 ## Usage
+
 Natural language prompts for task management:
-- "Build a new website" → creates main task
-- "Add login to website project" → creates subtask  
-- "Done with login feature" → marks as complete
-- "Archive website project" → moves to achievements (with confirmation)
+
+- `"Build a new website"` → creates main task
+- `"Add login to website project"` → creates subtask
+- `"Done with login feature"` → marks as complete
+- `"Archive website project"` → moves to achievements (with confirmation)
 
 ## File Structure
+
 Creates and manages two files:
+
 - `roadmap.md`: Active tasks with hierarchical structure
 - `achievements.md`: Archived completed projects
 
 ## Examples
-User: "Build a new website"
-→ Creates main task in roadmap.md
 
-User: "Add user authentication to the website project"  
-→ Creates subtask under "website" main task
+**Creating tasks:**
+- `"Build a new website"` → Creates main task in roadmap.md
+- `"Add user authentication to the website project"` → Creates subtask under "website" main task
 
-User: "Done with user authentication"
-→ Marks subtask as complete with [x]
+**Completing tasks:**
+- `"Done with user authentication"` → Marks subtask as complete with [x]
 
-User: "Archive the website project"
-→ Requests confirmation, then moves to achievements.md
+**Archiving:**
+- `"Archive the website project"` → Requests confirmation, then moves to achievements.md
 ```
 
 **Step 5: Run end-to-end test to verify it passes**
@@ -799,9 +832,9 @@ git commit -m "feat: add comprehensive error handling and edge case support"
 # Navigate Skill
 
 Personal task management system for OpenCode that uses natural language processing to manage your `roadmap.md` file.
-
 ## Installation
-The skill is automatically available in OpenCode when located in the project's `skills/` directory.
+
+The skill is automatically available in OpenCode when located in the project's `.opencode/skills/` directory.
 
 ## Usage
 Simply mention the skill and provide natural language prompts:
