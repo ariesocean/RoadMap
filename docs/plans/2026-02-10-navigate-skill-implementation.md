@@ -13,13 +13,13 @@
 ### Task 1: Create Project Structure and Skill Directory
 
 **Files:**
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/SKILL.md`
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/__init__.py`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/SKILL.md`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/__init__.py`
 
 **Step 1: Create navigate skill directory**
 
 ```bash
-mkdir -p /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate
+mkdir -p /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate
 ```
 
 **Step 2: Create empty __init__.py file**
@@ -56,15 +56,15 @@ Natural language prompts for task management:
 **Step 4: Commit initial structure**
 
 ```bash
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate
 git commit -m "feat: create navigate skill directory structure"
 ```
 
 ### Task 2: Implement File Manager Component
 
 **Files:**
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/file_manager.py`
-- Test: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_file_manager.py`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/file_manager.py`
+- Test: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_file_manager.py`
 
 **Step 1: Write failing test for reading roadmap.md**
 
@@ -83,7 +83,7 @@ def test_read_roadmap_creates_empty_if_not_exists():
 
 **Step 2: Run test to verify it fails**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_file_manager.py::test_read_roadmap_creates_empty_if_not_exists -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_file_manager.py::test_read_roadmap_creates_empty_if_not_exists -v`
 Expected: FAIL with "ModuleNotFoundError: No module named 'skills'"
 
 **Step 3: Write minimal File Manager implementation**
@@ -120,7 +120,7 @@ class FileManager:
 
 **Step 4: Run test to verify it passes**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_file_manager.py::test_read_roadmap_creates_empty_if_not_exists -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_file_manager.py::test_read_roadmap_creates_empty_if_not_exists -v`
 Expected: PASS
 
 **Step 5: Add more comprehensive tests**
@@ -139,16 +139,16 @@ def test_write_and_read_roadmap():
 **Step 6: Commit File Manager implementation**
 
 ```bash
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/file_manager.py
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_file_manager.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/file_manager.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_file_manager.py
 git commit -m "feat: implement File Manager component with read/write operations"
 ```
 
 ### Task 3: Implement Task State Manager Component
 
 **Files:**
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/task_state_manager.py`
-- Test: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_task_state_manager.py`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/task_state_manager.py`
+- Test: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_task_state_manager.py`
 
 **Step 1: Write failing test for creating main task**
 
@@ -169,7 +169,7 @@ def test_create_main_task():
 
 **Step 2: Run test to verify it fails**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_task_state_manager.py::test_create_main_task -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_task_state_manager.py::test_create_main_task -v`
 Expected: FAIL with "ModuleNotFoundError: No module named 'skills'"
 
 **Step 3: Write minimal Task State Manager implementation**
@@ -234,7 +234,7 @@ class TaskStateManager:
 
 **Step 4: Run test to verify it passes**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_task_state_manager.py::test_create_main_task -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_task_state_manager.py::test_create_main_task -v`
 Expected: PASS
 
 **Step 5: Add tests for subtask creation and completion**
@@ -257,16 +257,16 @@ def test_create_and_complete_subtask():
 **Step 6: Commit Task State Manager implementation**
 
 ```bash
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/task_state_manager.py
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_task_state_manager.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/task_state_manager.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_task_state_manager.py
 git commit -m "feat: implement Task State Manager with main/subtask creation and completion"
 ```
 
 ### Task 4: Implement Markdown Formatter Component
 
 **Files:**
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/markdown_formatter.py`
-- Test: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_markdown_formatter.py`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/markdown_formatter.py`
+- Test: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_markdown_formatter.py`
 
 **Step 1: Write failing test for formatting main task**
 
@@ -295,7 +295,7 @@ def test_format_single_main_task():
 
 **Step 2: Run test to verify it fails**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_markdown_formatter.py::test_format_single_main_task -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_markdown_formatter.py::test_format_single_main_task -v`
 Expected: FAIL with "ModuleNotFoundError: No module named 'skills'"
 
 **Step 3: Write minimal Markdown Formatter implementation**
@@ -348,7 +348,7 @@ class MarkdownFormatter:
 
 **Step 4: Run test to verify it passes**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_markdown_formatter.py::test_format_single_main_task -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_markdown_formatter.py::test_format_single_main_task -v`
 Expected: PASS (with proper timestamp handling)
 
 **Step 5: Add tests for subtasks and completion status**
@@ -372,16 +372,16 @@ def test_format_with_subtasks():
 **Step 6: Commit Markdown Formatter implementation**
 
 ```bash
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/markdown_formatter.py
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_markdown_formatter.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/markdown_formatter.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_markdown_formatter.py
 git commit -m "feat: implement Markdown Formatter for task serialization"
 ```
 
 ### Task 5: Implement Semantic Intent Analyzer Component
 
 **Files:**
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/semantic_analyzer.py`
-- Test: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_semantic_analyzer.py`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/semantic_analyzer.py`
+- Test: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_semantic_analyzer.py`
 
 **Step 1: Write failing test for intent analysis**
 
@@ -399,7 +399,7 @@ def test_analyze_create_main_task_intent():
 
 **Step 2: Run test to verify it fails**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_semantic_analyzer.py::test_analyze_create_main_task_intent -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_semantic_analyzer.py::test_analyze_create_main_task_intent -v`
 Expected: FAIL with "ModuleNotFoundError: No module named 'skills'"
 
 **Step 3: Write minimal Semantic Intent Analyzer implementation**
@@ -516,7 +516,7 @@ class SemanticIntentAnalyzer:
 
 **Step 4: Run test to verify it passes**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_semantic_analyzer.py::test_analyze_create_main_task_intent -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_semantic_analyzer.py::test_analyze_create_main_task_intent -v`
 Expected: PASS
 
 **Step 5: Add tests for different intent types**
@@ -542,16 +542,16 @@ def test_analyze_subtask_intent():
 **Step 6: Commit Semantic Intent Analyzer implementation**
 
 ```bash
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/semantic_analyzer.py
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_semantic_analyzer.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/semantic_analyzer.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_semantic_analyzer.py
 git commit -m "feat: implement Semantic Intent Analyzer with natural language understanding"
 ```
 
 ### Task 6: Implement Main Navigate Skill Integration
 
 **Files:**
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/main.py`
-- Modify: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/SKILL.md`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/main.py`
+- Modify: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/SKILL.md`
 
 **Step 1: Write failing test for end-to-end workflow**
 
@@ -585,7 +585,7 @@ def test_end_to_end_workflow():
 
 **Step 2: Run test to verify it fails**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_main.py::test_end_to_end_workflow -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_main.py::test_end_to_end_workflow -v`
 Expected: FAIL with "ModuleNotFoundError: No module named 'skills'"
 
 **Step 3: Write main Navigate Skill integration**
@@ -703,22 +703,22 @@ User: "Archive the website project"
 
 **Step 5: Run end-to-end test to verify it passes**
 
-Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_main.py::test_end_to_end_workflow -v`
+Run: `python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_main.py::test_end_to_end_workflow -v`
 Expected: PASS
 
 **Step 6: Commit main skill integration**
 
 ```bash
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/main.py
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/SKILL.md
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/main.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/SKILL.md
 git commit -m "feat: integrate all components into main Navigate skill with end-to-end workflow"
 ```
 
 ### Task 7: Add Error Handling and Edge Cases
 
 **Files:**
-- Modify: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/main.py`
-- Modify: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/file_manager.py`
+- Modify: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/main.py`
+- Modify: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/file_manager.py`
 
 **Step 1: Add error handling for file operations**
 
@@ -781,17 +781,17 @@ def test_file_write_error():
 **Step 5: Commit error handling improvements**
 
 ```bash
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/main.py
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/file_manager.py
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/test_main.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/main.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/file_manager.py
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/test_main.py
 git commit -m "feat: add comprehensive error handling and edge case support"
 ```
 
 ### Task 8: Final Testing and Documentation
 
 **Files:**
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/README.md`
-- Create: `/Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/example_usage.md`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/README.md`
+- Create: `/Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/example_usage.md`
 
 **Step 1: Create comprehensive README**
 
@@ -849,7 +849,7 @@ User: "Archive the mobile app project"
 
 ```bash
 # Run all tests
-python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/ -v
+python -m pytest /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/ -v
 ```
 
 **Step 4: Verify skill loads correctly in OpenCode**
@@ -859,7 +859,7 @@ Test by using the skill in a real session.
 **Step 5: Commit final documentation and testing**
 
 ```bash
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/README.md
-git add /Users/SparkingAries/VibeProjects/RoadMap/skills/navigate/example_usage.md
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/README.md
+git add /Users/SparkingAries/VibeProjects/RoadMap/.opencode/skills/navigate/example_usage.md
 git commit -m "docs: add comprehensive documentation and examples"
 ```
