@@ -32,5 +32,56 @@ class MarkdownFormatter:
         return "\n".join(markdown_parts)
     
     def parse_markdown_to_tasks(self, markdown_content: str) -> List[Dict]:
-        """Parse markdown content back to tasks structure (for future use)"""
-        return []
+        """Parse markdown content back to tasks structure"""
+        tasks = []
+        if not markdown_content.strip():
+            return tasks
+        
+        import re
+        lines = markdown_content.strip().split('\n')
+        current_task = None
+        
+        for line in lines:
+            line = line.rstrip()
+            
+            # Match main task heading: # Title [created: YYYY-MM-DD HH:MM]
+            task_match = re.match(r'^#\s+(.+?)\s+\[created:\s+([^\]]+)\]', line)
+            if task_match:
+                if current_task:
+                    tasks.append(current_task)
+                current_task = {
+                    "id": f"task_{len(tasks)}",
+                    "title": task_match.group(1).strip(),
+                    "created_at": task_match.group(2).strip(),
+                    "updated_at": task_match.group(2).strip(),
+                    "status": "active",
+                    "subtasks": []
+                }
+                continue
+            
+            # Match subtask: * [x] or [ ] Title [created: YYYY-MM-DD HH:MM]
+            subtask_match = re.match(r'^\*\s+(\[x\]|\[ \])\s+(.+?)(?:\s+\[created:\s+([^\]]+)\])?$', line)
+            if subtask_match and current_task:
+                completed = subtask_match.group(1) == '[x]'
+                title = subtask_match.group(2).strip()
+                created_at = subtask_match.group(3).strip() if subtask_match.group(3) else ""
+                subtask = {
+                    "id": f"subtask_{len(current_task['subtasks'])}",
+                    "title": title,
+                    "created_at": created_at,
+                    "completed": completed
+                }
+                current_task["subtasks"].append(subtask)
+                continue
+            
+            # Match task description: > Description
+            desc_match = re.match(r'^>\s+(.+)', line)
+            if desc_match and current_task and not current_task.get("description"):
+                current_task["description"] = desc_match.group(1).strip()
+                continue
+        
+        # Don't forget the last task
+        if current_task:
+            tasks.append(current_task)
+        
+        return tasks

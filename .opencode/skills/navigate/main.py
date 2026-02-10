@@ -1,4 +1,5 @@
 import sys
+import argparse
 from typing import List, Dict
 from skills.navigate.file_manager import FileManager
 from skills.navigate.task_state_manager import TaskStateManager
@@ -15,8 +16,14 @@ class NavigateSkill:
         self._load_existing_tasks()
 
     def _load_existing_tasks(self):
-        """Load existing tasks from roadmap.md (simplified for now)"""
-        pass
+        """Load existing tasks from roadmap.md"""
+        try:
+            content = self.file_manager.read_roadmap()
+            if content:
+                self.task_state_manager.tasks = self.markdown_formatter.parse_markdown_to_tasks(content)
+        except Exception as e:
+            # Silently fail on load - start with empty tasks
+            self.task_state_manager.tasks = []
 
     def process_prompt(self, prompt: str) -> str:
         """
@@ -81,3 +88,50 @@ class NavigateSkill:
         
         except Exception as e:
             return f"Error processing your request: {str(e)}. Please try again."
+
+
+def main():
+    """Main entry point for CLI usage"""
+    parser = argparse.ArgumentParser(
+        description="Navigate Skill - Personal task management with natural language"
+    )
+    parser.add_argument(
+        "prompt",
+        nargs="*",  # Allow multiple words as the prompt
+        help="Natural language task description"
+    )
+    parser.add_argument(
+        "--roadmap",
+        default="roadmap.md",
+        help="Path to roadmap file (default: roadmap.md)"
+    )
+    parser.add_argument(
+        "--achievements",
+        default="achievements.md",
+        help="Path to achievements file (default: achievements.md)"
+    )
+    
+    args = parser.parse_args()
+    
+    # Combine all prompt arguments into a single string
+    prompt = " ".join(args.prompt) if args.prompt else ""
+    
+    if not prompt.strip():
+        print("Error: Please provide a task description.")
+        print("Usage: python main.py \"Build a new website\"")
+        print("       python main.py \"Done with user authentication\"")
+        sys.exit(1)
+    
+    # Initialize skill with specified paths
+    skill = NavigateSkill(
+        roadmap_path=args.roadmap,
+        achievements_path=args.achievements
+    )
+    
+    # Process the prompt
+    response = skill.process_prompt(prompt)
+    print(response)
+
+
+if __name__ == "__main__":
+    main()
