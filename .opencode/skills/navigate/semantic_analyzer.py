@@ -77,24 +77,37 @@ class SemanticIntentAnalyzer:
     def _find_target_task(self, prompt: str, existing_tasks: List[Dict]) -> Dict:
         if not existing_tasks:
             return None
-        
+
         prompt_words = set(prompt.lower().split())
         best_match = None
         best_score = 0
-        
+
         for task in existing_tasks:
             task_words = set(task["title"].lower().split())
             score = len(prompt_words & task_words)
             if score > best_score:
                 best_score = score
                 best_match = task
-        
+
+            if task.get("subtasks"):
+                for subtask in task["subtasks"]:
+                    subtask_words = set(subtask["title"].lower().split())
+                    subtask_score = len(prompt_words & subtask_words)
+                    if subtask_score > best_score:
+                        best_score = subtask_score
+                        best_match = subtask
+
         return best_match if best_score > 0 else None
     
     def _should_be_subtask(self, prompt: str, existing_tasks: List[Dict]) -> bool:
         prompt_lower = prompt.lower()
         for task in existing_tasks:
-            if task["title"].lower() in prompt_lower:
+            task_words = set(task["title"].lower().split())
+            prompt_words = set(prompt_lower.split())
+            overlap = len(task_words & prompt_words)
+            if overlap > 0:
+                return True
+            if "project" in prompt_lower and task["title"].lower() in prompt_lower:
                 return True
         return False
     
