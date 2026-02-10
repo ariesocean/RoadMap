@@ -219,9 +219,46 @@ from skills.navigate.main import NavigateSkill
 # Initialize with custom paths
 skill = NavigateSkill(roadmap_path="roadmap.md", achievements_path="achievements.md")
 
+# Initialize with custom confidence thresholds
+custom_thresholds = {
+    "create_main_task": 0.90,
+    "create_subtask": 0.75,
+    "mark_complete": 0.95,
+    "archive": 0.80,
+    "clarify": 0.50
+}
+skill = NavigateSkill(
+    roadmap_path="roadmap.md",
+    achievements_path="achievements.md",
+    confidence_thresholds=custom_thresholds
+)
+
 # Process a natural language prompt
 response = skill.process_prompt("Build a new website")
 print(response)
+```
+
+### TaskStateManager Class
+
+```python
+from skills.navigate.task_state_manager import TaskStateManager
+
+manager = TaskStateManager()
+
+# Create tasks
+manager.create_main_task("Build a website")
+manager.create_subtask("task_0", "Add user login")
+
+# Mark completion
+success, status = manager.mark_task_complete("subtask_0")
+print(f"Success: {success}, Status: {status}")
+
+# Get completion percentage
+percentage = manager.get_completion_percentage("task_0")
+print(f"Completion: {percentage}%")
+
+# Archive completed task
+success, archived = manager.archive_task("task_0")
 ```
 
 ### Process Prompt Return Values
@@ -230,8 +267,8 @@ print(response)
 |--------|------------------|------------------|
 | create_main_task | "Created main task: 'title'" | "Error creating main task. Please try again." |
 | create_subtask | "Added subtask to existing task: 'content'" | "Error creating subtask. Please try again." |
-| mark_complete | "Marked task as complete" | "Error marking task as complete. Please try again." |
-| archive | "Would you like to archive this completed task? (Reply 'yes' to confirm)" | Task not found error |
+| mark_complete | "Marked task as complete" or "Marked task as complete (XX% progress)" | "Error marking task as complete. Please try again." |
+| archive | "Archived task: 'title'" | "Only completed tasks can be archived." or "Error archiving task." |
 | clarify | Clarification question | N/A |
 
 ### Semantic Intent Analyzer
@@ -239,7 +276,19 @@ print(response)
 ```python
 from skills.navigate.semantic_analyzer import SemanticIntentAnalyzer
 
+# Initialize with default thresholds
 analyzer = SemanticIntentAnalyzer()
+
+# Initialize with custom confidence thresholds
+custom_thresholds = {
+    "create_main_task": 0.90,
+    "create_subtask": 0.75,
+    "mark_complete": 0.95,
+    "archive": 0.80,
+    "clarify": 0.50
+}
+analyzer = SemanticIntentAnalyzer(custom_thresholds)
+
 result = analyzer.analyze_intent("Done with login feature", existing_tasks)
 
 # Returns:
@@ -247,7 +296,7 @@ result = analyzer.analyze_intent("Done with login feature", existing_tasks)
     "action": "mark_complete",
     "content": "Done with login feature",
     "target_task_id": "task_1",
-    "confidence": 0.9
+    "confidence": 0.95
 }
 ```
 
@@ -258,38 +307,71 @@ result = analyzer.analyze_intent("Done with login feature", existing_tasks)
 | Function | File | Description |
 |----------|------|-------------|
 | `analyze_intent()` | semantic_analyzer.py | Determines action type with confidence score |
-| `_find_target_task()` | semantic_analyzer.py | Finds matching task via word overlap |
+| `_find_target_task()` | semantic_analyzer.py | Finds matching task via word overlap with strict matching option |
+| `_check_archive_keywords()` | semantic_analyzer.py | Checks for multi-word archive keywords |
 | `_should_be_subtask()` | semantic_analyzer.py | Determines if prompt should be subtask |
 | `_find_best_parent_task()` | semantic_analyzer.py | Finds best parent task for subtask |
 | `create_main_task()` | task_state_manager.py | Creates new main task |
 | `create_subtask()` | task_state_manager.py | Creates subtask under parent |
-| `mark_task_complete()` | task_state_manager.py | Marks task and subtasks complete |
+| `mark_task_complete()` | task_state_manager.py | Marks task/subtask complete, updates status, returns completion percentage |
+| `archive_task()` | task_state_manager.py | Archives completed task to achievements |
+| `get_completion_percentage()` | task_state_manager.py | Returns completion percentage for a task |
 | `format_tasks()` | markdown_formatter.py | Converts tasks to markdown |
+| `format_achievement()` | markdown_formatter.py | Converts archived task to achievement markdown |
 | `write_roadmap()` | file_manager.py | Writes with backup creation |
+| `write_achievements()` | file_manager.py | Appends to achievements file |
 
 ### Confidence Scoring
 
-- **0.85+**: High confidence (create_main_task)
-- **0.80-0.84**: Good confidence (create_subtask)
-- **0.70-0.79**: Moderate confidence (may require clarification)
-- **< 0.70**: Triggers clarification question
+Confidence thresholds are configurable via constructor:
+
+- **create_main_task**: 0.85 (default)
+- **create_subtask**: 0.80 (default)
+- **mark_complete**: 0.90 (default)
+- **archive**: 0.85 (default)
+- **clarify**: 0.40 (default)
+
+Values below the clarify threshold trigger clarification requests.
 
 ### Task ID Structure
 
 - Main tasks: `task_0`, `task_1`, `task_2`, ...
 - Subtasks: `subtask_0`, `subtask_1`, ... (nested under parent)
 
+### Task Status Values
+
+- **active**: Task is in progress
+- **completed**: Task or all subtasks are complete
+- **archived**: Task has been moved to achievements
+
 ## Limitations & Future Enhancements
 
 Current limitations being addressed:
+
 - No subtask-to-subtask nesting (flat subtask structure)
-- Manual confirmation flow for archiving not fully implemented
 - Task loading from existing files not yet active
 - No project/task number reference support ("task #3")
 
 Planned features:
+
 - Hierarchical subtask levels (subtask of subtask)
-- Automatic archive confirmation handling
 - Rich task descriptions and longer notes
 - Task search and filtering
 - Export to other formats
+- Interactive confirmation mode for complex operations
+
+## Testing
+
+The skill includes comprehensive tests covering:
+
+- Semantic intent analysis (8 tests)
+- Task state management (9 tests)
+- Markdown formatting (6 tests)
+- File operations (3 tests)
+- Integration tests (6 tests)
+- Edge cases (3 tests)
+
+Run tests with:
+```bash
+PYTHONPATH=.opencode python -m pytest .opencode/skills/navigate/test_navigate.py -v
+```
