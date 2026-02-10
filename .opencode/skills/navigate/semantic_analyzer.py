@@ -225,25 +225,67 @@ class SemanticIntentAnalyzer:
         return False
     
     def _find_best_parent_task(self, prompt: str, existing_tasks: List[Dict]) -> Optional[Dict]:
-        """Find the best parent task for a subtask."""
+        """
+        Find the best parent task for a subtask.
+        Searches through all levels (main tasks, subtasks, subsubtasks).
+        Prefers deeper matches when there's ambiguity.
+        """
         if not existing_tasks:
             return None
 
         prompt_lower = prompt.lower()
-
-        # First try exact matching
-        for task in existing_tasks:
-            if task["title"].lower() in prompt_lower:
-                return task
-
-        # Then try keyword matching
         prompt_words = set(prompt_lower.split())
-        for task in existing_tasks:
-            task_words = set(task["title"].lower().split())
-            if len(task_words & prompt_words) > 0:
-                return task
 
-        # If no match found but we know it's a subtask, return the most recent task
+        def collect_all_tasks(tasks: List[Dict]) -> List[Dict]:
+            """Recursively collect all tasks including nested subtasks."""
+            all_tasks = []
+            for task in tasks:
+                all_tasks.append(task)
+                for subtask in task.get("subtasks", []):
+                    all_tasks.append(subtask)
+                    for subsubtask in subtask.get("subtasks", []):
+                        all_tasks.append(subsubtask)
+                        for subsubsubtask in subsubtask.get("subtasks", []):
+                            all_tasks.append(subsubsubtask)
+            return all_tasks
+
+        all_available = collect_all_tasks(existing_tasks)
+
+        # Priority 1: Exact match on task title
+        for task in all_available:
+            if task.get("level", 0) < 3:  # Can still have subtasks
+                if task["title"].lower() in prompt_lower:
+                    return task
+
+        # Priority 2: Keyword overlap (prefer deeper levels)
+        prompt_significant = [w for w in prompt_words if len(w) > 2 and w not in ['done', 'with', 'the', 'and', 'for', 'that', 'this', 'add', 'create', 'implement']]
+
+        best_match = None
+        best_level = -1
+        best_score = -1
+
+        for task in all_available:
+            if task.get("level", 0) >= 3:  # Max level reached
+                continue
+
+            task_words = set(task["title"].lower().split())
+            task_significant = [w for w in task_words if len(w) > 2]
+            overlap = len(set(prompt_significant) & set(task_significant))
+
+            if overlap > 0:
+                # Prefer deeper levels for better context match
+                level_bonus = task.get("level", 0) * 0.5
+                total_score = overlap + level_bonus
+
+                if total_score > best_score:
+                    best_score = total_score
+                    best_match = task
+                    best_level = task.get("level", 0)
+
+        if best_match:
+            return best_match
+
+        # Priority 3: Return the most recent main task if no match
         if existing_tasks:
             return existing_tasks[-1]
 
