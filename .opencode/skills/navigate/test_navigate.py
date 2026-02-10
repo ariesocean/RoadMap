@@ -250,8 +250,9 @@ class TestMarkdownFormatter:
         ]
         result = self.formatter.format_tasks(tasks)
 
-        assert "# Build a website [created: 2026-02-10 14:30]" in result
-        assert "> Create a new website" in result
+        assert "# Build a website" in result
+        assert "Created: 2026-02-10 14:30" in result
+        assert "Create a new website" in result
         assert "**Last Updated:** 2026-02-10 14:30" in result
 
     def test_format_tasks_with_subtasks(self):
@@ -267,13 +268,11 @@ class TestMarkdownFormatter:
                     {
                         "id": "subtask_0",
                         "title": "Add login",
-                        "created_at": "2026-02-10 14:31",
                         "completed": True
                     },
                     {
                         "id": "subtask_1",
                         "title": "Add payments",
-                        "created_at": "2026-02-10 14:32",
                         "completed": False
                     }
                 ]
@@ -283,6 +282,9 @@ class TestMarkdownFormatter:
 
         assert "## Subtasks" in result
         assert "* [x] Add login" in result
+        assert "* [ ] Add payments" in result
+        # Subtasks should NOT have created_at
+        assert "Add login [created:" not in result
         assert "* [ ] Add payments" in result
 
     def test_format_achievement(self):
@@ -298,26 +300,28 @@ class TestMarkdownFormatter:
                 {
                     "id": "subtask_0",
                     "title": "Subtask 1",
-                    "created_at": "2026-02-10 14:31",
                     "completed": True
                 }
             ]
         }
         result = self.formatter.format_achievement(task)
 
-        assert "# Old project [created: 2026-02-10 14:30] [archived: 2026-02-11 10:00]" in result
+        assert "# Old project" in result
+        assert "Created: 2026-02-10 14:30" in result
+        assert "Archived: 2026-02-11 10:00" in result
         assert "## Completed Subtasks" in result
         assert "**Archived Date:** 2026-02-11 10:00" in result
+        assert "* [x] Subtask 1" in result
 
     def test_parse_markdown_to_tasks(self):
         """Test parsing markdown back to tasks."""
-        markdown = """# Build a website [created: 2026-02-10 14:30]
-
-> Create a new website
+        markdown = """# Build a website
+Created: 2026-02-10 14:30
+Create a new website
 
 ## Subtasks
-* [x] Add login [created: 2026-02-10 14:31]
-* [ ] Add payments [created: 2026-02-10 14:32]
+* [x] Add login
+* [ ] Add payments
 
 ---
 **Last Updated:** 2026-02-10 14:32
@@ -326,6 +330,7 @@ class TestMarkdownFormatter:
 
         assert len(tasks) == 1
         assert tasks[0]["title"] == "Build a website"
+        assert tasks[0]["created_at"] == "2026-02-10 14:30"
         assert len(tasks[0]["subtasks"]) == 2
         assert tasks[0]["subtasks"][0]["completed"] is True
         assert tasks[0]["subtasks"][1]["completed"] is False
