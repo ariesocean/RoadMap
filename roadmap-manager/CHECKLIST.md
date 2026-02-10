@@ -143,29 +143,29 @@
 ## Verification Steps
 
 ### Build Verification
-- [ ] `npm run build` succeeds
-- [ ] TypeScript compilation passes
-- [ ] ESLint checks pass
+- [x] `npm run build` succeeds (4.99s)
+- [x] TypeScript compilation passes
+- [x] ESLint checks pass
 
 ### Runtime Verification
-- [ ] Browser preview loads at localhost:1420
-- [ ] Tauri dev mode launches desktop app
-- [ ] App window opens correctly
-- [ ] No console errors
+- [x] Browser preview loads at localhost:1430
+- [x] Tauri dev mode launches desktop app
+- [x] App window opens correctly
+- [x] No console errors
 
 ### Feature Verification
-- [ ] Tasks load from roadmap.md
-- [ ] Search filtering works
-- [ ] Subtask toggling updates UI
-- [ ] New task creation via prompt
-- [ ] Connection status indicator works
-- [ ] Animations render smoothly
+- [x] Tasks load from roadmap.md
+- [x] Search filtering works
+- [x] Subtask toggling updates UI
+- [x] New task creation via prompt
+- [x] Connection status indicator works
+- [x] Animations render smoothly
 
 ### Integration Verification
-- [ ] OpenCode server health check passes
-- [ ] Navigate skill executes correctly
-- [ ] roadmap.md updates persist
-- [ ] FileService reads/writes correctly
+- [x] OpenCode server health check passes
+- [x] Navigate skill executes correctly
+- [x] roadmap.md updates persist
+- [x] FileService reads/writes correctly
 
 ## Known Issues & Notes
 
@@ -176,8 +176,8 @@
 
 ## Next Steps
 
-1. Complete Tauri build verification
-2. Test all features in desktop app
-3. Run final lint/typecheck commands
-4. Document any remaining issues
-5. Mark project as complete
+1. [x] Complete Tauri build verification
+2. [x] Test all features in desktop app
+3. [x] Run final lint/typecheck commands
+4. [x] Document any remaining issues
+5. [x] Mark project as complete
