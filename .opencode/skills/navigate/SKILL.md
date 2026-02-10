@@ -102,14 +102,13 @@ Which task are you referring to when you say 'Done'?
 ### Workflow Pipeline
 
 ```
-1. Receive prompt
+1. **LLM Intelligent Intent Recognition** - Analyze prompt to determine action type, target task, and confidence score
 2. Validate input (non-empty, <1000 chars)
-3. **Intelligent Intent Recognition** - LLM analyzes prompt to determine action type, target task, and confidence score
-4. If confidence < 0.7, return clarification question
-5. Execute action (create/main, create/subtask, mark_complete, archive)
-6. Format tasks to markdown
-7. Write to file with backup
-8. Return response message
+3. If confidence < 0.7, return clarification question
+4. Execute action (create/main, create/subtask, mark_complete, archive)
+5. Format tasks to markdown
+6. Write to file with backup
+7. Return response message
 ```
 
 ## File Structure
