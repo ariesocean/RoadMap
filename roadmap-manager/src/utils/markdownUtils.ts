@@ -23,15 +23,15 @@ export function appendIdToTitle(title: string, id: string): string {
 export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achievements: Achievement[] } {
   const tasks: Task[] = [];
   const achievements: Achievement[] = [];
-  
+
   const lines = markdown.split('\n');
   let currentTask: Task | null = null;
   let currentAchievement: Achievement | null = null;
   let inAchievements = false;
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    
+
     if (line.startsWith('## Achievements')) {
       inAchievements = true;
       if (currentTask) {
@@ -40,7 +40,7 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
       }
       continue;
     }
-    
+
     const taskMatch = line.match(/^# (.+)$/);
     if (taskMatch) {
       if (currentTask && !inAchievements) {
@@ -49,8 +49,12 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
       if (currentAchievement && inAchievements) {
         achievements.push(currentAchievement);
       }
-      
+
       const title = taskMatch[1].trim();
+      if (title === 'Roadmap' || title === 'roadmap') {
+        continue;
+      }
+
       if (inAchievements) {
         currentAchievement = {
           id: generateTaskId(),
@@ -123,44 +127,44 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
 }
 
 export function generateMarkdownFromTasks(tasks: Task[], achievements: Achievement[]): string {
-  let markdown = '# Roadmap\n\n';
-  
+  let markdown = '';
+
   tasks.forEach(task => {
     markdown += `# ${task.title}\n`;
     if (task.originalPrompt) {
       markdown += `> ${task.originalPrompt}\n`;
     }
     markdown += '\n';
-    
+
     task.subtasks.forEach(subtask => {
       const indent = '  '.repeat(subtask.nestedLevel);
       const checkbox = subtask.completed ? '[x]' : '[ ]';
       markdown += `${indent}- ${checkbox} ${subtask.content}\n`;
     });
-    
+
     markdown += '\n';
   });
-  
+
   if (achievements.length > 0) {
     markdown += '## Achievements\n\n';
-    
+
     achievements.forEach(achievement => {
       markdown += `# ${achievement.title}\n`;
       if (achievement.originalPrompt) {
         markdown += `> ${achievement.originalPrompt}\n`;
       }
       markdown += '\n';
-      
+
       achievement.subtasks.forEach(subtask => {
         const indent = '  '.repeat(subtask.nestedLevel);
         const checkbox = subtask.completed ? '[x]' : '[ ]';
         markdown += `${indent}- ${checkbox} ${subtask.content}\n`;
       });
-      
+
       markdown += '\n';
     });
   }
-  
+
   return markdown.trim();
 }
 

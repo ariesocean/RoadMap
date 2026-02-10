@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { checkServerHealth, startOpenCodeServer } from '@/services/opencodeAPI';
+import { checkServerHealth } from '@/services/opencodeAPI';
 
 export function useOpenCode() {
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
 
   const checkConnection = useCallback(async () => {
@@ -17,15 +17,6 @@ export function useOpenCode() {
     }
   }, []);
 
-  const ensureServerRunning = useCallback(async () => {
-    const health = await checkServerHealth();
-    if (health.status !== 'healthy') {
-      await startOpenCodeServer();
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-    await checkConnection();
-  }, [checkConnection]);
-
   useEffect(() => {
     checkConnection();
     const interval = setInterval(checkConnection, 10000);
@@ -36,6 +27,5 @@ export function useOpenCode() {
     isConnected,
     isChecking,
     checkConnection,
-    ensureServerRunning,
   };
 }

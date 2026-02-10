@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { TaskStore, Task, Achievement } from './types';
-import { checkServerHealth, processPrompt, fetchTasks, toggleSubtaskCompletion } from '@/services/opencodeAPI';
+import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
+import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
@@ -10,7 +11,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   isProcessing: false,
   currentPrompt: '',
   error: null,
-  isConnected: false,
+  isConnected: true,
 
   setTasks: (tasks: Task[]) => set({ tasks }),
   
@@ -29,23 +30,17 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   setConnected: (isConnected: boolean) => set({ isConnected }),
 
   refreshTasks: async () => {
-    const { setLoading, setTasks, setAchievements, setError, setConnected } = get();
+    const { setLoading, setTasks, setAchievements, setError } = get();
     
     try {
       setLoading(true);
       setError(null);
       
-      const health = await checkServerHealth();
-      setConnected(health.status === 'healthy');
-      
-      if (health.status === 'healthy') {
-        const data = await fetchTasks();
-        setTasks(data.tasks);
-        setAchievements(data.achievements);
-      }
+      const data = await loadTasksFromFile();
+      setTasks(data.tasks);
+      setAchievements(data.achievements);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to refresh tasks');
-      setConnected(false);
     } finally {
       setLoading(false);
     }
@@ -59,7 +54,23 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       setError(null);
       setCurrentPrompt(prompt);
       
-      await processPrompt(prompt);
+      const content = await readRoadmapFile();
+      const parsed = parseMarkdownTasks(content);
+      parsed.tasks.push({
+        id: `task-${Date.now()}`,
+        title: prompt,
+        originalPrompt: prompt,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        subtasks: [],
+        completedSubtasks: 0,
+        totalSubtasks: 0,
+        isExpanded: false,
+      });
+      
+      const markdown = generateMarkdownFromTasks(parsed.tasks, parsed.achievements);
+      await writeRoadmapFile(markdown);
+      
       await refreshTasks();
       setCurrentPrompt('');
     } catch (err) {
@@ -97,7 +108,20 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       setTasks(updatedTasks);
       
-      await toggleSubtaskCompletion(taskId, subtaskId);
+      const content = await readRoadmapFile();
+      const parsed = parseMarkdownTasks(content);
+      
+      for (const task of parsed.tasks) {
+        for (const subtask of task.subtasks) {
+          if (subtask.id === subtaskId) {
+            subtask.completed = !subtask.completed;
+          }
+        }
+      }
+      
+      const markdown = generateMarkdownFromTasks(parsed.tasks, parsed.achievements);
+      await writeRoadmapFile(markdown);
+      
       await refreshTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to toggle subtask');

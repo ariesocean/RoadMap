@@ -1,26 +1,52 @@
-import { readTextFile, writeTextFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
 import type { Task, Achievement } from '@/store/types';
 
-const ROADMAP_FILENAME = 'roadmap.md';
+const ROADMAP_PATH = '/Users/SparkingAries/VibeProjects/RoadMap/roadmap.md';
 
 export async function readRoadmapFile(): Promise<string> {
   try {
-    const content = await readTextFile(ROADMAP_FILENAME, {
-      baseDir: BaseDirectory.AppData,
-    });
-    return content;
-  } catch (error) {
-    console.warn('Roadmap file not found, creating empty content');
-    return '# Roadmap\n\n';
+    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+      const { readTextFile, writeTextFile, BaseDirectory } = await import('@tauri-apps/plugin-fs');
+      const content = await readTextFile('roadmap.md', {
+        baseDir: BaseDirectory.AppData,
+      });
+      return content;
+    } else {
+      const response = await fetch('/api/read-roadmap');
+      if (response.ok) {
+        return await response.text();
+      }
+    }
+  } catch {
+    console.warn('Could not read roadmap via Tauri API');
   }
+  
+  try {
+    const response = await fetch('file:///Users/SparkingAries/VibeProjects/RoadMap/roadmap.md');
+    if (response.ok) {
+      return await response.text();
+    }
+  } catch {
+    console.warn('Could not read roadmap via file:// protocol');
+  }
+  
+  return '# Roadmap\n\n';
 }
 
 export async function writeRoadmapFile(content: string): Promise<void> {
   try {
-    await writeTextFile(ROADMAP_FILENAME, content, {
-      baseDir: BaseDirectory.AppData,
-    });
+    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+      const { writeTextFile, BaseDirectory } = await import('@tauri-apps/plugin-fs');
+      await writeTextFile('roadmap.md', content, {
+        baseDir: BaseDirectory.AppData,
+      });
+    } else {
+      await fetch('/api/write-roadmap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+    }
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'Failed to write roadmap file');
   }
