@@ -5,45 +5,6 @@ license: MIT
 compatibility: opencode
 ---
 
-# Navigate Skill
-
-## Overview
-
-The **navigate** skill is a personal task management system that uses LLM-assisted semantic analysis to intelligently manage a hierarchical `roadmap.md` file. It allows users to manage tasks using natural language without requiring special syntax or commands.
-
-## Core Capabilities
-
-### Intelligent Intent Recognition
-- Automatically determines whether prompts should create main tasks, subtasks, or mark completion
-- Uses semantic analysis to understand context and relationships between tasks
-- Handles ambiguous inputs by asking for clarification (confidence threshold: 0.7)
-
-### Hierarchical Task Management
-- Supports nested task structures with proper markdown formatting
-- Maintains task ordering by creation sequence
-- Automatically assigns appropriate hierarchy levels based on context
-
-### Natural Language Interface
-- Users can express tasks in natural language without special syntax
-- Recognizes various completion phrases ("done", "finished", "complete", "all set", etc.)
-- Recognizes subtask action verbs ("add", "create", "implement", "build", "setup", etc.)
-- Provides helpful clarification questions when intent is unclear
-
-### Smart Completion Tracking
-- Automatically detects completion indicators in prompts
-- Marks both subtasks and parent tasks as complete
-- Maintains proper completion status in markdown format with `[x]` and `[ ]` markers
-
-### Controlled Archiving
-- Detects archive intent with keywords ("archive", "move to achievements", "save to archive")
-- Moves completed main tasks to `achievements.md` only with explicit user confirmation
-- Maintains archived project history with completion and archive dates
-
-### Data Safety
-- Maintains file integrity with automatic backup creation (.md.bak)
-- Validates file structure before saving
-- Handles edge cases gracefully (missing files, malformed content, etc.)
-
 ## Quick Start
 
 ```bash
@@ -143,7 +104,7 @@ Which task are you referring to when you say 'Done'?
 ```
 1. Receive prompt
 2. Validate input (non-empty, <1000 chars)
-3. Analyze semantic intent with confidence scoring
+3. **Intelligent Intent Recognition** - LLM analyzes prompt to determine action type, target task, and confidence score
 4. If confidence < 0.7, return clarification question
 5. Execute action (create/main, create/subtask, mark_complete, archive)
 6. Format tasks to markdown
