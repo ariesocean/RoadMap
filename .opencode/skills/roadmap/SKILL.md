@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: Personal task management system using LLM-assisted semantic analysis to intelligently manage a hierarchical roadmap.md file with natural language commands
+description: Personal task management using LLM-assisted semantic analysis to manage roadmap.md with natural language commands
 license: MIT
 metadata:
   category: task-management
@@ -10,187 +10,107 @@ metadata:
     - achievements.md
 ---
 
-## What I do
+## Core Actions
 
-### Creating Tasks
-
-1. **Analyze the prompt** using semantic understanding to determine if this should be a main task or subtask
-2. **Literally convert user prompt** to task content without modification or derivation
-3. **Identify parent context** by examining existing tasks in roadmap.md
-4. **Add main task timestamp** with `[created: YYYY-MM-DD HH:MM]`
-5. **Subtasks have no timestamp**
-6. **Insert at appropriate hierarchy level** with proper markdown formatting
-7. **Update the "Last Updated" timestamp** at the bottom of each main task section
-
-### Completing Tasks
-
-1. **Detect completion intent** from phrases like "done", "finished", "complete", "marked off", "完成”, etc.
-2. **Match to existing task** using semantic similarity to find the referenced task
-3. **Update completion marker** from `[ ]` to `[x]`
-4. **If main task completed**, verify all subtasks are also complete
-5. **Update timestamps** appropriately
-
-### Archiving Tasks
-
-1. **Identify completed main task** to archive
-2. **Verify all subtasks are complete** before proceeding
-3. **Ask for explicit user confirmation** before archiving
-4. **Move task to achievements.md** with completion timestamp
-5. **Remove from roadmap.md** after successful archive
-
-## Workflow Pipeline
-
-1. **Receive natural language prompt**
-2. **Analyze semantic intent**: Determine action type (create/complete/archive), task hierarchy level, and task content
-3. **Confidence check**: If intent is ambiguous (< 80% confidence), ask clarification question
-4. **Update task state**: Modify in-memory task representation
-5. **Format to markdown**: Convert task data to proper markdown with timestamps and markers
-6. **Save files**: Write roadmap.md and optionally achievements.md
-7. **Confirm to user**: Report the action taken
-
-## Core Components
-
-1. **File Manager**: Handles reading/writing roadmap.md and achievements.md with backup safety
-2. **Semantic Intent Analyzer**: Uses LLM to determine action type, hierarchy level, and task content from natural language
-3. **Task State Manager**: Maintains current task structure and handles updates
-4. **Markdown Formatter**: Converts task data to properly formatted markdown with timestamps and completion markers
+| Action | Rules |
+|--------|-------|
+| **Create** | Extracts user prompt core intent as a task description for the title, preserving the original wording as much as possible. add `[created: YYYY-MM-DD HH:MM]` |
+| **Complete** | `[ ]` → `[x]`, verify subtasks if main task |
+| **Archive** | Confirm subtasks done, confirm with user to move to achievements.md with `[completed:]` |
 
 ## Available Tools
 
-- **Read**: Read roadmap.md and achievements.md files
-- **Write**: Create or overwrite roadmap.md and achievements.md with properly formatted content
-- **Edit**: Modify specific sections within roadmap.md or achievements.md
-- **glob**: Find roadmap.md and achievements.md files in project
-- **bash**: Get current timestamp using `date "+%Y-%m-%d %H:%M"` command
+- **Read**: Load roadmap.md, achievements.md (parallel)
+- **Edit**: Modify sections in-place
+- **Write**: Overwrite with new content
+- **bash**: `date "+%Y-%m-%d %H:%M"` for timestamps
 
-## Timestamp Format
+## Fast Workflow (4 Steps)
 
-Use `YYYY-MM-DD HH:MM` format (e.g., `2026-02-10 14:30`). Obtain via:
+1. **Parallel Read** - Load roadmap.md + achievements.md simultaneously
+2. **One-Pass Parse** - Single LLM call determines action, hierarchy, and task content
+3. **Direct Modify** - Update task state in memory
+4. **Single Write** - Write back roadmap.md (and achievements.md if archiving)
+
+## Intent Detection Rules
+
+| Pattern | Action |
+|---------|--------|
+| "Create/add/build/start: {task}" | New main task |
+| "Add subtask/step to {parent}: {task}" | Subtask under parent |
+| "Done/finished/complete/marked: {task}" | Mark complete |
+| "Archive/move to achievements: {task}" | Archive to achievements.md |
+
+## Timestamp Command
 
 ```bash
 date "+%Y-%m-%d %H:%M"
 ```
 
+## File Operations
 
-## Prerequisites
+| Operation | Source Files | Target Files |
+|-----------|--------------|--------------|
+| Create task | roadmap.md | roadmap.md |
+| Complete task | roadmap.md | roadmap.md |
+| Archive task | roadmap.md | roadmap.md + achievements.md |
 
-- The skill creates and manages `roadmap.md` and `achievements.md` files in the project root
-- Files follow specific markdown formats documented below
-- User confirmation is required for irreversible archive operations
+## Quick Formats
 
-## File Structure
-
-### roadmap.md Format
-
+### Main Task
 ```
-# Main Task Title [created: YYYY-MM-DD HH:MM]
-> Original user prompt verbatim
+# {title} [created: YYYY-MM-DD HH:MM]
+> {original_prompt}
 
-## Subtask Level 1
-* [ ] Subtask 1
-* [ ] Subtask 2
+## Subtasks
+* [ ] {subtask}
+```
 
-### Subtask Level 2
-* [ ] Nested subtask 2.1
+### Subtask (no timestamp)
+```
+* [ ] {subtask}
+```
 
+### Archived (achievements.md)
+```
+# {title} [completed: YYYY-MM-DD HH:MM]
+> {original_prompt}
+
+* [x] {subtasks...}
+
+**Archived:** YYYY-MM-DD HH:MM
+```
+
+### Footer (roadmap.md end)
+```
 ---
-
 **Last Updated:** YYYY-MM-DD HH:MM
-```
-
-### achievements.md Format
-
-```
-# Archived Main Task [completed: YYYY-MM-DD HH:MM]
-> Original user prompt verbatim
-
-## Completed Subtasks
-* [x] Subtask 1
-* [x] Subtask 2
-
----
-
-**Archived Date:** YYYY-MM-DD HH:MM
 ```
 
 ## Examples
 
-### Creating Main Tasks
+| User | Action |
+|------|--------|
+| "Build a website" | New main task with timestamp |
+| "Add auth to website" | Subtask under website |
+| "Done auth" | Mark subtask [x] |
+| "Complete task #3" | Mark main task #3 [x] |
+| "Archive website" | Confirm → move to achievements.md |
+| "Update the thing" | Ask clarification (ambiguous) |
 
-```
-User: "Build a new website"
-Action: Creates "# Build a new website [created: 2026-02-10 14:30]\n> Build a new website"
-```
+## Quick Validation
 
-```
-User: "Research React frameworks"
-Action: Creates "# Research React frameworks [created: 2026-02-10 14:31]\n> Research React frameworks"
-```
+- `[created: YYYY-MM-DD HH:MM]` for main tasks
+- `[x]` / `[ ]` for completion
+- `#` for main, `##` for subtasks
+- Archive = all subtasks done + user confirm
+- Footer: `**Last Updated:**` or `**Archived:**`
 
-### Creating Subtasks
+## Edge Cases
 
-```
-User: "Add user authentication to the website project"
-Action: Creates subtask "* [ ] Add user authentication to the website project" under website main task
-```
-
-### Completing Tasks
-
-```
-User: "Done with user authentication"
-Action: Marks corresponding subtask "[ ]" → "[x]" and updates timestamp
-```
-
-```
-User: "Finished the website!"
-Action: Marks main task and all subtasks as complete
-```
-
-```
-User: "Complete task #3"
-Action: Marks the third main task as complete
-```
-
-### Archiving
-
-```
-User: "Archive the website project"
-Action: Verifies all subtasks complete, asks confirmation, moves to achievements.md
-```
-
-### Clarification
-
-```
-User: "Update the thing"
-Action: "I found multiple matches - did you mean: (1) User authentication, (2) Website design, (3) API setup? Please clarify."
-```
-
-## Validation Checklist
-
-Before completing any operation:
-
-- [ ] All timestamps follow `YYYY-MM-DD HH:MM` format
-- [ ] Markdown structure maintains proper heading hierarchy (# for main, ## for subtasks)
-- [ ] Completion markers use `[x]` for complete, `[ ]` for incomplete
-- [ ] Task ordering preserved by creation sequence
-- [ ] Subtasks properly nested under parent tasks
-- [ ] Archive operations verified: all subtasks complete, user confirmed
-- [ ] File integrity maintained with backup before write operations
-- [ ] "Last Updated" timestamp refreshed on roadmap.md changes
-- [ ] Archived tasks include "Archived Date" in achievements.md
-
-## Error Handling
-
-- **File not found**: Create roadmap.md with default template if missing
-- **Malformed content**: Attempt to parse valid sections, report issues to user
-- **Ambiguous intent**: Ask clarification question with confidence < 80%
-- **Archive without completion**: Prompt user to complete subtasks first
-- **Write failures**: Restore from backup, retry, report error
-
-## Design Decisions
-
-- **Single roadmap file**: All active tasks in one central roadmap.md for simplicity
-- **LLM-assisted semantic analysis**: Leverages AI capabilities for intelligent parsing rather than complex regex rules
-- **User confirmation for archiving**: Ensures user control over irreversible archive operations
-- **Natural language first**: Prioritizes intuitive user experience over technical constraints
-- **Timestamps on everything**: Tracks creation and update times for audit trail
+| Case | Action |
+|------|--------|
+| Missing roadmap.md | Create template |
+| Ambiguous intent | Ask clarification |
+| Archive incomplete | Prompt to finish first |
+| Write fails | Retry once, report error |
