@@ -18,6 +18,8 @@ metadata:
 | **Complete** | `[ ]` → `[x]`, verify subtasks if main task |
 | **Archive** | Confirm subtasks done, confirm with user to move to achievements.md with `[completed:]` |
 
+> **Note**: Each prompt creates exactly ONE task (main or subtask) unless prompt explicitly says "add multiple tasks" or similar.
+
 ## Available Tools
 
 - **Read**: Load roadmap.md, achievements.md (parallel)
@@ -25,12 +27,13 @@ metadata:
 - **Write**: Overwrite with new content
 - **bash**: `date "+%Y-%m-%d %H:%M"` for timestamps
 
-## Fast Workflow (4 Steps)
+## Fast Workflow (5 Steps)
 
-1. **Parallel Read** - Load roadmap.md + achievements.md simultaneously
-2. **One-Pass Parse** - Single LLM call determines action, hierarchy, and task content
-3. **Direct Modify** - Update task state in memory
-4. **Single Write** - Write back roadmap.md (and achievements.md if archiving)
+1. **Bash Timestamp** - Execute bash command first to get current time
+2. **Parallel Read** - Load roadmap.md + achievements.md simultaneously
+3. **One-Pass Parse** - Single LLM call determines action, hierarchy, and task content
+4. **Direct Modify** - Update task state in memory
+5. **Single Write** - Write back roadmap.md (and achievements.md if archiving)
 
 ## Intent Detection Rules
 
@@ -64,6 +67,9 @@ date "+%Y-%m-%d %H:%M"
 
 ## Subtasks
 * [ ] {subtask}
+
+---
+**Last Updated:** YYYY-MM-DD HH:MM
 ```
 
 ### Subtask (no timestamp)
@@ -81,12 +87,6 @@ date "+%Y-%m-%d %H:%M"
 **Archived:** YYYY-MM-DD HH:MM
 ```
 
-### Footer (roadmap.md end)
-```
----
-**Last Updated:** YYYY-MM-DD HH:MM
-```
-
 ## Examples
 
 | User | Action |
@@ -100,11 +100,11 @@ date "+%Y-%m-%d %H:%M"
 
 ## Quick Validation
 
-- `[created: YYYY-MM-DD HH:MM]` for main tasks
+- `[created: YYYY-MM-DD HH:MM]` for main tasks (in title)
 - `[x]` / `[ ]` for completion
 - `#` for main, `##` for subtasks
 - Archive = all subtasks done + user confirm
-- Footer: `**Last Updated:**` or `**Archived:**`
+- Each main task has its own `**Last Updated:**` at section bottom
 
 ## Edge Cases
 
