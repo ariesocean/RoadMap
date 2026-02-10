@@ -1,8 +1,8 @@
-# Navigate Skill Design Document
+# Roadmap Skill Design Document
 
 ## Overview
 
-The "navigate" skill is a personal task management system that uses LLM-assisted semantic analysis to intelligently manage a hierarchical `roadmap.md` file. It allows users to manage tasks using natural language without requiring special syntax or commands.
+The "Roadmap" skill is a personal task management system that uses LLM-assisted semantic analysis to intelligently manage a hierarchical `roadmap.md` file. It allows users to manage tasks using natural language without requiring special syntax or commands.
 
 ## Core Capabilities
 
