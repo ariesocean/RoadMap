@@ -12,69 +12,6 @@ metadata:
 
 ## What I do
 
-The Roadmap skill manages a personal task management system through intelligent semantic analysis. It handles:
-
-- **Intelligent Intent Recognition**: Automatically determines whether prompts should create main tasks, subtasks, or mark completion using LLM understanding
-- **Hierarchical Task Management**: Maintains nested task structures with proper markdown formatting and creation sequence ordering
-- **Natural Language Interface**: Accepts task inputs without special syntax; recognizes completion phrases like "done", "finished", "complete"
-- **Smart Completion Tracking**: Detects completion indicators and maintains proper markdown completion markers
-- **Controlled Archiving**: Moves completed main tasks to achievements.md only with explicit user confirmation, verifying all subtasks are done
-- **Data Safety**: Maintains file integrity with backup handling and graceful edge case management
-
-## When to use me
-
-Use this skill when you need to:
-
-- Create and manage personal tasks using natural language without special syntax
-- Build hierarchical task structures with main tasks and nested subtasks
-- Track task completion through conversational commands
-- Automatically archive completed projects to a separate achievements file
-- Maintain an organized, human-readable roadmap of ongoing work
-- Convert task ideas into structured markdown task lists
-
-## Prerequisites
-
-- The skill creates and manages `roadmap.md` and `achievements.md` files in the project root
-- Files follow specific markdown formats documented below
-- User confirmation is required for irreversible archive operations
-
-## File Structure
-
-### roadmap.md Format
-
-```
-# Main Task Title [created: YYYY-MM-DD HH:MM]
-> Main task short description
-
-## Subtask Level 1
-* [ ] Subtask 1 [created: YYYY-MM-DD HH:MM]
-* [ ] Subtask 2 [created: YYYY-MM-DD HH:MM]
-
-### Subtask Level 2
-* [ ] Nested subtask 2.1 [created: YYYY-MM-DD HH:MM]
-
----
-
-**Last Updated:** YYYY-MM-DD HH:MM
-```
-
-### achievements.md Format
-
-```
-# Archived Main Task [completed: YYYY-MM-DD HH:MM]
-> Main task short description
-
-## Completed Subtasks
-* [x] Subtask 1 [created: YYYY-MM-DD HH:MM]
-* [x] Subtask 2 [created: YYYY-MM-DD HH:MM]
-
----
-
-**Archived Date:** YYYY-MM-DD HH:MM
-```
-
-## Usage
-
 ### Creating Tasks
 
 1. **Analyze the prompt** using semantic understanding to determine if this should be a main task or subtask
@@ -85,7 +22,7 @@ Use this skill when you need to:
 
 ### Completing Tasks
 
-1. **Detect completion intent** from phrases like "done", "finished", "complete", "marked off"
+1. **Detect completion intent** from phrases like "done", "finished", "complete", "marked off", "完成”, etc.
 2. **Match to existing task** using semantic similarity to find the referenced task
 3. **Update completion marker** from `[ ]` to `[x]`
 4. **If main task completed**, verify all subtasks are also complete
@@ -130,6 +67,48 @@ Use `YYYY-MM-DD HH:MM` format (e.g., `2026-02-10 14:30`). Obtain via:
 
 ```bash
 date "+%Y-%m-%d %H:%M"
+```
+
+
+## Prerequisites
+
+- The skill creates and manages `roadmap.md` and `achievements.md` files in the project root
+- Files follow specific markdown formats documented below
+- User confirmation is required for irreversible archive operations
+
+## File Structure
+
+### roadmap.md Format
+
+```
+# Main Task Title [created: YYYY-MM-DD HH:MM]
+> Main task short description
+
+## Subtask Level 1
+* [ ] Subtask 1 [created: YYYY-MM-DD HH:MM]
+* [ ] Subtask 2 [created: YYYY-MM-DD HH:MM]
+
+### Subtask Level 2
+* [ ] Nested subtask 2.1 [created: YYYY-MM-DD HH:MM]
+
+---
+
+**Last Updated:** YYYY-MM-DD HH:MM
+```
+
+### achievements.md Format
+
+```
+# Archived Main Task [completed: YYYY-MM-DD HH:MM]
+> Main task short description
+
+## Completed Subtasks
+* [x] Subtask 1 [created: YYYY-MM-DD HH:MM]
+* [x] Subtask 2 [created: YYYY-MM-DD HH:MM]
+
+---
+
+**Archived Date:** YYYY-MM-DD HH:MM
 ```
 
 ## Examples
