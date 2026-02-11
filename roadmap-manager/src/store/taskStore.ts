@@ -3,6 +3,25 @@ import type { TaskStore, Task, Achievement } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
 import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
 
+async function executeNavigate(prompt: string): Promise<void> {
+  const isTauri = typeof window !== 'undefined' && !!(window as any).__TAURI__;
+  
+  if (isTauri) {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('execute_navigate', { prompt });
+  } else {
+    const response = await fetch('/api/execute-navigate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to execute navigate');
+    }
+  }
+}
+
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
   achievements: [],
@@ -54,22 +73,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       setError(null);
       setCurrentPrompt(prompt);
       
-      const content = await readRoadmapFile();
-      const parsed = parseMarkdownTasks(content);
-      parsed.tasks.push({
-        id: `task-${Date.now()}`,
-        title: prompt,
-        originalPrompt: prompt,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        subtasks: [],
-        completedSubtasks: 0,
-        totalSubtasks: 0,
-        isExpanded: false,
-      });
-      
-      const markdown = generateMarkdownFromTasks(parsed.tasks, parsed.achievements);
-      await writeRoadmapFile(markdown);
+      await executeNavigate(prompt);
       
       await refreshTasks();
       setCurrentPrompt('');
