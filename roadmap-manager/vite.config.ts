@@ -224,6 +224,154 @@ const roadmapPlugin = {
         next();
       }
     });
+
+    server.middlewares.use('/api/execute-modal-prompt', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const prompt = body.prompt;
+
+          res.setHeader('Content-Type', 'text/event-stream');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.setHeader('Connection', 'keep-alive');
+          res.flushHeaders();
+
+          const sendEvent = (data: any) => {
+            if (res.writableEnded) return;
+            res.write(`data: ${JSON.stringify(data)}\n\n`);
+          };
+
+          const isHealthy = await checkServerHealth();
+
+          if (!isHealthy) {
+            sendEvent({ type: 'error', message: '❌ OpenCode Server 未运行\n\n请先运行: npm run opencode:server' });
+            res.end();
+            return;
+          }
+
+          sendEvent({ type: 'start', message: `正在处理: "${prompt}"\n\n` });
+
+          const createSessionRes = await httpRequest({
+            hostname: OPENCODE_HOST,
+            port: OPENCODE_PORT,
+            path: '/session',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          }, JSON.stringify({ title: `modal-prompt: ${prompt}` }));
+
+          if (createSessionRes.status !== 200) {
+            sendEvent({ type: 'error', message: '❌ 创建会话失败' });
+            res.end();
+            return;
+          }
+
+          const sessionId = createSessionRes.data.id;
+          sendEvent({ type: 'session', sessionId });
+
+          const sendMessageRes = await httpRequest({
+            hostname: OPENCODE_HOST,
+            port: OPENCODE_PORT,
+            path: `/session/${sessionId}/prompt_async`,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          }, JSON.stringify({
+            parts: [{ type: 'text', text: prompt }]
+          }));
+
+          if (sendMessageRes.status !== 204) {
+            console.error('[Modal Prompt] Send message failed:', sendMessageRes.status, sendMessageRes.data);
+            sendEvent({ type: 'error', message: `❌ 发送消息失败 (${sendMessageRes.status}): ${JSON.stringify(sendMessageRes.data)}` });
+            res.end();
+            return;
+          }
+
+          sendEvent({ type: 'started', message: `开始处理...\n\n` });
+
+          let isCompleted = false;
+
+          const eventReq = http.get({
+            hostname: OPENCODE_HOST,
+            port: OPENCODE_PORT,
+            path: `/event?session=${sessionId}`,
+            headers: { 'Accept': 'text/event-stream' }
+          }, (eventRes) => {
+            eventRes.on('data', (chunk: Buffer) => {
+              const text = chunk.toString();
+              const lines = text.split('\n');
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const wrapper = JSON.parse(line.slice(6));
+                    const eventType = wrapper.type;
+                    const props = wrapper.properties || {};
+
+                    if (eventType === 'session.status') {
+                      const status = props.status?.type;
+                      if (status === 'idle' && !isCompleted) {
+                        isCompleted = true;
+                        sendEvent({ type: 'done', message: '\n✅ 完成!' });
+                        res.end();
+                      }
+                    } else if (eventType === 'message.part.updated') {
+                      const part = props.part || {};
+                      const partType = part.type;
+
+                      if (partType === 'text' && part.text) {
+                        sendEvent({ type: 'text', content: part.text });
+                      } else if (partType === 'tool') {
+                        sendEvent({ type: 'tool-call', name: part.name || 'tool' });
+                      } else if (partType === 'tool-result') {
+                        sendEvent({ type: 'tool-result', name: part.name || 'tool' });
+                      } else if (partType === 'step-start') {
+                        sendEvent({ type: 'step-start', snapshot: part.snapshot || '' });
+                      } else if (partType === 'step-end') {
+                        sendEvent({ type: 'step-end' });
+                      } else if (partType === 'reasoning') {
+                        sendEvent({ type: 'reasoning', content: part.reasoning || '' });
+                      }
+                    } else if (eventType === 'message.updated') {
+                      const info = props.info || {};
+                      if (info.role === 'assistant' && info.completed) {
+                        sendEvent({ type: 'message-complete' });
+                      }
+                    }
+                  } catch (e) {
+                  }
+                }
+              }
+            });
+            eventRes.on('end', () => {
+              if (!isCompleted) {
+                sendEvent({ type: 'done', message: '\n✅ 完成!' });
+                res.end();
+              }
+            });
+          });
+
+          eventReq.on('error', (err: Error) => {
+            sendEvent({ type: 'error', message: `\n❌ 事件流错误: ${err.message}` });
+            res.end();
+          });
+
+          eventReq.setTimeout(300000, () => {
+            eventReq.destroy();
+            sendEvent({ type: 'timeout', message: '\n⏱️ 执行超时' });
+            res.end();
+          });
+
+        } catch (error) {
+          const errMsg = error instanceof Error ? error.message : String(error);
+          res.write(`data: ${JSON.stringify({ type: 'error', message: `❌ 错误: ${errMsg}` })}\n\n`);
+          res.end();
+        }
+      } else {
+        next();
+      }
+    });
   }
 };
 

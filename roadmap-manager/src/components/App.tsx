@@ -5,13 +5,11 @@ import { InputArea } from './InputArea';
 import { ResultModal } from './ResultModal';
 import { useTaskStore } from '@/store/taskStore';
 import { useThemeStore } from '@/store/themeStore';
-import { useResultModalStore } from '@/store/resultModalStore';
 import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 
 export const App: React.FC = () => {
   const { refreshTasks } = useTaskStore();
   const { theme } = useThemeStore();
-  const { isOpen, title, content, closeModal } = useResultModalStore();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {

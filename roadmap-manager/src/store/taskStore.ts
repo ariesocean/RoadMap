@@ -2,12 +2,7 @@ import { create } from 'zustand';
 import type { TaskStore, Task, Achievement } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
 import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
-import { navigateWithOpencode } from '@/services/opencodeSDK';
 import { useResultModalStore } from './resultModalStore';
-
-async function executeNavigate(prompt: string): Promise<string> {
-  return await navigateWithOpencode(prompt);
-}
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
@@ -54,7 +49,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   submitPrompt: async (prompt: string) => {
     const { setProcessing, setCurrentPrompt, refreshTasks, setError } = get();
-    const { openModal, closeModal, setContent, appendContent, setStreaming } = useResultModalStore.getState();
+    const { openModal, setContent, appendContent, setStreaming } = useResultModalStore.getState();
 
     try {
       setProcessing(true);
