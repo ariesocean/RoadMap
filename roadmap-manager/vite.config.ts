@@ -79,6 +79,52 @@ const roadmapPlugin = {
       }
     });
 
+    server.middlewares.use('/session', async (req: any, res: any, next: any) => {
+      const isHealthy = await checkServerHealth();
+      
+      if (!isHealthy) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'OpenCode server not running' }));
+        return;
+      }
+
+      if (req.method === 'GET') {
+        try {
+          const sessionsRes = await httpRequest({
+            hostname: OPENCODE_HOST,
+            port: OPENCODE_PORT,
+            path: '/session',
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          let sessions: any[] = [];
+          
+          if (Array.isArray(sessionsRes.data)) {
+            sessions = sessionsRes.data;
+          } else if (sessionsRes.data && Array.isArray((sessionsRes.data as any).sessions)) {
+            sessions = (sessionsRes.data as any).sessions;
+          }
+          
+          const roadmapSessions = sessions.filter((s: any) => 
+            s.directory === '/Users/SparkingAries/VibeProjects/RoadMap'
+          );
+          
+          roadmapSessions.sort((a: any, b: any) => 
+            (b.time?.created || 0) - (a.time?.created || 0)
+          );
+          
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(roadmapSessions));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
     server.middlewares.use('/api/execute-navigate', async (req: any, res: any, next: any) => {
       if (req.method === 'POST') {
         try {

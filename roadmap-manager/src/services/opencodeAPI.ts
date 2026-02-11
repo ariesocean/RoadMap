@@ -1,5 +1,123 @@
-import type { OpenCodeHealthResponse, OpenCodePromptResponse } from '@/store/types';
+import type { OpenCodeHealthResponse, OpenCodePromptResponse, Session } from '@/store/types';
 import { loadTasksFromFile } from '@/services/fileService';
+
+export interface ServerSessionResponse {
+  sessions: ServerSession[];
+}
+
+export interface FetchSessionsError {
+  type: 'network' | 'auth' | 'server';
+  message: string;
+}
+
+export interface ServerSessionTime {
+  created: number;
+  updated: number;
+}
+
+export interface ServerSession {
+  id: string;
+  slug?: string;
+  version?: string;
+  projectID?: string;
+  directory?: string;
+  title: string;
+  time: ServerSessionTime;
+  summary?: {
+    additions: number;
+    deletions: number;
+    files: number;
+  };
+  [key: string]: unknown;
+}
+
+function getAuthHeader(): string {
+  const password = import.meta.env?.VITE_OPENCODE_SERVER_PASSWORD || '';
+  const username = 'opencode';
+  const credentials = btoa(`${username}:${password}`);
+  return `Basic ${credentials}`;
+}
+
+export async function fetchSessionsFromServer(): Promise<ServerSession[]> {
+  try {
+    const response = await fetch('/session', {
+      method: 'GET',
+      headers: {
+        'Authorization': getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('Authentication failed - check server credentials');
+      } else if (response.status >= 500) {
+        throw new Error('Server error - please try again later');
+      } else {
+        throw new Error(`Failed to fetch sessions: ${response.statusText}`);
+      }
+    }
+
+    const data = await response.json();
+    
+    if (Array.isArray(data)) {
+      return data;
+    } else if (data && Array.isArray(data.sessions)) {
+      return data.sessions;
+    }
+    
+    return [];
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Unable to connect to server - check your connection');
+    }
+    throw error;
+  }
+}
+
+export function convertServerSessionToLocal(serverSession: ServerSession): Omit<Session, 'messages'> {
+  return {
+    id: serverSession.id,
+    title: serverSession.title,
+    createdAt: new Date(serverSession.time.created).toISOString(),
+    lastUsedAt: new Date(serverSession.time.updated).toISOString(),
+  };
+}
+
+export function showToastNotification(message: string, type: 'info' | 'error' | 'warning'): void {
+  if (typeof window !== 'undefined' && (window as any).showToast) {
+    (window as any).showToast(message, type);
+  } else {
+    console.log(`[Toast ${type}]: ${message}`);
+  }
+}
+
+export async function syncLocalSessionToServer(session: Session): Promise<string | null> {
+  try {
+    const response = await fetch('/session', {
+      method: 'POST',
+      headers: {
+        'Authorization': getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: session.title,
+        created_at: session.createdAt,
+        last_used_at: session.lastUsedAt,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to sync session to server');
+    }
+
+    const data = await response.json();
+    return data.id || null;
+  } catch (error) {
+    console.error('Failed to sync session to server:', error);
+    return null;
+  }
+}
 
 export async function checkServerHealth(): Promise<OpenCodeHealthResponse> {
   try {

@@ -15,11 +15,30 @@ export function useSession() {
     getAllSessions,
     cleanupAllSessions,
     createOrUpdateSessionFromAPI,
+    loadServerSessions,
+    refreshSessions,
+    startBackgroundRefresh,
+    stopBackgroundRefresh,
+    selectDefaultSession,
+    isLocalSession,
+    syncSessionToServer,
+    serverSessions,
+    isLoadingServerSessions,
   } = useSessionStore();
 
   useEffect(() => {
     initializeSession();
-  }, [initializeSession]);
+    
+    const loadAndStart = async () => {
+      await loadServerSessions();
+      startBackgroundRefresh();
+    };
+    loadAndStart();
+    
+    return () => {
+      stopBackgroundRefresh();
+    };
+  }, []);
 
   const handleCreateNewSession = useCallback((firstMessage?: string) => {
     return createNewSession(firstMessage);
@@ -129,6 +148,8 @@ export function useSession() {
     sessions,
     activeSessionId,
     currentSession,
+    serverSessions,
+    isLoadingServerSessions,
     initializeSession,
     createNewSession: handleCreateNewSession,
     switchToSession: handleSwitchToSession,
@@ -139,5 +160,10 @@ export function useSession() {
     cleanupAllSessions,
     submitWithSession: handleSubmitWithSession,
     createOrUpdateSessionFromAPI: handleCreateOrUpdateSessionFromAPI,
+    loadServerSessions,
+    refreshSessions,
+    selectDefaultSession,
+    isLocalSession,
+    syncSessionToServer,
   };
 }
