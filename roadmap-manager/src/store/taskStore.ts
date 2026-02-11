@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { TaskStore, Task, Achievement } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
-import { parseMarkdownTasks, updateCheckboxInMarkdown } from '@/utils/markdownUtils';
+import { parseMarkdownTasks, updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
 import { initOpencodeSDK, navigateWithOpencode } from '@/services/opencodeSDK';
 
 async function executeNavigate(prompt: string): Promise<void> {
@@ -125,5 +125,45 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     });
     
     setTasks(updatedTasks);
+  },
+
+  updateSubtaskContent: async (taskId: string, subtaskId: string, newContent: string) => {
+    const { setError, tasks, setTasks } = get();
+
+    try {
+      setError(null);
+
+      const targetSubtask = tasks
+        .find(t => t.id === taskId)
+        ?.subtasks.find(s => s.id === subtaskId);
+
+      if (!targetSubtask) return;
+      if (targetSubtask.content === newContent) return;
+
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          const updatedSubtasks = task.subtasks.map(subtask => {
+            if (subtask.id === subtaskId) {
+              return { ...subtask, content: newContent };
+            }
+            return subtask;
+          });
+
+          return {
+            ...task,
+            subtasks: updatedSubtasks,
+          };
+        }
+        return task;
+      });
+
+      setTasks(updatedTasks);
+
+      const content = await readRoadmapFile();
+      const updatedMarkdown = updateSubtaskContentInMarkdown(content, targetSubtask.content, newContent);
+      await writeRoadmapFile(updatedMarkdown);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update subtask');
+    }
   },
 }));

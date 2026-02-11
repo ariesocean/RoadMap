@@ -23,13 +23,13 @@ export const InputArea: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-color shadow-input">
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card-bg border-t dark:border-dark-border-color shadow-input transition-colors duration-300">
       <div className="max-w-[800px] mx-auto px-6 py-4">
         {error && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-3 px-4 py-2 bg-red-50 border border-red-200 rounded-md text-sm text-red-600"
+            className="mb-3 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-sm text-red-600 dark:text-red-400"
           >
             {error}
           </motion.div>
@@ -43,7 +43,7 @@ export const InputArea: React.FC = () => {
             onKeyDown={handleKeyDown}
             placeholder="➕ Enter a prompt to create or update tasks..."
             disabled={isProcessing}
-            className="w-full pr-12 pl-4 py-3 bg-secondary-bg border border-border-color rounded-lg text-primary-text placeholder:text-placeholder-text focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-60"
+            className="w-full pr-12 pl-4 py-3 bg-secondary-bg dark:bg-dark-secondary-bg border border-border-color dark:border-dark-border-color rounded-lg text-primary-text dark:text-dark-primary-text placeholder:text-placeholder-text focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-60"
           />
 
           <motion.button
@@ -65,7 +65,7 @@ export const InputArea: React.FC = () => {
           </motion.button>
         </form>
 
-        <p className="mt-2 text-xs text-secondary-text text-center">
+        <p className="mt-2 text-xs text-secondary-text dark:text-dark-secondary-text text-center transition-colors duration-300">
           Press Enter to submit, Shift+Enter for new line
         </p>
       </div>

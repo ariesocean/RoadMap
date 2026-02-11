@@ -27,17 +27,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="text-base font-semibold text-primary-text mb-1">
+          <h3 className="text-base font-semibold text-primary-text dark:text-dark-primary-text mb-1 transition-colors duration-300">
             {task.title}
           </h3>
 
           {task.originalPrompt && (
-            <p className="text-sm text-secondary-text mb-2 italic">
+            <p className="text-sm text-secondary-text dark:text-dark-secondary-text mb-2 italic transition-colors duration-300">
               "{task.originalPrompt}"
             </p>
           )}
 
-          <div className="flex items-center gap-4 text-xs text-secondary-text">
+          <div className="flex items-center gap-4 text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
             {task.totalSubtasks > 0 && (
               <div className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
@@ -47,7 +47,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           </div>
 
           {task.totalSubtasks > 0 && (
-            <div className="mt-3 h-1 bg-secondary-bg rounded-full overflow-hidden">
+            <div className="mt-3 h-1 bg-secondary-bg dark:bg-dark-secondary-bg rounded-full overflow-hidden transition-colors duration-300">
               <div
                 className="h-full bg-primary transition-all duration-300 rounded-full"
                 style={{ width: `${progressPercentage}%` }}
@@ -57,20 +57,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs text-secondary-text/80">
+          <span className="text-xs text-secondary-text/80 dark:text-dark-secondary-text/80 transition-colors duration-300">
             {formatDate(task.createdAt)}
           </span>
 
           {task.subtasks.length > 0 && (
             <button
               onClick={() => toggleTaskExpanded(task.id)}
-              className="p-1 hover:bg-secondary-bg rounded transition-colors"
+              className="p-1 hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
             >
               <motion.div
                 animate={{ rotate: task.isExpanded ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <ChevronDown className="w-5 h-5 text-secondary-text" />
+                <ChevronDown className="w-5 h-5 text-secondary-text dark:text-dark-secondary-text transition-colors duration-300" />
               </motion.div>
             </button>
           )}
@@ -83,7 +83,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="mt-4 pt-4 border-t border-card-border"
+          className="mt-4 pt-4 border-t border-card-border dark:border-dark-card-border transition-colors duration-300"
         >
           <SubtaskList subtasks={task.subtasks} taskId={task.id} />
         </motion.div>

@@ -48,11 +48,11 @@ export const TaskList: React.FC = () => {
         animate={{ opacity: 1 }}
         className="flex flex-col items-center justify-center h-full text-center px-6"
       >
-        <ClipboardList className="w-16 h-16 text-border-color mb-4" />
-        <h3 className="text-lg font-semibold text-primary-text mb-2">
+        <ClipboardList className="w-16 h-16 text-border-color dark:text-dark-border-color mb-4 transition-colors duration-300" />
+        <h3 className="text-lg font-semibold text-primary-text dark:text-dark-primary-text mb-2 transition-colors duration-300">
           {searchQuery ? 'No tasks found' : 'No tasks yet'}
         </h3>
-        <p className="text-sm text-secondary-text">
+        <p className="text-sm text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
           {searchQuery
             ? 'Try adjusting your search query'
             : 'Enter a prompt below to create your first task'}

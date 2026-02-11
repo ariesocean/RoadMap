@@ -67,4 +67,5 @@ export interface TaskStore extends UIState {
   submitPrompt: (prompt: string) => Promise<void>;
   toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;
   toggleTaskExpanded: (taskId: string) => void;
+  updateSubtaskContent: (taskId: string, subtaskId: string, newContent: string) => Promise<void>;
 }

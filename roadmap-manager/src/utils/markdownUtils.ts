@@ -191,6 +191,29 @@ export function generateMarkdownFromTasks(tasks: Task[], achievements: Achieveme
   return markdown.trim();
 }
 
+export function updateSubtaskContentInMarkdown(
+  markdown: string,
+  oldContent: string,
+  newContent: string
+): string {
+  const lines = markdown.split('\n');
+
+  const updatedLines = lines.map(line => {
+    const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
+    if (subtaskMatch) {
+      const indent = subtaskMatch[1];
+      const checkbox = subtaskMatch[2];
+      const content = subtaskMatch[3].trim();
+      if (content === oldContent) {
+        return `${indent}- ${checkbox} ${newContent}`;
+      }
+    }
+    return line;
+  });
+
+  return updatedLines.join('\n');
+}
+
 export function updateCheckboxInMarkdown(
   markdown: string,
   subtaskContent: string,
@@ -203,7 +226,6 @@ export function updateCheckboxInMarkdown(
     const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
     if (subtaskMatch) {
       const indent = subtaskMatch[1];
-      const oldCheckbox = subtaskMatch[2];
       const content = subtaskMatch[3].trim();
       if (content === subtaskContent) {
         return `${indent}- ${newCheckbox} ${content}`;

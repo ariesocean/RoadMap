@@ -14,7 +14,20 @@
   }
 
   body {
-    @apply bg-background text-primary-text font-sans antialiased;
+    @apply bg-background text-primary-text font-sans antialiased transition-colors duration-300;
+  }
+
+  .dark body,
+  body.dark {
+    @apply bg-dark-background text-dark-primary-text;
+  }
+
+  html.dark {
+    @apply bg-dark-background;
+  }
+
+  html.dark body {
+    @apply bg-dark-background text-dark-primary-text;
   }
 }
 
@@ -23,8 +36,16 @@
     @apply bg-card-bg border border-card-border rounded-lg p-4 shadow-card transition-all duration-200;
   }
 
+  .dark .card {
+    @apply bg-dark-card-bg border-dark-card-border shadow-dark-card;
+  }
+
   .card:hover {
     @apply shadow-card-hover -translate-y-0.5;
+  }
+
+  .dark .card:hover {
+    @apply shadow-dark-card-hover;
   }
 
   .btn-primary {
@@ -35,9 +56,33 @@
     @apply border border-border-color rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all;
   }
 
+  .dark .input-field {
+    @apply bg-dark-secondary-bg border-dark-border-color text-dark-primary-text focus:ring-primary;
+  }
+
+  .header {
+    @apply bg-white border-b border-border-color;
+  }
+
+  .dark .header {
+    @apply bg-dark-card-bg border-dark-border-color;
+  }
+
+  .search-input {
+    @apply border border-border-color rounded-md bg-secondary-bg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all;
+  }
+
+  .dark .search-input {
+    @apply bg-dark-secondary-bg border-dark-border-color text-dark-primary-text focus:ring-primary;
+  }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: #E1DFDD transparent;
+  }
+
+  .dark .scrollbar-thin {
+    scrollbar-color: #3D3D3D transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -51,6 +96,10 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: #E1DFDD;
     border-radius: 3px;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #3D3D3D;
   }
 }
 
