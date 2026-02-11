@@ -134,6 +134,7 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const prompt = body.prompt;
+          let sessionId = body.sessionId;
 
           res.setHeader('Content-Type', 'text/event-stream');
           res.setHeader('Cache-Control', 'no-cache');
@@ -155,21 +156,26 @@ const roadmapPlugin = {
 
           sendEvent({ type: 'start', message: `正在发送命令: "${prompt}"\n\n` });
 
-          const createSessionRes = await httpRequest({
-            hostname: OPENCODE_HOST,
-            port: OPENCODE_PORT,
-            path: '/session',
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          }, JSON.stringify({ title: `navigate: ${prompt}` }));
+          const isValidServerSession = sessionId && typeof sessionId === 'string' && sessionId.startsWith('ses');
+          
+          if (!isValidServerSession) {
+            const createSessionRes = await httpRequest({
+              hostname: OPENCODE_HOST,
+              port: OPENCODE_PORT,
+              path: '/session',
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            }, JSON.stringify({ title: `navigate: ${prompt}` }));
 
-          if (createSessionRes.status !== 200) {
-            sendEvent({ type: 'error', message: '❌ 创建会话失败' });
-            res.end();
-            return;
+            if (createSessionRes.status !== 200) {
+              sendEvent({ type: 'error', message: '❌ 创建会话失败' });
+              res.end();
+              return;
+            }
+
+            sessionId = createSessionRes.data.id;
           }
 
-          const sessionId = createSessionRes.data.id;
           sendEvent({ type: 'session', sessionId });
 
           const sendMessageRes = await httpRequest({
@@ -289,6 +295,7 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const prompt = body.prompt;
+          let sessionId = body.sessionId;
 
           res.setHeader('Content-Type', 'text/event-stream');
           res.setHeader('Cache-Control', 'no-cache');
@@ -310,21 +317,26 @@ const roadmapPlugin = {
 
           sendEvent({ type: 'start', message: `正在处理: "${prompt}"\n\n` });
 
-          const createSessionRes = await httpRequest({
-            hostname: OPENCODE_HOST,
-            port: OPENCODE_PORT,
-            path: '/session',
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          }, JSON.stringify({ title: `modal-prompt: ${prompt}` }));
+          const isValidServerSession = sessionId && typeof sessionId === 'string' && sessionId.startsWith('ses');
+          
+          if (!isValidServerSession) {
+            const createSessionRes = await httpRequest({
+              hostname: OPENCODE_HOST,
+              port: OPENCODE_PORT,
+              path: '/session',
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            }, JSON.stringify({ title: `modal-prompt: ${prompt}` }));
 
-          if (createSessionRes.status !== 200) {
-            sendEvent({ type: 'error', message: '❌ 创建会话失败' });
-            res.end();
-            return;
+            if (createSessionRes.status !== 200) {
+              sendEvent({ type: 'error', message: '❌ 创建会话失败' });
+              res.end();
+              return;
+            }
+
+            sessionId = createSessionRes.data.id;
           }
 
-          const sessionId = createSessionRes.data.id;
           sendEvent({ type: 'session', sessionId });
 
           const sendMessageRes = await httpRequest({

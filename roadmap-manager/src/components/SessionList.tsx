@@ -6,6 +6,22 @@ interface SessionListProps {
   onSelect?: () => void;
 }
 
+const sessionListStyles = `
+  .session-dropdown-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .session-dropdown-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .session-dropdown-scroll::-webkit-scrollbar-thumb {
+    background-color: #E1DFDD;
+    border-radius: 3px;
+  }
+  .dark .session-dropdown-scroll::-webkit-scrollbar-thumb {
+    background-color: #4A4A4A;
+  }
+`;
+
 function formatTime(timestamp: number): string {
   const date = new Date(timestamp);
   const now = new Date();
@@ -87,7 +103,9 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <>
+      <style>{sessionListStyles}</style>
+      <div className="relative" ref={dropdownRef}>
       <button
         onClick={handleOpenDropdown}
         className="flex items-center gap-1 px-2 py-1 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
@@ -127,7 +145,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
             {allSessions.length} sessions ({serverSessions.length} from server)
           </div>
 
-          <div className="max-h-64 overflow-y-auto">
+          <div className="max-h-64 overflow-y-auto session-dropdown-scroll">
             {orderedSessions.map((session) => {
               const serverSession = serverSessions.find(s => s.id === session.id);
               const isFromServer = !!serverSession;
@@ -181,6 +199,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
