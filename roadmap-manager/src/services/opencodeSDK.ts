@@ -1,62 +1,31 @@
-import { createOpencode } from "@opencode-ai/sdk";
-
-let opencodeInstance: Awaited<ReturnType<typeof createOpencode>> | null = null;
-let isInitializing = false;
-let initPromise: Promise<void> | null = null;
+const isTauri = typeof window !== 'undefined' && !!(window as any).__TAURI__;
 
 export async function initOpencodeSDK(): Promise<void> {
-  if (opencodeInstance) return;
-  if (isInitializing && initPromise) return initPromise;
-
-  isInitializing = true;
-  initPromise = (async () => {
-    try {
-      opencodeInstance = await createOpencode({
-        hostname: "127.0.0.1",
-        port: 4096,
-      });
-    } catch (error) {
-      console.error("Failed to initialize OpenCode SDK:", error);
-      throw error;
-    } finally {
-      isInitializing = false;
-    }
-  })();
-
-  return initPromise;
+  console.log('Running in Tauri mode:', isTauri);
 }
 
 export async function navigateWithOpencode(prompt: string): Promise<string> {
-  if (!opencodeInstance) {
-    await initOpencodeSDK();
+  if (isTauri) {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const result = await invoke('execute_navigate', { prompt });
+    return result as string;
   }
 
-  if (!opencodeInstance) {
-    throw new Error("OpenCode SDK not initialized");
+  const response = await fetch('/api/execute-navigate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || 'Failed to execute navigate');
   }
 
-  try {
-    const session = await opencodeInstance.client.session.create({
-      body: { title: "Roadmap App" },
-    });
-
-    const response = await opencodeInstance.client.session.prompt({
-      path: { id: session.id },
-      body: {
-        parts: [{ type: "text", text: `navigate: ${prompt}` }],
-      },
-    });
-
-    return JSON.stringify(response);
-  } catch (error) {
-    console.error("OpenCode navigate error:", error);
-    throw error;
-  }
+  const result = await response.json();
+  return result.result || JSON.stringify(result);
 }
 
 export async function closeOpencodeSDK(): Promise<void> {
-  if (opencodeInstance) {
-    opencodeInstance.server.close();
-    opencodeInstance = null;
-  }
+  // Handled by Rust backend
 }

@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import type { TaskStore, Task, Achievement } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
-import { parseMarkdownTasks, updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
-import { initOpencodeSDK, navigateWithOpencode } from '@/services/opencodeSDK';
+import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
+import { navigateWithOpencode } from '@/services/opencodeSDK';
+import { useResultModalStore } from './resultModalStore';
 
-async function executeNavigate(prompt: string): Promise<void> {
-  await navigateWithOpencode(prompt);
+async function executeNavigate(prompt: string): Promise<string> {
+  return await navigateWithOpencode(prompt);
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -53,18 +54,109 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   submitPrompt: async (prompt: string) => {
     const { setProcessing, setCurrentPrompt, refreshTasks, setError } = get();
-    
+    const { openModal, closeModal, setContent, appendContent, setStreaming } = useResultModalStore.getState();
+
     try {
       setProcessing(true);
       setError(null);
       setCurrentPrompt(prompt);
-      
-      await executeNavigate(prompt);
-      
-      await refreshTasks();
-      setCurrentPrompt('');
+
+      openModal('执行中', `正在启动 OpenCode Server...\n\n`);
+
+      const response = await fetch('/api/execute-navigate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start command');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      const decoder = new TextDecoder();
+      setStreaming(true);
+      let resultContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text = decoder.decode(value);
+        const lines = text.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const eventType = data.type;
+
+              if (eventType === 'start' || eventType === 'started') {
+                appendContent(data.message || '');
+              } else if (eventType === 'text') {
+                const content = data.content || '';
+                resultContent += content;
+                appendContent(content);
+              } else if (eventType === 'tool-call') {
+                const toolInfo = `\n🔧 使用工具: ${data.name || 'unknown'}\n`;
+                resultContent += toolInfo;
+                appendContent(toolInfo);
+              } else if (eventType === 'tool-result') {
+                const toolResult = `✓ ${data.name || 'tool'} 完成\n`;
+                resultContent += toolResult;
+                appendContent(toolResult);
+              } else if (eventType === 'step-start') {
+                const stepInfo = `\n📋 ${data.snapshot || '步骤'}\n`;
+                resultContent += stepInfo;
+                appendContent(stepInfo);
+              } else if (eventType === 'step-end') {
+                appendContent('\n');
+              } else if (eventType === 'reasoning') {
+                const reasoning = data.content || '';
+                resultContent += reasoning;
+                appendContent(reasoning);
+              } else if (eventType === 'message-complete') {
+                appendContent('\n');
+              } else if (eventType === 'done' || eventType === 'success') {
+                appendContent(data.message || '\n✅ 完成!\n');
+                setStreaming(false);
+                setTimeout(async () => {
+                  await refreshTasks();
+                  setCurrentPrompt('');
+                }, 500);
+              } else if (eventType === 'error' || eventType === 'failed') {
+                appendContent(data.message || '错误');
+                setError(data.message || 'Command failed');
+                setStreaming(false);
+              } else if (eventType === 'session') {
+              } else if (eventType === 'timeout') {
+                appendContent(data.message || '\n⏱️ 超时\n');
+                setStreaming(false);
+              } else if (eventType === 'message.updated') {
+                const info = data.properties?.info || {};
+                if (info.role === 'assistant' && info.completed) {
+                  appendContent('\n');
+                }
+              }
+            } finally {
+              if (done) {
+                setStreaming(false);
+              }
+            }
+          }
+        }
+      }
+
+      setContent(resultContent);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process prompt');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to process prompt';
+      setError(errorMsg);
+      appendContent(`\n\n❌ 错误: ${errorMsg}`);
+      setStreaming(false);
     } finally {
       setProcessing(false);
     }

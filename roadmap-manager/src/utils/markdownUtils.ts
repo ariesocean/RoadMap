@@ -36,10 +36,6 @@ export function appendIdToTitle(title: string, id: string): string {
   return `${title} [id:${id}]`;
 }
 
-function appendIdToSubtask(content: string, id: string): string {
-  return `${content} [id:${id}]`;
-}
-
 export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achievements: Achievement[] } {
   const tasks: Task[] = [];
   const achievements: Achievement[] = [];

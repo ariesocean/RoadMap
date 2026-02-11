@@ -1,12 +1,10 @@
 import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
 import type { Task, Achievement } from '@/store/types';
 
-const ROADMAP_PATH = '/Users/SparkingAries/VibeProjects/RoadMap/roadmap.md';
-
 export async function readRoadmapFile(): Promise<string> {
   try {
     if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-      const { readTextFile, writeTextFile, BaseDirectory } = await import('@tauri-apps/plugin-fs');
+      const { readTextFile, BaseDirectory } = await import('@tauri-apps/plugin-fs');
       const content = await readTextFile('roadmap.md', {
         baseDir: BaseDirectory.AppData,
       });
@@ -20,7 +18,7 @@ export async function readRoadmapFile(): Promise<string> {
   } catch {
     console.warn('Could not read roadmap via Tauri API');
   }
-  
+
   try {
     const response = await fetch('file:///Users/SparkingAries/VibeProjects/RoadMap/roadmap.md');
     if (response.ok) {
@@ -29,7 +27,7 @@ export async function readRoadmapFile(): Promise<string> {
   } catch {
     console.warn('Could not read roadmap via file:// protocol');
   }
-  
+
   return '# Roadmap\n\n';
 }
 

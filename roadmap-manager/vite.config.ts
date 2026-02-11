@@ -2,7 +2,46 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
-import { spawn } from 'child_process'
+import http from 'http'
+
+const OPENCODE_PORT = 51432
+const OPENCODE_HOST = '127.0.0.1'
+
+async function checkServerHealth(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const req = http.get(`http://${OPENCODE_HOST}:${OPENCODE_PORT}/global/health`, (res) => {
+      resolve(res.statusCode === 200)
+    });
+    req.on('error', () => resolve(false));
+    req.setTimeout(2000, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
+async function httpRequest(options: any, body?: string): Promise<{ status: number; data: any }> {
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve({ status: res.statusCode || 0, data: JSON.parse(data) });
+        } catch {
+          resolve({ status: res.statusCode || 0, data });
+        }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(30000, () => {
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
+    if (body) req.write(body);
+    req.end();
+  });
+}
 
 const roadmapPlugin = {
   name: 'roadmap-api',
@@ -50,39 +89,138 @@ const roadmapPlugin = {
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const prompt = body.prompt;
 
-          const result = await new Promise<string>((resolve, reject) => {
-            const proc = spawn('opencode', ['run', `navigate: ${prompt}`], {
-              cwd: '/Users/SparkingAries/VibeProjects/RoadMap'
-            });
+          res.setHeader('Content-Type', 'text/event-stream');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.setHeader('Connection', 'keep-alive');
+          res.flushHeaders();
 
-            let stdout = '';
-            let stderr = '';
+          const sendEvent = (data: any) => {
+            if (res.writableEnded) return;
+            res.write(`data: ${JSON.stringify(data)}\n\n`);
+          };
 
-            proc.stdout.on('data', (data) => {
-              stdout += data.toString();
-            });
+          const isHealthy = await checkServerHealth();
 
-            proc.stderr.on('data', (data) => {
-              stderr += data.toString();
-            });
+          if (!isHealthy) {
+            sendEvent({ type: 'error', message: '❌ OpenCode Server 未运行\n\n请先运行: npm run opencode:server' });
+            res.end();
+            return;
+          }
 
-            proc.on('close', (code) => {
-              if (code === 0) {
-                resolve(stdout + stderr);
-              } else {
-                reject(new Error(`Command failed with code ${code}: ${stderr}`));
+          sendEvent({ type: 'start', message: `正在发送命令: "${prompt}"\n\n` });
+
+          const createSessionRes = await httpRequest({
+            hostname: OPENCODE_HOST,
+            port: OPENCODE_PORT,
+            path: '/session',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          }, JSON.stringify({ title: `navigate: ${prompt}` }));
+
+          if (createSessionRes.status !== 200) {
+            sendEvent({ type: 'error', message: '❌ 创建会话失败' });
+            res.end();
+            return;
+          }
+
+          const sessionId = createSessionRes.data.id;
+          sendEvent({ type: 'session', sessionId });
+
+          const sendMessageRes = await httpRequest({
+            hostname: OPENCODE_HOST,
+            port: OPENCODE_PORT,
+            path: `/session/${sessionId}/prompt_async`,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          }, JSON.stringify({
+            parts: [{ type: 'text', text: `navigate: ${prompt}` }]
+          }));
+
+          if (sendMessageRes.status !== 204) {
+            console.error('[Roadmap] Send message failed:', sendMessageRes.status, sendMessageRes.data);
+            sendEvent({ type: 'error', message: `❌ 发送消息失败 (${sendMessageRes.status}): ${JSON.stringify(sendMessageRes.data)}` });
+            res.end();
+            return;
+          }
+
+          sendEvent({ type: 'started', message: `会话已创建，开始处理...\n\n` });
+
+          let isCompleted = false;
+
+          const eventReq = http.get({
+            hostname: OPENCODE_HOST,
+            port: OPENCODE_PORT,
+            path: `/event?session=${sessionId}`,
+            headers: { 'Accept': 'text/event-stream' }
+          }, (eventRes) => {
+            eventRes.on('data', (chunk: Buffer) => {
+              const text = chunk.toString();
+              const lines = text.split('\n');
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const wrapper = JSON.parse(line.slice(6));
+                    const eventType = wrapper.type;
+                    const props = wrapper.properties || {};
+
+                    if (eventType === 'session.status') {
+                      const status = props.status?.type;
+                      if (status === 'idle' && !isCompleted) {
+                        isCompleted = true;
+                        sendEvent({ type: 'done', message: '\n✅ 执行完成!' });
+                        res.end();
+                      }
+                    } else if (eventType === 'message.part.updated') {
+                      const part = props.part || {};
+                      const partType = part.type;
+
+                      if (partType === 'text' && part.text) {
+                        sendEvent({ type: 'text', content: part.text });
+                      } else if (partType === 'tool') {
+                        sendEvent({ type: 'tool-call', name: part.name || 'tool' });
+                      } else if (partType === 'step-start') {
+                        sendEvent({ type: 'step-start', snapshot: part.snapshot || '' });
+                      } else if (partType === 'step-end') {
+                        sendEvent({ type: 'step-end' });
+                      } else if (partType === 'reasoning') {
+                        sendEvent({ type: 'reasoning', content: part.reasoning || '' });
+                      }
+                    } else if (eventType === 'message.updated') {
+                      const info = props.info || {};
+                      if (info.role === 'assistant' && info.completed) {
+                        sendEvent({ type: 'message-complete' });
+                      }
+                    }
+
+                    sendEvent(wrapper);
+                  } catch (e) {
+                  }
+                }
               }
             });
-
-            proc.on('error', (err) => {
-              reject(err);
+            eventRes.on('end', () => {
+              if (!isCompleted) {
+                sendEvent({ type: 'done', message: '\n✅ 执行完成!' });
+                res.end();
+              }
             });
           });
 
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ success: true, result }));
+          eventReq.on('error', (err: Error) => {
+            sendEvent({ type: 'error', message: `\n❌ 事件流错误: ${err.message}` });
+            res.end();
+          });
+
+          eventReq.setTimeout(300000, () => {
+            eventReq.destroy();
+            sendEvent({ type: 'timeout', message: '\n⏱️ 执行超时' });
+            res.end();
+          });
+
         } catch (error) {
-          res.status(500).end(JSON.stringify({ success: false, error: String(error) }));
+          const errMsg = error instanceof Error ? error.message : String(error);
+          res.write(`data: ${JSON.stringify({ type: 'error', message: `❌ 错误: ${errMsg}` })}\n\n`);
+          res.end();
         }
       } else {
         next();
@@ -102,4 +240,10 @@ export default defineConfig({
     port: 1430,
   },
   envPrefix: ['VITE_', 'TAURI_'],
+  optimizeDeps: {
+    exclude: ['@opencode-ai/sdk'],
+  },
+  build: {
+    target: 'esnext',
+  },
 })
