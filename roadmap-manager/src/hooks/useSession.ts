@@ -14,6 +14,7 @@ export function useSession() {
     updateSessionTitle,
     getAllSessions,
     cleanupAllSessions,
+    createOrUpdateSessionFromAPI,
   } = useSessionStore();
 
   useEffect(() => {
@@ -42,6 +43,10 @@ export function useSession() {
   const handleUpdateSessionTitle = useCallback((sessionId: string, title: string) => {
     updateSessionTitle(sessionId, title);
   }, [updateSessionTitle]);
+
+  const handleCreateOrUpdateSessionFromAPI = useCallback((apiSessionId: string, apiSessionName: string) => {
+    return createOrUpdateSessionFromAPI(apiSessionId, apiSessionName);
+  }, [createOrUpdateSessionFromAPI]);
 
   const handleSubmitWithSession = useCallback(
     async (prompt: string, onComplete?: () => void) => {
@@ -133,5 +138,6 @@ export function useSession() {
     getAllSessions,
     cleanupAllSessions,
     submitWithSession: handleSubmitWithSession,
+    createOrUpdateSessionFromAPI: handleCreateOrUpdateSessionFromAPI,
   };
 }

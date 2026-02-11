@@ -3,6 +3,7 @@ import type { TaskStore, Task, Achievement } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
 import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
 import { useResultModalStore } from './resultModalStore';
+import { useSessionStore } from './sessionStore';
 
 const INTENT_CONFIGS = [
   { keywords: ['create', '新增', '新建', '添加', '增加'], emoji: '📝', action: 'Creating new task' },
@@ -72,6 +73,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
     const { setProcessing, setCurrentPrompt, refreshTasks, setError } = get();
     const { openModal, setContent, appendContent, setStreaming } = useResultModalStore.getState();
+    const { createOrUpdateSessionFromAPI, currentSession } = useSessionStore.getState();
 
     try {
       setProcessing(true);
@@ -80,10 +82,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       openModal('Processing', getInitialModalMessage(prompt));
 
+      const body = currentSession
+        ? { prompt, sessionId: currentSession.id }
+        : { prompt };
+
       const response = await fetch('/api/execute-navigate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -122,6 +128,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             const data = JSON.parse(line.slice(6));
             const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
             const eventType = data.type;
+
+            if (data.sessionId && data.sessionName) {
+              createOrUpdateSessionFromAPI(data.sessionId, data.sessionName);
+            }
 
             if (eventType === 'start' || eventType === 'started') {
               processEvent(eventId, () => appendContent(data.message || ''));

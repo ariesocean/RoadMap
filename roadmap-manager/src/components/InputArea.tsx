@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Loader2, Plus, MessageSquare } from 'lucide-react';
+import { Send, Loader2, MessageSquare, Plus } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useSession } from '@/hooks/useSession';
+import { useSessionStore } from '@/store/sessionStore';
+import { SessionList } from './SessionList';
 
 export const InputArea: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const { submitPrompt, isProcessing, error } = useTaskStore();
-  const { currentSession, addMessage, updateSessionTitle, createNewSession } = useSession();
+  const { createNewSession } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,13 +17,9 @@ export const InputArea: React.FC = () => {
 
     const prompt = inputValue.trim();
 
+    const { currentSession, addMessage } = useSessionStore.getState();
     if (currentSession) {
       addMessage(currentSession.id, 'user', prompt);
-
-      if (currentSession.title === 'New Conversation') {
-        const title = prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt;
-        updateSessionTitle(currentSession.id, title);
-      }
     }
 
     await submitPrompt(prompt);
@@ -53,35 +51,15 @@ export const InputArea: React.FC = () => {
         )}
 
         <div className="flex items-center gap-2 mb-3">
-          {currentSession ? (
-            <>
-              <MessageSquare className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
-              <span className="text-xs text-secondary-text dark:text-dark-secondary-text truncate max-w-[180px]">
-                {currentSession.title}
-              </span>
-              <button
-                onClick={handleNewSession}
-                className="p-0.5 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-                title="New conversation"
-              >
-                <Plus className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
-              </button>
-            </>
-          ) : (
-            <>
-              <MessageSquare className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
-              <span className="text-xs text-secondary-text dark:text-dark-secondary-text">
-                New Conversation
-              </span>
-              <button
-                onClick={handleNewSession}
-                className="p-0.5 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-                title="New conversation"
-              >
-                <Plus className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
-              </button>
-            </>
-          )}
+          <MessageSquare className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
+          <SessionList />
+          <button
+            onClick={handleNewSession}
+            className="p-0.5 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
+            title="New conversation"
+          >
+            <Plus className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="relative flex items-center">

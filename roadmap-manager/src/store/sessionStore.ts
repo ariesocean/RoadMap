@@ -130,6 +130,7 @@ export interface SessionStore {
   getSession: (sessionId: string) => Session | null;
   getAllSessions: () => Session[];
   cleanupAllSessions: () => void;
+  createOrUpdateSessionFromAPI: (apiSessionId: string, apiSessionName: string) => Session;
 }
 
 export const useSessionStore = create<SessionStore>((set, get) => {
@@ -307,6 +308,44 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       persistSessions({});
       clearActiveSessionId();
       set({ sessions: {}, activeSessionId: null, currentSession: null });
+    },
+
+    createOrUpdateSessionFromAPI: (apiSessionId: string, apiSessionName: string) => {
+      const existingSession = sessions[apiSessionId];
+
+      if (existingSession) {
+        existingSession.title = apiSessionName;
+        existingSession.lastUsedAt = new Date().toISOString();
+        persistSessions(sessions);
+
+        if (activeSessionId === apiSessionId) {
+          currentSession = existingSession;
+          set({ sessions, activeSessionId, currentSession });
+        } else {
+          set({ sessions });
+        }
+
+        return existingSession;
+      }
+
+      const now = new Date().toISOString();
+      const newSession: Session = {
+        id: apiSessionId,
+        title: apiSessionName,
+        createdAt: now,
+        lastUsedAt: now,
+        messages: [],
+      };
+
+      const newSessions = { ...sessions, [apiSessionId]: newSession };
+      persistSessions(newSessions);
+
+      activeSessionId = apiSessionId;
+      currentSession = newSession;
+      setActiveSessionId(apiSessionId);
+
+      set({ sessions: newSessions, activeSessionId, currentSession });
+      return newSession;
     },
   };
 });
