@@ -146,12 +146,17 @@ const roadmapPlugin = {
           sendEvent({ type: 'started', message: `会话已创建，开始处理...\n\n` });
 
           let isCompleted = false;
+          let eventCounter = 0;
+          const processedEvents = new Set<string>();
 
           const eventReq = http.get({
             hostname: OPENCODE_HOST,
             port: OPENCODE_PORT,
             path: `/event?session=${sessionId}`,
-            headers: { 'Accept': 'text/event-stream' }
+            headers: {
+              'Accept': 'text/event-stream',
+              'Connection': 'close'
+            }
           }, (eventRes) => {
             eventRes.on('data', (chunk: Buffer) => {
               const text = chunk.toString();
@@ -160,8 +165,13 @@ const roadmapPlugin = {
                 if (line.startsWith('data: ')) {
                   try {
                     const wrapper = JSON.parse(line.slice(6));
-                    const eventType = wrapper.type;
                     const props = wrapper.properties || {};
+                    const part = props.part || {};
+                    const eventId = wrapper.id || part.id || `${wrapper.type}-${sessionId}-${eventCounter++}`;
+                    if (processedEvents.has(eventId)) continue;
+                    processedEvents.add(eventId);
+
+                    const eventType = wrapper.type;
 
                     if (eventType === 'session.status') {
                       const status = props.status?.type;
@@ -171,7 +181,6 @@ const roadmapPlugin = {
                         res.end();
                       }
                     } else if (eventType === 'message.part.updated') {
-                      const part = props.part || {};
                       const partType = part.type;
 
                       if (partType === 'text' && part.text) {
@@ -292,13 +301,17 @@ const roadmapPlugin = {
           sendEvent({ type: 'started', message: `Processing...\n\n` });
 
           let isCompleted = false;
+          let eventCounter = 0;
           const processedEvents = new Set<string>();
 
           const eventReq = http.get({
             hostname: OPENCODE_HOST,
             port: OPENCODE_PORT,
             path: `/event?session=${sessionId}`,
-            headers: { 'Accept': 'text/event-stream' }
+            headers: {
+              'Accept': 'text/event-stream',
+              'Connection': 'close'
+            }
           }, (eventRes) => {
             eventRes.on('data', (chunk: Buffer) => {
               const text = chunk.toString();
@@ -308,13 +321,14 @@ const roadmapPlugin = {
 
                 try {
                   const wrapper = JSON.parse(line.slice(6));
-                  const eventId = wrapper.id || `${wrapper.type}-${sessionId}-${Date.now()}`;
+                  const props = wrapper.properties || {};
+                  const part = props.part || {};
+                  const eventId = wrapper.id || part.id || `${wrapper.type}-${sessionId}-${eventCounter++}`;
 
                   if (processedEvents.has(eventId)) continue;
                   processedEvents.add(eventId);
 
                   const eventType = wrapper.type;
-                  const props = wrapper.properties || {};
 
                   if (eventType === 'session.status') {
                     const status = props.status?.type;
@@ -323,11 +337,10 @@ const roadmapPlugin = {
                       sendEvent({ type: 'done', message: '\n✅ Completed!' });
                       res.end();
                     }
-                  } else if (eventType === 'message.part.updated') {
-                    const part = props.part || {};
-                    const partType = part.type;
+                   } else if (eventType === 'message.part.updated') {
+                     const partType = part.type;
 
-                    if (partType === 'text' && part.text) {
+                     if (partType === 'text' && part.text) {
                       sendEvent({ type: 'text', content: part.text });
                     } else if (partType === 'tool') {
                       sendEvent({ type: 'tool-call', name: part.name || 'tool' });

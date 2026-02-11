@@ -48,6 +48,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   submitPrompt: async (prompt: string) => {
+    const { isProcessing } = get();
+    if (isProcessing) return;
+
     const { setProcessing, setCurrentPrompt, refreshTasks, setError } = get();
     const { openModal, setContent, appendContent, setStreaming } = useResultModalStore.getState();
 
@@ -77,6 +80,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       setStreaming(true);
       let resultContent = '';
       let isFinished = false;
+      let eventCounter = 0;
       const processedEvents = new Set<string>();
 
       const processEvent = (eventId: string, handler: () => void) => {
@@ -97,7 +101,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
           try {
             const data = JSON.parse(line.slice(6));
-            const eventId = data.id || `${data.type}-${data.sessionId}-${Date.now()}`;
+            const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
             const eventType = data.type;
 
             if (eventType === 'start' || eventType === 'started') {
