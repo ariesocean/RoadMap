@@ -28,3 +28,4 @@ These issues stem from the lack of explicit session selection UI and poor integr
   - Prompt submission flow
 - **Breaking changes**: None; this is an additive feature that improves existing behavior
 - **Dependencies**: OpenCode server running with session API endpoints
+
