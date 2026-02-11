@@ -2,24 +2,10 @@ import { create } from 'zustand';
 import type { TaskStore, Task, Achievement } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
 import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
+import { initOpencodeSDK, navigateWithOpencode } from '@/services/opencodeSDK';
 
 async function executeNavigate(prompt: string): Promise<void> {
-  const isTauri = typeof window !== 'undefined' && !!(window as any).__TAURI__;
-  
-  if (isTauri) {
-    const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('execute_navigate', { prompt });
-  } else {
-    const response = await fetch('/api/execute-navigate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to execute navigate');
-    }
-  }
+  await navigateWithOpencode(prompt);
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -86,10 +72,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   toggleSubtask: async (taskId: string, subtaskId: string) => {
     const { refreshTasks, setError, tasks, setTasks } = get();
-    
+
     try {
       setError(null);
-      
+
       const updatedTasks = tasks.map(task => {
         if (task.id === taskId) {
           const updatedSubtasks = task.subtasks.map(subtask => {
@@ -98,9 +84,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             }
             return subtask;
           });
-          
+
           const completedSubtasks = updatedSubtasks.filter(s => s.completed).length;
-          
+
           return {
             ...task,
             subtasks: updatedSubtasks,
@@ -109,23 +95,27 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         }
         return task;
       });
-      
+
       setTasks(updatedTasks);
-      
+
       const content = await readRoadmapFile();
       const parsed = parseMarkdownTasks(content);
-      
+
       for (const task of parsed.tasks) {
         for (const subtask of task.subtasks) {
           if (subtask.id === subtaskId) {
-            subtask.completed = !subtask.completed;
+            const targetState = updatedTasks.find(t => t.id === taskId)
+              ?.subtasks.find(s => s.id === subtaskId)?.completed;
+            if (targetState !== undefined) {
+              subtask.completed = targetState;
+            }
           }
         }
       }
-      
+
       const markdown = generateMarkdownFromTasks(parsed.tasks, parsed.achievements);
       await writeRoadmapFile(markdown);
-      
+
       await refreshTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to toggle subtask');

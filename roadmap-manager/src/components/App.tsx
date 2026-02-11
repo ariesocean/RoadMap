@@ -3,20 +3,24 @@ import { Header } from './Header';
 import { TaskList } from './TaskList';
 import { InputArea } from './InputArea';
 import { useTaskStore } from '@/store/taskStore';
+import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 
 export const App: React.FC = () => {
   const { refreshTasks } = useTaskStore();
 
   useEffect(() => {
-    // Initial load
+    initOpencodeSDK().catch(console.error);
+
     refreshTasks();
 
-    // Set up auto-refresh every 30 seconds
     const interval = setInterval(() => {
       refreshTasks();
     }, 30000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      closeOpencodeSDK();
+    };
   }, [refreshTasks]);
 
   return (

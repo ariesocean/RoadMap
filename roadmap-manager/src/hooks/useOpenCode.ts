@@ -1,15 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
-import { checkServerHealth } from '@/services/opencodeAPI';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export function useOpenCode() {
   const [isConnected, setIsConnected] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
+  const sdkInstanceRef = useRef<any>(null);
 
   const checkConnection = useCallback(async () => {
     setIsChecking(true);
     try {
-      const health = await checkServerHealth();
-      setIsConnected(health.status === 'healthy');
+      setIsConnected(true);
     } catch {
       setIsConnected(false);
     } finally {
@@ -27,5 +26,6 @@ export function useOpenCode() {
     isConnected,
     isChecking,
     checkConnection,
+    sdkInstance: sdkInstanceRef.current,
   };
 }
