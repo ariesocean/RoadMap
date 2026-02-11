@@ -75,6 +75,14 @@ export async function executeModalPrompt(
     }
 
     const decoder = new TextDecoder();
+    let isFinished = false;
+    const processedEvents = new Set<string>();
+
+    const processEvent = (eventId: string, handler: () => void) => {
+      if (processedEvents.has(eventId)) return;
+      processedEvents.add(eventId);
+      handler();
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -84,31 +92,37 @@ export async function executeModalPrompt(
       const lines = text.split('\n');
 
       for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            const eventType = data.type;
+        if (!line.trim() || !line.startsWith('data: ')) continue;
 
-            if (eventType === 'text') {
-              onText(data.content || '');
-            } else if (eventType === 'tool-call') {
-              onToolCall(data.name || 'unknown');
-            } else if (eventType === 'tool-result') {
-              onToolResult(data.name || 'tool');
-            } else if (eventType === 'done' || eventType === 'success') {
+        try {
+          const data = JSON.parse(line.slice(6));
+          const eventId = data.id || `${data.type}-${data.sessionId}-${Date.now()}`;
+
+          if (data.type === 'text') {
+            processEvent(eventId, () => onText(data.content || ''));
+          } else if (data.type === 'tool-call') {
+            processEvent(eventId, () => onToolCall(data.name || 'unknown'));
+          } else if (data.type === 'tool-result') {
+            processEvent(eventId, () => onToolResult(data.name || 'tool'));
+          } else if (data.type === 'done' || data.type === 'success') {
+            if (!isFinished) {
+              isFinished = true;
               onDone();
               return;
-            } else if (eventType === 'error' || eventType === 'failed') {
-              throw new Error(data.message || 'Command failed');
             }
-          } catch {
-            // Skip invalid JSON lines
+          } else if (data.type === 'error' || data.type === 'failed') {
+            throw new Error(data.message || 'Command failed');
           }
+        } catch {
+          // Skip invalid JSON lines
         }
       }
     }
 
-    onDone();
+    if (!isFinished) {
+      isFinished = true;
+      onDone();
+    }
   } catch (error) {
     onError(error instanceof Error ? error.message : 'Failed to process prompt');
     throw error;

@@ -56,7 +56,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       setError(null);
       setCurrentPrompt(prompt);
 
-      openModal('执行中', `正在启动 OpenCode Server...\n\n`);
+      openModal('Processing', `Starting OpenCode Server...\n\n`);
 
       const response = await fetch('/api/execute-navigate', {
         method: 'POST',
@@ -76,6 +76,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       const decoder = new TextDecoder();
       setStreaming(true);
       let resultContent = '';
+      let isFinished = false;
+      const processedEvents = new Set<string>();
+
+      const processEvent = (eventId: string, handler: () => void) => {
+        if (processedEvents.has(eventId)) return;
+        processedEvents.add(eventId);
+        handler();
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -85,65 +93,87 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         const lines = text.split('\n');
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              const eventType = data.type;
+          if (!line.trim() || !line.startsWith('data: ')) continue;
 
-              if (eventType === 'start' || eventType === 'started') {
-                appendContent(data.message || '');
-              } else if (eventType === 'text') {
+          try {
+            const data = JSON.parse(line.slice(6));
+            const eventId = data.id || `${data.type}-${data.sessionId}-${Date.now()}`;
+            const eventType = data.type;
+
+            if (eventType === 'start' || eventType === 'started') {
+              processEvent(eventId, () => appendContent(data.message || ''));
+            } else if (eventType === 'text') {
+              processEvent(eventId, () => {
                 const content = data.content || '';
                 resultContent += content;
                 appendContent(content);
-              } else if (eventType === 'tool-call') {
-                const toolInfo = `\n🔧 使用工具: ${data.name || 'unknown'}\n`;
+              });
+            } else if (eventType === 'tool-call') {
+              processEvent(eventId, () => {
+                const toolInfo = `\n🔧 Using tool: ${data.name || 'unknown'}\n`;
                 resultContent += toolInfo;
                 appendContent(toolInfo);
-              } else if (eventType === 'tool-result') {
-                const toolResult = `✓ ${data.name || 'tool'} 完成\n`;
+              });
+            } else if (eventType === 'tool-result') {
+              processEvent(eventId, () => {
+                const toolResult = `✓ ${data.name || 'tool'} completed\n`;
                 resultContent += toolResult;
                 appendContent(toolResult);
-              } else if (eventType === 'step-start') {
-                const stepInfo = `\n📋 ${data.snapshot || '步骤'}\n`;
+              });
+            } else if (eventType === 'step-start') {
+              processEvent(eventId, () => {
+                const stepInfo = `\n📋 ${data.snapshot || 'Step'}\n`;
                 resultContent += stepInfo;
                 appendContent(stepInfo);
-              } else if (eventType === 'step-end') {
-                appendContent('\n');
-              } else if (eventType === 'reasoning') {
+              });
+            } else if (eventType === 'step-end') {
+              processEvent(eventId, () => appendContent('\n'));
+            } else if (eventType === 'reasoning') {
+              processEvent(eventId, () => {
                 const reasoning = data.content || '';
                 resultContent += reasoning;
                 appendContent(reasoning);
-              } else if (eventType === 'message-complete') {
-                appendContent('\n');
-              } else if (eventType === 'done' || eventType === 'success') {
-                appendContent(data.message || '\n✅ 完成!\n');
+              });
+            } else if (eventType === 'message-complete') {
+              processEvent(eventId, () => appendContent('\n'));
+            } else if (eventType === 'done' || eventType === 'success') {
+              if (!isFinished) {
+                isFinished = true;
+                appendContent(data.message || '\n✅ Completed!\n');
                 setStreaming(false);
                 setTimeout(async () => {
                   await refreshTasks();
                   setCurrentPrompt('');
                 }, 500);
-              } else if (eventType === 'error' || eventType === 'failed') {
-                appendContent(data.message || '错误');
+              }
+            } else if (eventType === 'error' || eventType === 'failed') {
+              if (!isFinished) {
+                isFinished = true;
+                appendContent(data.message || 'Error');
                 setError(data.message || 'Command failed');
                 setStreaming(false);
-              } else if (eventType === 'session') {
-              } else if (eventType === 'timeout') {
-                appendContent(data.message || '\n⏱️ 超时\n');
-                setStreaming(false);
-              } else if (eventType === 'message.updated') {
-                const info = data.properties?.info || {};
-                if (info.role === 'assistant' && info.completed) {
-                  appendContent('\n');
-                }
               }
-            } finally {
-              if (done) {
+            } else if (eventType === 'timeout') {
+              if (!isFinished) {
+                isFinished = true;
+                appendContent(data.message || '\n⏱️ Timeout\n');
                 setStreaming(false);
+              }
+            } else if (eventType === 'message.updated') {
+              const info = data.properties?.info || {};
+              if (info.role === 'assistant' && info.completed) {
+                processEvent(eventId, () => appendContent('\n'));
               }
             }
+          } catch {
+            // Skip invalid JSON lines
           }
         }
+      }
+
+      if (!isFinished) {
+        isFinished = true;
+        setStreaming(false);
       }
 
       setContent(resultContent);

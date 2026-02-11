@@ -289,9 +289,10 @@ const roadmapPlugin = {
             return;
           }
 
-          sendEvent({ type: 'started', message: `开始处理...\n\n` });
+          sendEvent({ type: 'started', message: `Processing...\n\n` });
 
           let isCompleted = false;
+          const processedEvents = new Set<string>();
 
           const eventReq = http.get({
             hostname: OPENCODE_HOST,
@@ -303,69 +304,75 @@ const roadmapPlugin = {
               const text = chunk.toString();
               const lines = text.split('\n');
               for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  try {
-                    const wrapper = JSON.parse(line.slice(6));
-                    const eventType = wrapper.type;
-                    const props = wrapper.properties || {};
+                if (!line.trim() || !line.startsWith('data: ')) continue;
 
-                    if (eventType === 'session.status') {
-                      const status = props.status?.type;
-                      if (status === 'idle' && !isCompleted) {
-                        isCompleted = true;
-                        sendEvent({ type: 'done', message: '\n✅ 完成!' });
-                        res.end();
-                      }
-                    } else if (eventType === 'message.part.updated') {
-                      const part = props.part || {};
-                      const partType = part.type;
+                try {
+                  const wrapper = JSON.parse(line.slice(6));
+                  const eventId = wrapper.id || `${wrapper.type}-${sessionId}-${Date.now()}`;
 
-                      if (partType === 'text' && part.text) {
-                        sendEvent({ type: 'text', content: part.text });
-                      } else if (partType === 'tool') {
-                        sendEvent({ type: 'tool-call', name: part.name || 'tool' });
-                      } else if (partType === 'tool-result') {
-                        sendEvent({ type: 'tool-result', name: part.name || 'tool' });
-                      } else if (partType === 'step-start') {
-                        sendEvent({ type: 'step-start', snapshot: part.snapshot || '' });
-                      } else if (partType === 'step-end') {
-                        sendEvent({ type: 'step-end' });
-                      } else if (partType === 'reasoning') {
-                        sendEvent({ type: 'reasoning', content: part.reasoning || '' });
-                      }
-                    } else if (eventType === 'message.updated') {
-                      const info = props.info || {};
-                      if (info.role === 'assistant' && info.completed) {
-                        sendEvent({ type: 'message-complete' });
-                      }
+                  if (processedEvents.has(eventId)) continue;
+                  processedEvents.add(eventId);
+
+                  const eventType = wrapper.type;
+                  const props = wrapper.properties || {};
+
+                  if (eventType === 'session.status') {
+                    const status = props.status?.type;
+                    if (status === 'idle' && !isCompleted) {
+                      isCompleted = true;
+                      sendEvent({ type: 'done', message: '\n✅ Completed!' });
+                      res.end();
                     }
-                  } catch (e) {
+                  } else if (eventType === 'message.part.updated') {
+                    const part = props.part || {};
+                    const partType = part.type;
+
+                    if (partType === 'text' && part.text) {
+                      sendEvent({ type: 'text', content: part.text });
+                    } else if (partType === 'tool') {
+                      sendEvent({ type: 'tool-call', name: part.name || 'tool' });
+                    } else if (partType === 'tool-result') {
+                      sendEvent({ type: 'tool-result', name: part.name || 'tool' });
+                    } else if (partType === 'step-start') {
+                      sendEvent({ type: 'step-start', snapshot: part.snapshot || '' });
+                    } else if (partType === 'step-end') {
+                      sendEvent({ type: 'step-end' });
+                    } else if (partType === 'reasoning') {
+                      sendEvent({ type: 'reasoning', content: part.reasoning || '' });
+                    }
+                  } else if (eventType === 'message.updated') {
+                    const info = props.info || {};
+                    if (info.role === 'assistant' && info.completed) {
+                      sendEvent({ type: 'message-complete' });
+                    }
                   }
+                } catch (e) {
                 }
               }
             });
             eventRes.on('end', () => {
               if (!isCompleted) {
-                sendEvent({ type: 'done', message: '\n✅ 完成!' });
+                isCompleted = true;
+                sendEvent({ type: 'done', message: '\n✅ Completed!' });
                 res.end();
               }
             });
           });
 
           eventReq.on('error', (err: Error) => {
-            sendEvent({ type: 'error', message: `\n❌ 事件流错误: ${err.message}` });
+            sendEvent({ type: 'error', message: `\n❌ Event stream error: ${err.message}` });
             res.end();
           });
 
           eventReq.setTimeout(300000, () => {
             eventReq.destroy();
-            sendEvent({ type: 'timeout', message: '\n⏱️ 执行超时' });
+            sendEvent({ type: 'timeout', message: '\n⏱️ Timeout' });
             res.end();
           });
 
         } catch (error) {
           const errMsg = error instanceof Error ? error.message : String(error);
-          res.write(`data: ${JSON.stringify({ type: 'error', message: `❌ 错误: ${errMsg}` })}\n\n`);
+          res.write(`data: ${JSON.stringify({ type: 'error', message: `❌ Error: ${errMsg}` })}\n\n`);
           res.end();
         }
       } else {
