@@ -35,7 +35,7 @@ export const InputArea: React.FC = () => {
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="relative">
+        <form onSubmit={handleSubmit} className="relative flex items-center">
           <input
             type="text"
             value={inputValue}
@@ -43,14 +43,14 @@ export const InputArea: React.FC = () => {
             onKeyDown={handleKeyDown}
             placeholder="➕ Enter a prompt to create or update tasks..."
             disabled={isProcessing}
-            className="w-full pr-12 pl-4 py-3 bg-secondary-bg dark:bg-dark-secondary-bg border border-border-color dark:border-dark-border-color rounded-lg text-primary-text dark:text-dark-primary-text placeholder:text-placeholder-text focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-60"
+            className="w-full pl-4 pr-12 py-3 bg-secondary-bg dark:bg-dark-secondary-bg border border-border-color dark:border-dark-border-color rounded-lg text-primary-text dark:text-dark-primary-text placeholder:text-placeholder-text focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-60"
           />
 
           <motion.button
             type="submit"
             disabled={!inputValue.trim() || isProcessing}
             whileTap={{ scale: 0.95 }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
+            className="absolute right-2 p-2 bg-primary text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
           >
             {isProcessing ? (
               <motion.div
