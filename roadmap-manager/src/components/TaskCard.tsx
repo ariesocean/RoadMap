@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, Calendar, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, CheckCircle2 } from 'lucide-react';
 import type { Task } from '@/store/types';
 import { useTaskStore } from '@/store/taskStore';
-import { formatRelativeTime } from '@/utils/dateUtils';
+import { formatDate } from '@/utils/dateUtils';
 import { SubtaskList } from './SubtaskList';
 
 interface TaskCardProps {
@@ -30,19 +30,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           <h3 className="text-base font-semibold text-primary-text mb-1">
             {task.title}
           </h3>
-          
+
           {task.originalPrompt && (
             <p className="text-sm text-secondary-text mb-2 italic">
               "{task.originalPrompt}"
             </p>
           )}
-          
+
           <div className="flex items-center gap-4 text-xs text-secondary-text">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              <span>{formatRelativeTime(task.createdAt)}</span>
-            </div>
-            
             {task.totalSubtasks > 0 && (
               <div className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
@@ -50,7 +45,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
               </div>
             )}
           </div>
-          
+
           {task.totalSubtasks > 0 && (
             <div className="mt-3 h-1 bg-secondary-bg rounded-full overflow-hidden">
               <div
@@ -60,22 +55,28 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
             </div>
           )}
         </div>
-        
-        {task.subtasks.length > 0 && (
-          <button
-            onClick={() => toggleTaskExpanded(task.id)}
-            className="p-1 hover:bg-secondary-bg rounded transition-colors"
-          >
-            <motion.div
-              animate={{ rotate: task.isExpanded ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
+
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-secondary-text/80">
+            {formatDate(task.createdAt)}
+          </span>
+
+          {task.subtasks.length > 0 && (
+            <button
+              onClick={() => toggleTaskExpanded(task.id)}
+              className="p-1 hover:bg-secondary-bg rounded transition-colors"
             >
-              <ChevronDown className="w-5 h-5 text-secondary-text" />
-            </motion.div>
-          </button>
-        )}
+              <motion.div
+                animate={{ rotate: task.isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown className="w-5 h-5 text-secondary-text" />
+              </motion.div>
+            </button>
+          )}
+        </div>
       </div>
-      
+
       {task.isExpanded && task.subtasks.length > 0 && (
         <motion.div
           initial={{ height: 0, opacity: 0 }}

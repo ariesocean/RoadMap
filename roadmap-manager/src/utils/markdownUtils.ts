@@ -16,8 +16,28 @@ export function extractIdFromTitle(title: string): { title: string; id: string |
   return { title, id: null };
 }
 
+export function extractCreatedDate(title: string): { title: string; createdAt: string | null } {
+  const match = title.match(/\[created: ([^\]]+)\]$/);
+  if (match) {
+    return { title: title.slice(0, -match[0].length - 1).trim(), createdAt: match[1] };
+  }
+  return { title, createdAt: null };
+}
+
+function extractIdFromSubtask(content: string): { content: string; id: string | null } {
+  const match = content.match(/\[id:([^\]]+)\]$/);
+  if (match) {
+    return { content: content.slice(0, -match[0].length).trim(), id: match[1] };
+  }
+  return { content, id: null };
+}
+
 export function appendIdToTitle(title: string, id: string): string {
   return `${title} [id:${id}]`;
+}
+
+function appendIdToSubtask(content: string, id: string): string {
+  return `${content} [id:${id}]`;
 }
 
 export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achievements: Achievement[] } {
@@ -50,15 +70,17 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
         achievements.push(currentAchievement);
       }
 
-      const title = taskMatch[1].trim();
-      if (title === 'Roadmap' || title === 'roadmap') {
+      const rawTitle = taskMatch[1].trim();
+      const { title: cleanTitle, createdAt } = extractCreatedDate(rawTitle);
+
+      if (cleanTitle === 'Roadmap' || cleanTitle === 'roadmap') {
         continue;
       }
 
       if (inAchievements) {
         currentAchievement = {
           id: generateTaskId(),
-          title,
+          title: cleanTitle,
           originalPrompt: '',
           completedAt: getCurrentISOString(),
           subtasks: [],
@@ -66,9 +88,9 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
       } else {
         currentTask = {
           id: generateTaskId(),
-          title,
+          title: cleanTitle,
           originalPrompt: '',
-          createdAt: getCurrentISOString(),
+          createdAt: createdAt ? new Date(createdAt).toISOString() : getCurrentISOString(),
           updatedAt: getCurrentISOString(),
           subtasks: [],
           completedSubtasks: 0,
@@ -94,11 +116,12 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
     if (subtaskMatch) {
       const indent = subtaskMatch[1].length;
       const completed = subtaskMatch[2].toLowerCase() === 'x';
-      const content = subtaskMatch[3].trim();
+      const rawContent = subtaskMatch[3].trim();
+      const { content, id } = extractIdFromSubtask(rawContent);
       const nestedLevel = Math.floor(indent / 2);
-      
+
       const subtask: Subtask = {
-        id: generateSubtaskId(),
+        id: id || generateSubtaskId(),
         content,
         completed,
         nestedLevel,
@@ -155,17 +178,41 @@ export function generateMarkdownFromTasks(tasks: Task[], achievements: Achieveme
       }
       markdown += '\n';
 
-      achievement.subtasks.forEach(subtask => {
-        const indent = '  '.repeat(subtask.nestedLevel);
-        const checkbox = subtask.completed ? '[x]' : '[ ]';
-        markdown += `${indent}- ${checkbox} ${subtask.content}\n`;
-      });
+        achievement.subtasks.forEach(subtask => {
+          const indent = '  '.repeat(subtask.nestedLevel);
+          const checkbox = subtask.completed ? '[x]' : '[ ]';
+          markdown += `${indent}- ${checkbox} ${subtask.content}\n`;
+        });
 
       markdown += '\n';
     });
   }
 
   return markdown.trim();
+}
+
+export function updateCheckboxInMarkdown(
+  markdown: string,
+  subtaskContent: string,
+  completed: boolean
+): string {
+  const lines = markdown.split('\n');
+  const newCheckbox = completed ? '[x]' : '[ ]';
+
+  const updatedLines = lines.map(line => {
+    const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
+    if (subtaskMatch) {
+      const indent = subtaskMatch[1];
+      const oldCheckbox = subtaskMatch[2];
+      const content = subtaskMatch[3].trim();
+      if (content === subtaskContent) {
+        return `${indent}- ${newCheckbox} ${content}`;
+      }
+    }
+    return line;
+  });
+
+  return updatedLines.join('\n');
 }
 
 function getCurrentISOString(): string {
