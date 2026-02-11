@@ -5,11 +5,13 @@ import { InputArea } from './InputArea';
 import { ResultModal } from './ResultModal';
 import { useTaskStore } from '@/store/taskStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useSession } from '@/hooks/useSession';
 import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 
 export const App: React.FC = () => {
   const { refreshTasks } = useTaskStore();
   const { theme } = useThemeStore();
+  const { initializeSession, cleanupAllSessions } = useSession();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -27,11 +29,14 @@ export const App: React.FC = () => {
     } else {
       useThemeStore.getState().setTheme('light');
     }
+
+    initializeSession();
     setIsInitialized(true);
 
     refreshTasks();
 
     return () => {
+      cleanupAllSessions();
       closeOpencodeSDK();
     };
   }, []);

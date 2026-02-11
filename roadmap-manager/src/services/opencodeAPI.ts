@@ -10,8 +10,23 @@ export async function checkServerHealth(): Promise<OpenCodeHealthResponse> {
   }
 }
 
-export async function processPrompt(_prompt: string): Promise<OpenCodePromptResponse> {
+export async function processPrompt(
+  prompt: string,
+  sessionId?: string
+): Promise<OpenCodePromptResponse> {
   try {
+    const body = sessionId ? { prompt, sessionId } : { prompt };
+    const response = await fetch('/api/execute-navigate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || 'Failed to execute prompt');
+    }
+
     return { success: true, message: 'Command executed' };
   } catch (error) {
     return { success: false, message: String(error) };

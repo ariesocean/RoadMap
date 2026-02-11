@@ -41,6 +41,21 @@ export interface OpenCodeTasksResponse {
   achievements: Achievement[];
 }
 
+export interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+export interface Session {
+  id: string;
+  title: string;
+  createdAt: string;
+  lastUsedAt: string;
+  messages: Message[];
+}
+
 export interface UIState {
   searchQuery: string;
   isLoading: boolean;
