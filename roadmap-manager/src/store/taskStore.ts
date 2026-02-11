@@ -4,6 +4,25 @@ import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services
 import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
 import { useResultModalStore } from './resultModalStore';
 
+const INTENT_CONFIGS = [
+  { keywords: ['create', '新增', '新建', '添加', '增加'], emoji: '📝', action: 'Creating new task' },
+  { keywords: ['update', '修改', '更新', '改变'], emoji: '✏️', action: 'Updating task' },
+  { keywords: ['delete', '删除', '移除', 'remove'], emoji: '🗑️', action: 'Removing task' },
+  { keywords: ['complete', '完成', 'done', 'mark'], emoji: '✅', action: 'Completing task' },
+] as const;
+
+function getInitialModalMessage(prompt: string): string {
+  const promptLower = prompt.toLowerCase();
+
+  for (const config of INTENT_CONFIGS) {
+    if (config.keywords.some(keyword => promptLower.includes(keyword))) {
+      return `${config.emoji} ${config.action}\nAnalyzing your request...\n\n`;
+    }
+  }
+
+  return `🔄 Processing request\nAnalyzing your request...\n\n`;
+}
+
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
   achievements: [],
@@ -59,7 +78,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       setError(null);
       setCurrentPrompt(prompt);
 
-      openModal('Processing', `Starting OpenCode Server...\n\n`);
+      openModal('Processing', getInitialModalMessage(prompt));
 
       const response = await fetch('/api/execute-navigate', {
         method: 'POST',
