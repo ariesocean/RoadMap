@@ -191,8 +191,6 @@ const roadmapPlugin = {
                         sendEvent({ type: 'message-complete' });
                       }
                     }
-
-                    sendEvent(wrapper);
                   } catch (e) {
                   }
                 }
