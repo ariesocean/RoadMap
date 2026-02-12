@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Trash2, Plus, RefreshCw } from 'lucide-react';
+import { ChevronDown, Trash2, Plus, RefreshCw, MessageSquare } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
 
 interface SessionListProps {
@@ -107,16 +107,17 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
       <div className="relative" ref={dropdownRef}>
       <button
         onClick={handleOpenDropdown}
-        className="flex items-center gap-1 px-2 py-1 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-secondary-bg/80 dark:hover:bg-dark-secondary-bg/80 transition-colors"
       >
-        <span className="text-xs text-secondary-text dark:text-dark-secondary-text truncate max-w-[120px]">
+        <MessageSquare className="w-3.5 h-3.5 text-secondary-text/50 dark:text-dark-secondary-text/50" />
+        <span className="text-xs text-secondary-text/80 dark:text-dark-secondary-text/80 truncate">
           {currentSession?.title || 'New Conversation'}
         </span>
-        <ChevronDown className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
+        <ChevronDown className="w-3 h-3 text-secondary-text/50 dark:text-dark-secondary-text/50" />
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 w-64 bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-lg shadow-lg overflow-hidden z-50">
+        <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-lg shadow-xl overflow-hidden z-[100]">
           <div className="flex items-center justify-between p-2 border-b border-border-color dark:border-dark-border-color">
             <button
               onClick={handleCreateNewSession}

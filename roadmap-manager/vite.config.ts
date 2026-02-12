@@ -135,6 +135,7 @@ const roadmapPlugin = {
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const prompt = body.prompt;
           let sessionId = body.sessionId;
+          const model = body.model;
 
           res.setHeader('Content-Type', 'text/event-stream');
           res.setHeader('Cache-Control', 'no-cache');
@@ -178,15 +179,26 @@ const roadmapPlugin = {
 
           sendEvent({ type: 'session', sessionId });
 
+          // Prepare the payload for OpenCode Server
+          const payload: any = {
+            parts: [{ type: 'text', text: `navigate: ${prompt}` }]
+          };
+
+          // Include model if provided
+          if (model && model.providerID && model.modelID) {
+            payload.model = {
+              providerID: model.providerID,
+              modelID: model.modelID
+            };
+          }
+
           const sendMessageRes = await httpRequest({
             hostname: OPENCODE_HOST,
             port: OPENCODE_PORT,
             path: `/session/${sessionId}/prompt_async`,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
-          }, JSON.stringify({
-            parts: [{ type: 'text', text: `navigate: ${prompt}` }]
-          }));
+          }, JSON.stringify(payload));
 
           if (sendMessageRes.status !== 204) {
             console.error('[Roadmap] Send message failed:', sendMessageRes.status, sendMessageRes.data);
@@ -296,6 +308,7 @@ const roadmapPlugin = {
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const prompt = body.prompt;
           let sessionId = body.sessionId;
+          const model = body.model;
 
           res.setHeader('Content-Type', 'text/event-stream');
           res.setHeader('Cache-Control', 'no-cache');
@@ -339,15 +352,26 @@ const roadmapPlugin = {
 
           sendEvent({ type: 'session', sessionId });
 
+          // Prepare the payload for OpenCode Server
+          const payload: any = {
+            parts: [{ type: 'text', text: prompt }]
+          };
+
+          // Include model if provided
+          if (model && model.providerID && model.modelID) {
+            payload.model = {
+              providerID: model.providerID,
+              modelID: model.modelID
+            };
+          }
+
           const sendMessageRes = await httpRequest({
             hostname: OPENCODE_HOST,
             port: OPENCODE_PORT,
             path: `/session/${sessionId}/prompt_async`,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
-          }, JSON.stringify({
-            parts: [{ type: 'text', text: prompt }]
-          }));
+          }, JSON.stringify(payload));
 
           if (sendMessageRes.status !== 204) {
             console.error('[Modal Prompt] Send message failed:', sendMessageRes.status, sendMessageRes.data);

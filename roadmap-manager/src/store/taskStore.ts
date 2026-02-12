@@ -4,6 +4,7 @@ import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services
 import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
 import { useResultModalStore } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
+import { useModelStore } from './modelStore';
 import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
 
 const INTENT_CONFIGS = [
@@ -75,6 +76,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const { setProcessing, setCurrentPrompt, refreshTasks, setError } = get();
     const { openModal, setContent, appendContent, setStreaming } = useResultModalStore.getState();
     const { createOrUpdateSessionFromAPI, currentSession } = useSessionStore.getState();
+    const { selectedModel } = useModelStore.getState();
 
     try {
       setProcessing(true);
@@ -83,9 +85,17 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       openModal('Processing', getInitialModalMessage(prompt));
 
-      const body = currentSession
+      const body: any = currentSession
         ? { prompt, sessionId: currentSession.id }
         : { prompt };
+
+      // Include model if selected
+      if (selectedModel) {
+        body.model = {
+          providerID: selectedModel.providerID,
+          modelID: selectedModel.modelID
+        };
+      }
 
       const response = await fetch('/api/execute-navigate', {
         method: 'POST',

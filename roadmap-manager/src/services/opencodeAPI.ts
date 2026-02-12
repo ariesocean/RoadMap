@@ -1,5 +1,7 @@
 import type { OpenCodeHealthResponse, OpenCodePromptResponse, Session } from '@/store/types';
 import { loadTasksFromFile, saveTasksToFile } from '@/services/fileService';
+import { useSessionStore } from '@/store/sessionStore';
+import { useModelStore } from '@/store/modelStore';
 
 export interface ServerSessionResponse {
   sessions: ServerSession[];
@@ -195,10 +197,24 @@ export async function executeModalPrompt(
   onError: (error: string) => void
 ): Promise<void> {
   try {
+    const { currentSession } = useSessionStore.getState();
+    const { selectedModel } = useModelStore.getState();
+
+    const body: any = currentSession
+      ? { prompt, sessionId: currentSession.id }
+      : { prompt };
+
+    if (selectedModel) {
+      body.model = {
+        providerID: selectedModel.providerID,
+        modelID: selectedModel.modelID
+      };
+    }
+
     const response = await fetch('/api/execute-modal-prompt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {

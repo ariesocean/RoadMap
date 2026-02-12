@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Loader2, MessageSquare, Plus } from 'lucide-react';
+import { Send, Loader2, Plus } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useSession } from '@/hooks/useSession';
 import { useSessionStore } from '@/store/sessionStore';
 import { SessionList } from './SessionList';
+import { ModelSelector } from './ModelSelector';
 
 export const InputArea: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { submitPrompt, isProcessing, error } = useTaskStore();
   const { createNewSession } = useSession();
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [inputValue]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +34,10 @@ export const InputArea: React.FC = () => {
 
     await submitPrompt(prompt);
     setInputValue('');
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -38,8 +52,8 @@ export const InputArea: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card-bg border-t dark:border-dark-border-color shadow-input transition-colors duration-300">
-      <div className="max-w-[800px] mx-auto px-6 py-4">
+    <div className="fixed bottom-0 left-0 right-0 transition-colors duration-300 z-40">
+      <div className="max-w-[800px] mx-auto px-6 pb-4">
         {error && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -50,48 +64,70 @@ export const InputArea: React.FC = () => {
           </motion.div>
         )}
 
-        <div className="flex items-center gap-2 mb-3">
-          <MessageSquare className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
-          <SessionList />
-          <button
-            onClick={handleNewSession}
-            className="p-0.5 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-            title="New conversation"
-          >
-            <Plus className="w-3 h-3 text-secondary-text dark:text-dark-secondary-text" />
-          </button>
-        </div>
+        <form onSubmit={handleSubmit}>
+          {/* Unified Input Card */}
+          <div className="bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-2xl shadow-lg">
+            {/* Textarea Area */}
+            <div className="px-4 pt-3 pb-2">
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter a prompt to create or update tasks..."
+                disabled={isProcessing}
+                rows={1}
+                className="w-full resize-none bg-transparent text-primary-text dark:text-dark-primary-text placeholder:text-placeholder-text/60 focus:outline-none text-sm leading-relaxed disabled:opacity-60"
+                style={{ minHeight: '24px', maxHeight: '200px' }}
+              />
+            </div>
 
-        <form onSubmit={handleSubmit} className="relative flex items-center">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Enter a prompt to create or update tasks..."
-            disabled={isProcessing}
-            className="w-full pl-4 pr-12 py-3 bg-secondary-bg dark:bg-dark-secondary-bg border border-border-color dark:border-dark-border-color rounded-lg text-primary-text dark:text-dark-primary-text placeholder:text-placeholder-text focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-60"
-          />
+            {/* Toolbar */}
+            <div className="px-2 py-2 border-t border-border-color/30 dark:border-dark-border-color/30 flex items-center justify-between bg-secondary-bg/20 dark:bg-dark-secondary-bg/20">
+              {/* Left: Session Controls */}
+              <div className="flex items-center gap-1">
+                <SessionList />
+                <button
+                  onClick={handleNewSession}
+                  className="p-1.5 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
+                  title="New conversation"
+                  type="button"
+                >
+                  <Plus className="w-3.5 h-3.5 text-secondary-text/50 dark:text-dark-secondary-text/50" />
+                </button>
+              </div>
 
-          <motion.button
-            type="submit"
-            disabled={!inputValue.trim() || isProcessing}
-            whileTap={{ scale: 0.95 }}
-            className="absolute right-2 p-2 bg-primary text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
-          >
-            {isProcessing ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                <Loader2 className="w-4 h-4" />
-              </motion.div>
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </motion.button>
+              {/* Right: Model & Send */}
+              <div className="flex items-center gap-1">
+                <ModelSelector />
+                <motion.button
+                  type="submit"
+                  disabled={!inputValue.trim() || isProcessing}
+                  whileTap={{ scale: 0.95 }}
+                  className={`ml-2 p-1.5 rounded-md transition-all flex items-center justify-center ${
+                    !inputValue.trim() || isProcessing
+                      ? 'bg-secondary-bg/50 text-secondary-text/30 dark:bg-dark-secondary-bg/50 dark:text-dark-secondary-text/30 cursor-not-allowed'
+                      : 'bg-primary text-white hover:opacity-90 shadow-sm'
+                  }`}
+                >
+                  {isProcessing ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Loader2 className="w-3.5 h-3.5" />
+                    </motion.div>
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                </motion.button>
+              </div>
+            </div>
+          </div>
         </form>
       </div>
     </div>
   );
 };
+
+export default InputArea;

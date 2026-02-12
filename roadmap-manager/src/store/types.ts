@@ -1,3 +1,9 @@
+export interface ModelConfig {
+  providerID: string;
+  modelID: string;
+  displayName: string;
+}
+
 export interface Subtask {
   id: string;
   content: string;
