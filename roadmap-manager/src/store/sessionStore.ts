@@ -1,21 +1,12 @@
 import { create } from 'zustand';
-import type { Session, Message, ServerSession } from './types';
+import type { Session, Message } from './types';
 import { fetchSessionsFromServer, convertServerSessionToLocal, showToastNotification } from '@/services/opencodeAPI';
+import { generateUUID, generateMessageId } from '@/utils/idGenerator';
+import { getCurrentISOString } from '@/utils/timestamp';
+import { saveToLocalStorage, loadFromLocalStorage, removeFromLocalStorage } from '@/utils/storage';
 
 const SESSIONS_STORAGE_KEY = 'roadmap-sessions';
 const ACTIVE_SESSION_KEY = 'roadmap-active-session';
-
-function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-function generateMessageId(): string {
-  return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
 
 function validateSession(session: unknown): session is Session {
   if (!session || typeof session !== 'object') return false;
@@ -40,7 +31,7 @@ function loadSessionsFromStorage(): Record<string, Session> {
   if (typeof window === 'undefined') return {};
 
   try {
-    const stored = localStorage.getItem(SESSIONS_STORAGE_KEY);
+    const stored = loadFromLocalStorage(SESSIONS_STORAGE_KEY);
     if (!stored) return {};
 
     const parsed = JSON.parse(stored);
@@ -64,7 +55,7 @@ function saveSessionsToStorage(sessions: Record<string, Session>): void {
   if (typeof window === 'undefined') return;
 
   try {
-    localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+    saveToLocalStorage(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
   } catch {
     console.warn('Failed to save sessions to storage');
   }
@@ -74,7 +65,7 @@ function getActiveSessionId(): string | null {
   if (typeof window === 'undefined') return null;
 
   try {
-    return localStorage.getItem(ACTIVE_SESSION_KEY);
+    return loadFromLocalStorage(ACTIVE_SESSION_KEY);
   } catch {
     return null;
   }
@@ -84,7 +75,7 @@ function setActiveSessionId(sessionId: string): void {
   if (typeof window === 'undefined') return;
 
   try {
-    localStorage.setItem(ACTIVE_SESSION_KEY, sessionId);
+    saveToLocalStorage(ACTIVE_SESSION_KEY, sessionId);
   } catch {
     console.warn('Failed to save active session ID');
   }
@@ -94,14 +85,14 @@ function clearActiveSessionId(): void {
   if (typeof window === 'undefined') return;
 
   try {
-    localStorage.removeItem(ACTIVE_SESSION_KEY);
+    removeFromLocalStorage(ACTIVE_SESSION_KEY);
   } catch {
     console.warn('Failed to clear active session ID');
   }
 }
 
 function createNewSession(firstMessage?: string): Session {
-  const now = new Date().toISOString();
+  const now = getCurrentISOString();
   const title = firstMessage
     ? firstMessage.length > 50
       ? firstMessage.substring(0, 50) + '...'

@@ -4,6 +4,7 @@ import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services
 import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
 import { useResultModalStore } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
+import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
 
 const INTENT_CONFIGS = [
   { keywords: ['create', '新增', '新建', '添加', '增加'], emoji: '📝', action: 'Creating new task' },
@@ -259,6 +260,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       const content = await readRoadmapFile();
       const updatedMarkdown = updateCheckboxInMarkdown(content, targetSubtask.content, newCompletedState);
       await writeRoadmapFile(updatedMarkdown);
+      
+      // Call the API function
+      await toggleSubtaskCompletion(subtaskId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to toggle subtask');
     }

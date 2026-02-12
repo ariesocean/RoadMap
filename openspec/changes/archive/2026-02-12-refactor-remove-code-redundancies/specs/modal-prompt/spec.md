@@ -1,8 +1,4 @@
-# modal-prompt Specification
-
-## Purpose
-TBD - created by archiving change add-modal-prompt-interface. Update Purpose after archive.
-## Requirements
+## MODIFIED Requirements
 ### Requirement: Modal Prompt Interface
 The ResultModal component SHALL provide a prompt-only input interface when opened in prompt mode, allowing users to send follow-up messages to the OpenCode server without closing the modal.
 
@@ -103,4 +99,3 @@ Both `/api/execute-navigate` and `/api/execute-modal-prompt` endpoints SHALL use
 - **THEN** the endpoint SHALL maintain a `processedEvents` Set
 - **AND** eventId generation SHALL use an incrementing counter
 - **AND** duplicate events SHALL not reach the client
-

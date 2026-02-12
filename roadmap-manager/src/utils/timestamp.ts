@@ -1,3 +1,7 @@
+export function getCurrentISOString(): string {
+  return new Date().toISOString();
+}
+
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleString('zh-CN', {

@@ -1,11 +1,13 @@
 import type { Task, Subtask, Achievement } from '@/store/types';
+import { generateTaskId as generateTaskIdUtil, generateSubtaskId as generateSubtaskIdUtil } from '@/utils/idGenerator';
+import { getCurrentISOString } from '@/utils/timestamp';
 
 export function generateTaskId(): string {
-  return `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return generateTaskIdUtil();
 }
 
 export function generateSubtaskId(): string {
-  return `sub-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return generateSubtaskIdUtil();
 }
 
 export function extractIdFromTitle(title: string): { title: string; id: string | null } {
@@ -231,8 +233,4 @@ export function updateCheckboxInMarkdown(
   });
 
   return updatedLines.join('\n');
-}
-
-function getCurrentISOString(): string {
-  return new Date().toISOString();
 }

@@ -1,5 +1,5 @@
 import type { OpenCodeHealthResponse, OpenCodePromptResponse, Session } from '@/store/types';
-import { loadTasksFromFile } from '@/services/fileService';
+import { loadTasksFromFile, saveTasksToFile } from '@/services/fileService';
 
 export interface ServerSessionResponse {
   sessions: ServerSession[];
@@ -32,7 +32,7 @@ export interface ServerSession {
 }
 
 function getAuthHeader(): string {
-  const password = import.meta.env?.VITE_OPENCODE_SERVER_PASSWORD || '';
+  const password = (import.meta.env as any)?.VITE_OPENCODE_SERVER_PASSWORD || '';
   const username = 'opencode';
   const credentials = btoa(`${username}:${password}`);
   return `Basic ${credentials}`;
@@ -155,7 +155,7 @@ export async function fetchTasks() {
   return loadTasksFromFile();
 }
 
-export async function toggleSubtaskCompletion(_taskId: string, subtaskId: string): Promise<void> {
+export async function toggleSubtaskCompletion(subtaskId: string): Promise<void> {
   const { tasks, achievements } = await loadTasksFromFile();
   let found = false;
 
@@ -179,6 +179,10 @@ export async function toggleSubtaskCompletion(_taskId: string, subtaskId: string
         }
       }
     }
+  }
+
+  if (found) {
+    await saveTasksToFile(tasks, achievements);
   }
 }
 

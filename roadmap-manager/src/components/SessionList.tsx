@@ -81,7 +81,6 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
   };
 
   const handleManualRefresh = async () => {
-    console.log('Manual refresh clicked');
     await refreshSessions();
   };
 

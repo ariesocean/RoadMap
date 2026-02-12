@@ -57,27 +57,6 @@ export interface Session {
   serverId?: string;
 }
 
-export interface ServerSessionTime {
-  created: number;
-  updated: number;
-}
-
-export interface ServerSession {
-  id: string;
-  slug?: string;
-  version?: string;
-  projectID?: string;
-  directory?: string;
-  title: string;
-  time: ServerSessionTime;
-  summary?: {
-    additions: number;
-    deletions: number;
-    files: number;
-  };
-  [key: string]: unknown;
-}
-
 export interface UIState {
   searchQuery: string;
   isLoading: boolean;

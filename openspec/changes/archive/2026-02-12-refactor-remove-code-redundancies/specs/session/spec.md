@@ -1,8 +1,4 @@
-# session Specification
-
-## Purpose
-TBD - created by archiving change add-session-management. Update Purpose after archive.
-## Requirements
+## MODIFIED Requirements
 ### Requirement: Session Persistence
 The system SHALL maintain a persistent session across application restarts, preserving the sessionID and allowing continued conversation context.
 
@@ -72,26 +68,6 @@ The system SHALL display the current session title in the UI with an icon to cre
 - **WHEN** no session is active
 - **THEN** a default session SHALL be created automatically
 - **AND** the default session title SHALL be displayed as "New Conversation"
-
-### Requirement: Session Cleanup on Exit
-The system SHALL clean up all sessions created by the application when the application exits.
-
-#### Scenario: Cleanup on app exit
-- **WHEN** the application is closed or exited
-- **THEN** all sessions created by this application SHALL be deleted from the server
-- **AND** local session data SHALL be cleared
-- **AND** no orphaned sessions SHALL remain on the server
-
-#### Scenario: Graceful cleanup
-- **WHEN** the application receives exit signal
-- **THEN** cleanup SHALL be attempted before process termination
-- **AND** cleanup failure SHALL not block application exit
-- **AND** cleanup errors SHALL be logged for debugging
-
-#### Scenario: Partial cleanup handling
-- **WHEN** cleanup operation is interrupted
-- **THEN** the system SHALL retry cleanup on next startup
-- **AND** orphaned sessions SHALL be identified and cleaned up
 
 ### Requirement: Session API Integration
 The system SHALL integrate session management with existing OpenCode API calls, passing sessionID to maintain conversation context.
@@ -261,4 +237,3 @@ The system SHALL create new sessions locally by default, with optional server sy
 - **THEN** the system SHALL call `POST /session` with the local session data
 - **AND** the server SHALL return a server session ID
 - **AND** the local session SHALL be updated with the server ID
-
