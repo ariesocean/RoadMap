@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { TaskStore, Task, Achievement } from './types';
+import type { TaskStore, Task, Achievement, Subtask } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
-import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown } from '@/utils/markdownUtils';
+import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown } from '@/utils/markdownUtils';
 import { useResultModalStore } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
@@ -328,6 +328,50 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       await writeRoadmapFile(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update subtask');
+    }
+  },
+
+  reorderSubtasks: async (taskId: string, newOrder: { id: string; nestedLevel: number }[]) => {
+    const { setError, tasks, setTasks } = get();
+
+    try {
+      setError(null);
+
+      const targetTask = tasks.find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      const subtaskMap = new Map(targetTask.subtasks.map(s => [s.id, s]));
+
+      const reorderedSubtasks = newOrder
+        .map(({ id, nestedLevel }) => {
+          const subtask = subtaskMap.get(id);
+          if (subtask) {
+            return { ...subtask, nestedLevel };
+          }
+          return null;
+        })
+        .filter((s): s is Subtask => s !== null);
+
+      const completedSubtasks = reorderedSubtasks.filter(s => s.completed).length;
+
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          return {
+            ...task,
+            subtasks: reorderedSubtasks,
+            completedSubtasks,
+          };
+        }
+        return task;
+      });
+
+      setTasks(updatedTasks);
+
+      const content = await readRoadmapFile();
+      const updatedMarkdown = updateSubtasksOrderInMarkdown(content, targetTask.title, reorderedSubtasks);
+      await writeRoadmapFile(updatedMarkdown);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reorder subtasks');
     }
   },
 }));

@@ -234,3 +234,117 @@ export function updateCheckboxInMarkdown(
 
   return updatedLines.join('\n');
 }
+
+export function updateSubtasksOrderInMarkdown(
+  markdown: string,
+  taskTitle: string,
+  reorderedSubtasks: Subtask[]
+): string {
+  const lines = markdown.split('\n');
+  let inTargetTask = false;
+  let inAchievements = false;
+  let taskStartIndex = -1;
+  let taskEndIndex = -1;
+  let originalTitleLine = '';
+  let originalPrompt = '';
+  let hasSubtasksHeader = false;
+  let lastUpdatedLine = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('## Achievements')) {
+      inAchievements = true;
+      if (inTargetTask) {
+        taskEndIndex = i;
+        break;
+      }
+      continue;
+    }
+
+    const taskMatch = line.match(/^# (.+)$/);
+    if (taskMatch) {
+      const title = taskMatch[1].trim();
+      const { title: cleanTitle } = extractCreatedDate(title);
+
+      if (cleanTitle === taskTitle) {
+        inTargetTask = true;
+        taskStartIndex = i;
+        originalTitleLine = line;
+      } else if (inTargetTask && !inAchievements) {
+        taskEndIndex = i;
+        break;
+      }
+      continue;
+    }
+
+    if (inTargetTask && !inAchievements) {
+      const promptMatch = line.match(/^> (.+)$/);
+      if (promptMatch) {
+        originalPrompt = line;
+        continue;
+      }
+
+      if (line.match(/^##\s+Subtasks?$/i)) {
+        hasSubtasksHeader = true;
+        continue;
+      }
+
+      const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
+      if (subtaskMatch) {
+        const nextLine = lines[i + 1];
+        if (!nextLine || (!nextLine.match(/^(\s*)[-*] (\[[ x]\])(.+)$/) && !nextLine.startsWith('#'))) {
+          taskEndIndex = i + 1;
+        }
+        continue;
+      }
+
+      if (line.startsWith('**Last Updated:**')) {
+        lastUpdatedLine = line;
+        continue;
+      }
+
+      if (line.startsWith('# ') && !line.startsWith('##')) {
+        taskEndIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (taskStartIndex === -1 || !originalTitleLine) {
+    return markdown;
+  }
+
+  if (taskEndIndex === -1) {
+    taskEndIndex = lines.length;
+  }
+
+  const subtasksMd = reorderedSubtasks.map(subtask => {
+    const indent = '  '.repeat(Math.min(subtask.nestedLevel, 6));
+    const checkbox = subtask.completed ? '[x]' : '[ ]';
+    return `${indent}* ${checkbox} ${subtask.content}`;
+  }).join('\n');
+
+  const newTaskSectionParts: string[] = [];
+  newTaskSectionParts.push(originalTitleLine);
+  if (originalPrompt) {
+    newTaskSectionParts.push('');
+    newTaskSectionParts.push(originalPrompt);
+  }
+  newTaskSectionParts.push('');
+  if (hasSubtasksHeader) {
+    newTaskSectionParts.push('## Subtasks');
+  }
+  newTaskSectionParts.push(subtasksMd);
+  if (lastUpdatedLine) {
+    newTaskSectionParts.push('');
+    newTaskSectionParts.push(lastUpdatedLine);
+  }
+
+  const newTaskSection = newTaskSectionParts.join('\n');
+
+  const beforeTask = lines.slice(0, taskStartIndex);
+  const afterTask = lines.slice(taskEndIndex);
+
+  return [...beforeTask, newTaskSection, ...afterTask].join('\n');
+}

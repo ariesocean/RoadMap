@@ -1,6 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Pencil } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+  DropAnimation
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Subtask } from '@/store/types';
 import { useTaskStore } from '@/store/taskStore';
 
@@ -9,12 +30,45 @@ interface SubtaskListProps {
   taskId: string;
 }
 
-interface SubtaskItemProps {
+interface SortableSubtaskItemProps {
   subtask: Subtask;
   taskId: string;
 }
 
-const SubtaskItem: React.FC<SubtaskItemProps> = ({ subtask, taskId }) => {
+const dropAnimation: DropAnimation = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: '0.5'
+      }
+    }
+  })
+};
+
+const SortableSubtaskItem: React.FC<SortableSubtaskItemProps> = ({ subtask, taskId }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: subtask.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <SubtaskItemContent subtask={subtask} taskId={taskId} />
+    </div>
+  );
+};
+
+const SubtaskItemContent: React.FC<SortableSubtaskItemProps> = ({ subtask, taskId }) => {
   const { toggleSubtask, updateSubtaskContent } = useTaskStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(subtask.content);
@@ -64,7 +118,7 @@ const SubtaskItem: React.FC<SubtaskItemProps> = ({ subtask, taskId }) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors cursor-pointer group"
+      className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors cursor-grab active:cursor-grabbing"
       style={{ marginLeft: `${subtask.nestedLevel * 24}px` }}
     >
       <motion.div
@@ -127,11 +181,88 @@ const SubtaskItem: React.FC<SubtaskItemProps> = ({ subtask, taskId }) => {
 };
 
 export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) => {
+  const { reorderSubtasks } = useTaskStore();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [localSubtasks, setLocalSubtasks] = useState(subtasks);
+
+  useEffect(() => {
+    setLocalSubtasks(subtasks);
+  }, [subtasks]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8
+      }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    if (active.id !== over.id) {
+      const oldIndex = localSubtasks.findIndex(s => s.id === active.id);
+      const newIndex = localSubtasks.findIndex(s => s.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = arrayMove(localSubtasks, oldIndex, newIndex);
+        setLocalSubtasks(newOrder);
+
+        const updateData = newOrder.map(({ id, nestedLevel }) => ({
+          id,
+          nestedLevel
+        }));
+        await reorderSubtasks(taskId, updateData);
+      }
+    }
+  };
+
+  const activeSubtask = activeId
+    ? localSubtasks.find(s => s.id === activeId)
+    : null;
+
   return (
-    <div className="space-y-1">
-      {subtasks.map((subtask) => (
-        <SubtaskItem key={subtask.id} subtask={subtask} taskId={taskId} />
-      ))}
-    </div>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={localSubtasks.map(s => s.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-1">
+          {localSubtasks.map((subtask) => (
+            <SortableSubtaskItem
+              key={subtask.id}
+              subtask={subtask}
+              taskId={taskId}
+            />
+          ))}
+        </div>
+      </SortableContext>
+
+      <DragOverlay dropAnimation={dropAnimation}>
+        {activeSubtask ? (
+          <div className="opacity-80">
+            <SubtaskItemContent
+              subtask={activeSubtask}
+              taskId={taskId}
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
