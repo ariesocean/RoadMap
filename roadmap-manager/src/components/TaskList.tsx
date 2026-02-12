@@ -62,7 +62,7 @@ export const TaskList: React.FC = () => {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="max-w-[800px] mx-auto px-6 space-y-3">
       <AnimatePresence mode="popLayout">
         {filteredTasks.map((task, index) => (
           <TaskCard key={task.id} task={task} index={index} />

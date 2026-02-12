@@ -27,7 +27,6 @@ export const ModelSelector: React.FC = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-secondary-bg/80 dark:hover:bg-dark-secondary-bg/80 transition-colors"
       >
@@ -43,7 +42,6 @@ export const ModelSelector: React.FC = () => {
           <div className="py-1">
             {AVAILABLE_MODELS.map((model) => (
               <button
-                type="button"
                 key={model.displayName}
                 onClick={() => handleSelect(model)}
                 className={`w-full text-left px-3 py-2 text-xs transition-colors ${
