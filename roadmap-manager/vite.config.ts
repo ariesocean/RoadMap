@@ -106,14 +106,17 @@ const roadmapPlugin = {
             sessions = (sessionsRes.data as any).sessions;
           }
           
-          const roadmapSessions = sessions.filter((s: any) => 
-            s.directory === '/Users/SparkingAries/VibeProjects/RoadMap'
+          const roadmapSessions = sessions.filter((s: any) =>
+            s.directory === '/Users/SparkingAries/VibeProjects/RoadMap' &&
+            !s.parentID &&
+            !/\(@.*subagent\)/i.test(s.title || '') &&
+            !(s.title || '').startsWith('modal-prompt:')
           );
-          
-          roadmapSessions.sort((a: any, b: any) => 
+
+          roadmapSessions.sort((a: any, b: any) =>
             (b.time?.created || 0) - (a.time?.created || 0)
           );
-          
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(roadmapSessions));
         } catch (error) {

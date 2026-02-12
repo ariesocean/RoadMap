@@ -49,14 +49,20 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const allSessions = Object.values(sessions).sort((a, b) => {
+    const aIsNavigate = /navigate:/i.test(a.title);
+    const bIsNavigate = /navigate:/i.test(b.title);
+
+    if (aIsNavigate && !bIsNavigate) return -1;
+    if (!aIsNavigate && bIsNavigate) return 1;
+
     const timeA = new Date(a.lastUsedAt).getTime();
     const timeB = new Date(b.lastUsedAt).getTime();
     if (timeA !== timeB) return timeB - timeA;
-    
+
     const createdA = new Date(a.createdAt).getTime();
     const createdB = new Date(b.createdAt).getTime();
     if (createdA !== createdB) return createdB - createdA;
-    
+
     return a.title.localeCompare(b.title);
   });
 
