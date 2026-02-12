@@ -45,15 +45,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
               </div>
             )}
           </div>
-
-          {task.totalSubtasks > 0 && (
-            <div className="mt-3 h-1 bg-secondary-bg dark:bg-dark-secondary-bg rounded-full overflow-hidden transition-colors duration-300">
-              <div
-                className="h-full bg-primary transition-all duration-300 rounded-full"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -76,6 +67,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           )}
         </div>
       </div>
+
+      {task.totalSubtasks > 0 && (
+        <div className="mt-3 h-1 bg-secondary-bg dark:bg-dark-secondary-bg rounded-full overflow-hidden transition-colors duration-300">
+          <div
+            className="h-full bg-primary transition-all duration-300 rounded-full"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
+      )}
 
       {task.isExpanded && task.subtasks.length > 0 && (
         <motion.div
