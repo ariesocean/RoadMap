@@ -36,10 +36,21 @@
 - [x] 7.3 Drop on self - no-op handled by dnd-kit
 - [x] 7.4 Local state updates immediately for smooth UX
 
-## 8. Validation
-- [x] 8.1 Run `openspec validate add-subtask-drag-drop --strict`
-- [x] 8.2 Verify TypeScript compilation in modified files
-- [x] 8.3 No new TypeScript errors introduced (pre-existing errors in other files)
+## 8. Nesting Support (Drag Operations for Indentation/De-indentation)
+- [x] 8.1 Add horizontal drag detection for nesting mode
+- [x] 8.2 Add visual nesting level indicators with chevron buttons
+- [x] 8.3 Implement nesting level selector popup during drag
+- [x] 8.4 Add changeSubtaskNestedLevel action to taskStore
+- [x] 8.5 Handle nestedLevel changes in reorderSubtasks action
+- [x] 8.6 Update markdown persistence to preserve nested levels
+- [x] 8.7 Add visual feedback for nesting drag operations
+- [x] 8.8 Limit nesting to 6 levels (matches markdown heading conventions)
+- [x] 8.9 Update SubtaskItem with indentation buttons for manual nesting
+
+## 9. Validation
+- [x] 9.1 Run `openspec validate add-subtask-drag-drop --strict`
+- [x] 9.2 Verify TypeScript compilation in modified files
+- [x] 9.3 No new TypeScript errors introduced (pre-existing errors in other files)
 
 ## Implementation Notes
 
@@ -50,20 +61,32 @@
 - Keyboard navigation support via dnd-kit sensors
 - Markdown persistence on drop completion
 - Immediate local state update for smooth UX
+- **Drag-based indentation/de-indentation (horizontal drag to change nesting level)**
+- **Visual nesting level selector popup during drag**
+- **Manual indentation buttons (ChevronLeft/ChevronRight) for precise control**
+- **Nesting level indicator showing current indentation level**
 
-### Scope Simplifications:
-- Reordering only (nested hierarchy changes deferred to future iteration)
+### Features Added:
+1. **Horizontal Drag for Nesting**: Drag horizontally while in drag mode to enter nesting mode
+2. **Nesting Level Popup**: Floating popup shows when dragging with level selectors (0-6)
+3. **Manual Nesting Controls**: Chevron buttons next to checkbox for increasing/decreasing indentation
+4. **Visual Feedback**: Highlighted borders and color changes during nesting operations
+5. **Persistent Nesting**: All nesting changes are saved to markdown file
+
+### Scope:
+- Reordering only (vertical drag)
+- Nested hierarchy changes through horizontal drag operations ✅ **COMPLETED**
 - Single subtask list per task (no cross-task dragging)
-- Basic visual feedback (drop indicators may be added in future)
+- Basic visual feedback with nesting level indicators
 
 ### Dependencies Added:
 - @dnd-kit/core (6.1.0) - Core drag-and-drop primitives
-- @dnd-kit/sortable (8.0.0) - Sortable list functionality
+- @dnd-kit/sortable (8.0.0) - Sortable list functionality  
 - @dnd-kit/utilities (3.2.2) - Utility functions
 
 ### Files Modified:
 - `package.json` - Added dependencies
-- `src/store/types.ts` - Added reorderSubtasks action signature
-- `src/store/taskStore.ts` - Added reorderSubtasks implementation
+- `src/store/types.ts` - Added reorderSubtasks action signature + changeSubtaskNestedLevel action
+- `src/store/taskStore.ts` - Added reorderSubtasks + changeSubtaskNestedLevel implementation
 - `src/utils/markdownUtils.ts` - Added updateSubtasksOrderInMarkdown
-- `src/components/SubtaskList.tsx` - Complete rewrite with dnd-kit integration
+- `src/components/SubtaskList.tsx` - Complete rewrite with dnd-kit integration + nesting support

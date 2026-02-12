@@ -91,4 +91,5 @@ export interface TaskStore extends UIState {
   toggleTaskExpanded: (taskId: string) => void;
   updateSubtaskContent: (taskId: string, subtaskId: string, newContent: string) => Promise<void>;
   reorderSubtasks: (taskId: string, newOrder: { id: string; nestedLevel: number }[]) => Promise<void>;
+  changeSubtaskNestedLevel: (taskId: string, subtaskId: string, newNestedLevel: number) => Promise<void>;
 }

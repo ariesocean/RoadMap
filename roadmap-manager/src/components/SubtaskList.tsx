@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Check, Pencil } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, Pencil, ChevronRight, ChevronLeft } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -12,7 +12,8 @@ import {
   DragStartEvent,
   DragOverlay,
   defaultDropAnimationSideEffects,
-  DropAnimation
+  DropAnimation,
+  DragOverEvent
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -33,7 +34,32 @@ interface SubtaskListProps {
 interface SortableSubtaskItemProps {
   subtask: Subtask;
   taskId: string;
+  isOverNesting?: boolean;
+  onNestLevelChange?: (subtaskId: string, level: number) => void;
 }
+
+interface NestingDropZoneProps {
+  level: number;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const NestingDropZone: React.FC<NestingDropZoneProps> = ({ level, isActive, onClick }) => {
+  return (
+    <motion.div
+      className={`w-6 h-6 rounded flex items-center justify-center cursor-pointer transition-colors ${
+        isActive
+          ? 'bg-primary text-white'
+          : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+      }`}
+      onClick={onClick}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <span className="text-xs font-bold">{level + 1}</span>
+    </motion.div>
+  );
+};
 
 const dropAnimation: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -45,7 +71,10 @@ const dropAnimation: DropAnimation = {
   })
 };
 
-const SortableSubtaskItem: React.FC<SortableSubtaskItemProps> = ({ subtask, taskId }) => {
+const SortableSubtaskItem: React.FC<SortableSubtaskItemProps & { 
+  isOverNesting?: boolean; 
+  onNestLevelChange?: (subtaskId: string, level: number) => void;
+}> = ({ subtask, taskId, isOverNesting, onNestLevelChange }) => {
   const {
     attributes,
     listeners,
@@ -63,12 +92,25 @@ const SortableSubtaskItem: React.FC<SortableSubtaskItemProps> = ({ subtask, task
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <SubtaskItemContent subtask={subtask} taskId={taskId} />
+      <SubtaskItemContent 
+        subtask={subtask} 
+        taskId={taskId} 
+        isOverNesting={isOverNesting}
+        onNestLevelChange={onNestLevelChange}
+      />
     </div>
   );
 };
 
-const SubtaskItemContent: React.FC<SortableSubtaskItemProps> = ({ subtask, taskId }) => {
+const SubtaskItemContent: React.FC<SortableSubtaskItemProps & { 
+  isOverNesting?: boolean; 
+  onNestLevelChange?: (subtaskId: string, level: number) => void;
+}> = ({ 
+  subtask, 
+  taskId, 
+  isOverNesting = false,
+  onNestLevelChange
+}) => {
   const { toggleSubtask, updateSubtaskContent } = useTaskStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(subtask.content);
@@ -114,32 +156,74 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps> = ({ subtask, taskI
     setIsEditing(false);
   };
 
+  const handleNestClick = (level: number) => {
+    if (onNestLevelChange && level !== subtask.nestedLevel) {
+      onNestLevelChange(subtask.id, level);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex items-center gap-3 py-2 px-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors cursor-grab active:cursor-grabbing"
+      className={`flex items-center gap-2 py-2 px-2 rounded-md transition-colors cursor-grab active:cursor-grabbing ${
+        isOverNesting 
+          ? 'bg-primary/10 dark:bg-primary/20 border-2 border-primary border-dashed' 
+          : 'hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg'
+      }`}
       style={{ marginLeft: `${subtask.nestedLevel * 24}px` }}
     >
-      <motion.div
-        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-          subtask.completed
-            ? 'bg-primary border-primary'
-            : 'border-border-color dark:border-dark-border-color bg-white dark:bg-dark-card-bg'
-        }`}
-        whileTap={{ scale: 0.9 }}
-        onClick={handleCheckboxClick}
-      >
-        {subtask.completed && (
-          <motion.div
-            initial={{ scale: 0, rotate: -45 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      <div className="flex items-center gap-1">
+        {subtask.nestedLevel > 0 && (
+          <motion.button
+            className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-primary transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNestClick(subtask.nestedLevel - 1);
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            title="Decrease indentation"
           >
-            <Check className="w-3 h-3 text-white" strokeWidth={3} />
-          </motion.div>
+            <ChevronLeft className="w-3 h-3" />
+          </motion.button>
         )}
-      </motion.div>
+        
+        <motion.div
+          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+            subtask.completed
+              ? 'bg-primary border-primary'
+              : 'border-border-color dark:border-dark-border-color bg-white dark:bg-dark-card-bg'
+          }`}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleCheckboxClick}
+        >
+          {subtask.completed && (
+            <motion.div
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            >
+              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+            </motion.div>
+          )}
+        </motion.div>
+
+        {subtask.nestedLevel < 6 && (
+          <motion.button
+            className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-primary transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNestClick(subtask.nestedLevel + 1);
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            title="Increase indentation"
+          >
+            <ChevronRight className="w-3 h-3" />
+          </motion.button>
+        )}
+      </div>
 
       {isEditing ? (
         <input
@@ -184,6 +268,8 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
   const { reorderSubtasks } = useTaskStore();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [localSubtasks, setLocalSubtasks] = useState(subtasks);
+  const [isInNestingMode, setIsInNestingMode] = useState(false);
+  const [targetNestingLevel, setTargetNestingLevel] = useState<number | null>(null);
 
   useEffect(() => {
     setLocalSubtasks(subtasks);
@@ -204,13 +290,57 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
     setActiveId(event.active.id as string);
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    if (!activeId) return;
+    
+    const { active, over, delta } = event;
+    
+    if (over && over.id !== active.id) {
+      if (Math.abs(delta.x) > Math.abs(delta.y) && Math.abs(delta.x) > 20) {
+        setIsInNestingMode(true);
+        
+        const activeSubtask = localSubtasks.find(s => s.id === active.id);
+        if (activeSubtask) {
+          const newLevel = activeSubtask.nestedLevel + (delta.x > 0 ? 1 : -1);
+          setTargetNestingLevel(Math.max(0, Math.min(6, newLevel)));
+        }
+      } else {
+        setIsInNestingMode(false);
+        setTargetNestingLevel(null);
+      }
+    } else {
+      setIsInNestingMode(false);
+      setTargetNestingLevel(null);
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+    setIsInNestingMode(false);
+    setTargetNestingLevel(null);
 
     if (!over) return;
 
-    if (active.id !== over.id) {
+    if (isInNestingMode && targetNestingLevel !== null) {
+      const activeSubtask = localSubtasks.find(s => s.id === active.id);
+      if (activeSubtask && activeSubtask.nestedLevel !== targetNestingLevel) {
+        const updatedSubtasks = localSubtasks.map(s => {
+          if (s.id === active.id) {
+            return { ...s, nestedLevel: targetNestingLevel };
+          }
+          return s;
+        });
+        
+        setLocalSubtasks(updatedSubtasks);
+        
+        const updateData = updatedSubtasks.map(({ id, nestedLevel }) => ({
+          id,
+          nestedLevel
+        }));
+        await reorderSubtasks(taskId, updateData);
+      }
+    } else if (active.id !== over.id) {
       const oldIndex = localSubtasks.findIndex(s => s.id === active.id);
       const newIndex = localSubtasks.findIndex(s => s.id === over.id);
 
@@ -231,12 +361,52 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
     ? localSubtasks.find(s => s.id === activeId)
     : null;
 
+  const handleNestingLevelClick = async (level: number) => {
+    if (!activeId) return;
+    
+    const activeSubtask = localSubtasks.find(s => s.id === activeId);
+    if (activeSubtask && activeSubtask.nestedLevel !== level) {
+      const updatedSubtasks = localSubtasks.map(s => {
+        if (s.id === activeId) {
+          return { ...s, nestedLevel: level };
+        }
+        return s;
+      });
+      
+      setLocalSubtasks(updatedSubtasks);
+      
+      const updateData = updatedSubtasks.map(({ id, nestedLevel }) => ({
+        id,
+        nestedLevel
+      }));
+      await reorderSubtasks(taskId, updateData);
+    }
+  };
+
+  const handleNestLevelChange = async (subtaskId: string, level: number) => {
+    const updatedSubtasks = localSubtasks.map(s => {
+      if (s.id === subtaskId) {
+        return { ...s, nestedLevel: level };
+      }
+      return s;
+    });
+    
+    setLocalSubtasks(updatedSubtasks);
+    
+    const updateData = updatedSubtasks.map(({ id, nestedLevel }) => ({
+      id,
+      nestedLevel
+    }));
+    await reorderSubtasks(taskId, updateData);
+  };
+
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
     >
       <SortableContext
         items={localSubtasks.map(s => s.id)}
@@ -248,10 +418,33 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
               key={subtask.id}
               subtask={subtask}
               taskId={taskId}
+              isOverNesting={activeId === subtask.id && isInNestingMode}
+              onNestLevelChange={handleNestLevelChange}
             />
           ))}
         </div>
       </SortableContext>
+
+      <AnimatePresence>
+        {activeId && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-dark-card-bg rounded-lg shadow-lg p-3 flex items-center gap-2 z-50"
+          >
+            <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">Nesting Level:</span>
+            {[0, 1, 2, 3, 4, 5, 6].map((level) => (
+              <NestingDropZone
+                key={level}
+                level={level}
+                isActive={targetNestingLevel === level || (activeSubtask?.nestedLevel === level && targetNestingLevel === null)}
+                onClick={() => handleNestingLevelClick(level)}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <DragOverlay dropAnimation={dropAnimation}>
         {activeSubtask ? (
@@ -259,6 +452,8 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
             <SubtaskItemContent
               subtask={activeSubtask}
               taskId={taskId}
+              isOverNesting={isInNestingMode}
+              onNestLevelChange={handleNestLevelChange}
             />
           </div>
         ) : null}

@@ -374,4 +374,46 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       setError(err instanceof Error ? err.message : 'Failed to reorder subtasks');
     }
   },
+
+  changeSubtaskNestedLevel: async (
+    taskId: string,
+    subtaskId: string,
+    newNestedLevel: number
+  ): Promise<void> => {
+    const { setError, tasks, setTasks } = get();
+
+    try {
+      setError(null);
+
+      const clampedLevel = Math.max(0, Math.min(newNestedLevel, 6));
+
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          const updatedSubtasks = task.subtasks.map(subtask => {
+            if (subtask.id === subtaskId) {
+              return { ...subtask, nestedLevel: clampedLevel };
+            }
+            return subtask;
+          });
+
+          return {
+            ...task,
+            subtasks: updatedSubtasks,
+          };
+        }
+        return task;
+      });
+
+      setTasks(updatedTasks);
+
+      const targetTask = tasks.find(t => t.id === taskId);
+      if (targetTask) {
+        const content = await readRoadmapFile();
+        const updatedMarkdown = updateSubtasksOrderInMarkdown(content, targetTask.title, updatedTasks.find(t => t.id === taskId)!.subtasks);
+        await writeRoadmapFile(updatedMarkdown);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change subtask nested level');
+    }
+  },
 }));
