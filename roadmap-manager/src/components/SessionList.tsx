@@ -106,6 +106,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
       <style>{sessionListStyles}</style>
       <div className="relative" ref={dropdownRef}>
       <button
+        type="button"
         onClick={handleOpenDropdown}
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-secondary-bg/80 dark:hover:bg-dark-secondary-bg/80 transition-colors"
       >
@@ -120,6 +121,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
         <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-lg shadow-xl overflow-hidden z-[100]">
           <div className="flex items-center justify-between p-2 border-b border-border-color dark:border-dark-border-color">
             <button
+              type="button"
               onClick={handleCreateNewSession}
               className="flex items-center gap-2 px-3 py-2 text-sm text-primary dark:text-primary-dark hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
             >
@@ -131,6 +133,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                 <RefreshCw className="w-4 h-4 text-secondary-text animate-spin" />
               ) : (
                 <button
+                  type="button"
                   onClick={handleManualRefresh}
                   className="p-1 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
                   title="Refresh sessions"
@@ -169,6 +172,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                     )}
                     {allSessions.length > 1 && isLocalSession(session.id) && (
                       <button
+                        type="button"
                         onClick={(e) => handleDeleteSession(e, session.id)}
                         className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors ml-2"
                         title="Delete session"
