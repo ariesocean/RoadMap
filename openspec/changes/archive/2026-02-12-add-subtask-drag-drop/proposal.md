@@ -1,4 +1,4 @@
-# Change: Add Subtask Drag-and-Drop Reordering
+# Change: Add Subtask Drag-and-Drop Reordering ✅ COMPLETED
 
 ## Why
 
@@ -8,7 +8,7 @@ Users need to reorganize subtasks within a task to prioritize work more effectiv
 
 - Add drag-and-drop capability for subtasks within a single taskBox
 - Support reordering subtasks (changing position in the list)
-- Support changing nested hierarchy level (indentation change)
+- **Support changing nested hierarchy level through drag operations (indentation/de-indentation)** ✅
 - Persist new order and hierarchy to the markdown file
 - Maintain all existing subtask functionality (toggle, edit, display)
 - Add visual feedback during drag operations using existing Framer Motion animations
@@ -17,8 +17,17 @@ Users need to reorganize subtasks within a task to prioritize work more effectiv
 
 - Affected specs: `task-management`
 - Affected code:
-  - `src/components/SubtaskList.tsx` - main drag-and-drop implementation
-  - `src/store/taskStore.ts` - state management for reordering
+  - `src/components/SubtaskList.tsx` - main drag-and-drop implementation with nesting support
+  - `src/store/taskStore.ts` - state management for reordering and nesting
   - `src/utils/markdownUtils.ts` - markdown persistence logic
-  - `src/store/types.ts` - Subtask interface (may need minor updates)
-- Dependencies: Consider adding `@dnd-kit/core` and `@dnd-kit/sortable` (both ~50KB each) for robust drag-and-drop
+  - `src/store/types.ts` - Subtask interface (already supports nestedLevel)
+- Dependencies: Added `@dnd-kit/core` and `@dnd-kit/sortable` for robust drag-and-drop
+
+## Features Delivered
+
+1. **Vertical Drag** → Reorder subtask position in list
+2. **Horizontal Drag** → Change subtask nesting level (indentation)
+3. **Visual Feedback** → Highlighted borders during nesting mode
+4. **Markdown Persistence** → All changes persist to roadmap.md
+5. **Keyboard Support** → Arrow keys for accessibility
+6. **Touch Support** → Works on mobile devices

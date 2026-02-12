@@ -38,14 +38,13 @@
 
 ## 8. Nesting Support (Drag Operations for Indentation/De-indentation)
 - [x] 8.1 Add horizontal drag detection for nesting mode
-- [x] 8.2 Add visual nesting level indicators with chevron buttons
-- [x] 8.3 Implement nesting level selector popup during drag
+- [x] 8.2 Add visual feedback when entering nesting mode (highlighted borders)
+- [x] 8.3 Add target nesting level display during drag operations
 - [x] 8.4 Add changeSubtaskNestedLevel action to taskStore
 - [x] 8.5 Handle nestedLevel changes in reorderSubtasks action
 - [x] 8.6 Update markdown persistence to preserve nested levels
 - [x] 8.7 Add visual feedback for nesting drag operations
 - [x] 8.8 Limit nesting to 6 levels (matches markdown heading conventions)
-- [x] 8.9 Update SubtaskItem with indentation buttons for manual nesting
 
 ## 9. Validation
 - [x] 9.1 Run `openspec validate add-subtask-drag-drop --strict`
@@ -62,22 +61,19 @@
 - Markdown persistence on drop completion
 - Immediate local state update for smooth UX
 - **Drag-based indentation/de-indentation (horizontal drag to change nesting level)**
-- **Visual nesting level selector popup during drag**
-- **Manual indentation buttons (ChevronLeft/ChevronRight) for precise control**
+- **Visual feedback for nesting drag operations**
 - **Nesting level indicator showing current indentation level**
 
 ### Features Added:
 1. **Horizontal Drag for Nesting**: Drag horizontally while in drag mode to enter nesting mode
-2. **Nesting Level Popup**: Floating popup shows when dragging with level selectors (0-6)
-3. **Manual Nesting Controls**: Chevron buttons next to checkbox for increasing/decreasing indentation
-4. **Visual Feedback**: Highlighted borders and color changes during nesting operations
-5. **Persistent Nesting**: All nesting changes are saved to markdown file
+2. **Visual Feedback**: Highlighted borders and color changes during nesting operations
+3. **Persistent Nesting**: All nesting changes are saved to markdown file
 
 ### Scope:
 - Reordering only (vertical drag)
 - Nested hierarchy changes through horizontal drag operations ✅ **COMPLETED**
 - Single subtask list per task (no cross-task dragging)
-- Basic visual feedback with nesting level indicators
+- Clean UI without redundant manual nesting controls
 
 ### Dependencies Added:
 - @dnd-kit/core (6.1.0) - Core drag-and-drop primitives

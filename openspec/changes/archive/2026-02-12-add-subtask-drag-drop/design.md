@@ -59,23 +59,43 @@ interface Subtask {
 
 No changes required to the interface. The `nestedLevel` field already supports hierarchy.
 
-### Drag Handle Design
+### Drag Modes
 
-**Decision: Entire item is draggable** (not just a handle icon)
+The implementation supports two drag modes:
 
-Rationale:
-- More intuitive UX for touch/mouse users
-- Consistent with modern UI patterns (Notion, Trello)
-- Reduces visual clutter (no extra handle icon needed)
-- Framer Motion already handles tap interactions on checkboxes
+1. **Reorder (Vertical Drag)**: Default mode. Drag item up/down to change position in the list
+2. **Nest (Horizontal Drag)**: Drag item left/right to change nestedLevel (indentation)
 
-### Edge Cases to Handle
+**Horizontal Drag Detection**:
+- When drag delta exceeds 20px horizontally, enter nesting mode
+- Visual feedback (highlighted dashed border) indicates nesting mode is active
+- Drag further right → increase nesting level
+- Drag further left → decrease nesting level
+- Clamped to 0-6 nesting levels
 
-1. **Empty subtask list**: DnD should not be active
-2. **Single subtask**: No reordering possible, graceful handling
-3. **Drop on self**: No-op, maintain current position
-4. **Max nested level**: Prevent nesting beyond 6 levels (matches markdown heading conventions)
-5. **Rapid reordering**: Debounce markdown updates to avoid performance issues
+### Visual Feedback
+
+- **Drag Overlay**: Semi-transparent copy of the dragged item follows cursor
+- **Nesting Mode**: Item displays highlighted dashed border when in nesting mode
+- **Cursor**: Changes to 'grabbing' during drag operations
+
+### State Management
+
+Two actions handle nesting:
+
+1. `reorderSubtasks(taskId, newOrder)` - Handles both reordering and nesting changes
+2. `changeSubtaskNestedLevel(taskId, subtaskId, newNestedLevel)` - Direct nesting level update
+
+Both actions:
+- Update local state immediately for responsive UX
+- Persist changes to roadmap.md on completion
+
+### Persistence
+
+All nesting changes persist to markdown file:
+- Each subtask's `nestedLevel` preserved
+- Indentation rendered as 2 spaces per level
+- Maximum 6 levels enforced
 
 ## Risks / Trade-offs
 
@@ -95,8 +115,34 @@ Rationale:
 5. Update `markdownUtils.ts` to preserve order
 6. Add visual styling for drag states (overlay, placeholder)
 7. Test with existing task structures
+8. Implement horizontal drag detection for nesting
+9. Add visual feedback for nesting mode
 
-## Open Questions
+## Implementation Notes
 
-1. Should nesting changes be intuitive? Consider adding visual guides when dragging near indentation zones
-2. Should we animate the markdown file update or show a toast notification?
+### Horizontal Drag for Nesting
+
+The key innovation is detecting horizontal vs vertical drag intent:
+
+```typescript
+const handleDragOver = (event: DragOverEvent) => {
+  const { delta } = event;
+  
+  if (Math.abs(delta.x) > Math.abs(delta.y) && Math.abs(delta.x) > 20) {
+    // Enter nesting mode
+    const newLevel = activeSubtask.nestedLevel + (delta.x > 0 ? 1 : -1);
+    setTargetNestingLevel(Math.max(0, Math.min(6, newLevel)));
+  }
+};
+```
+
+This provides intuitive nesting control without manual buttons.
+
+### Design Decisions Revisited
+
+**Manual Nesting Controls Removed**: Initially considered chevron buttons for manual nesting control. These were removed in favor of pure drag-based interaction, which is:
+- More discoverable (drag behavior is consistent)
+- Less cluttered UI (no extra buttons)
+- Faster workflow (no mode switching needed)
+
+The entire item remains draggable (per original decision), but horizontal movement now controls nesting while vertical controls reordering.
