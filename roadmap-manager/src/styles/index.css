@@ -119,4 +119,105 @@
   .animation-delay-300 {
     animation-delay: 300ms;
   }
+
+  /* Gradient border animation for processing state */
+  .gradient-border-animation {
+    background: linear-gradient(
+      90deg,
+      #0078D4,
+      #6366F1,
+      #8B5CF6,
+      #06B6D4,
+      #0078D4
+    );
+    background-size: 400% 400%;
+    animation: gradient-flow 3s ease infinite;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 2px;
+    border-radius: inherit;
+  }
+
+  /* Safari-compatible gradient border using pseudo-element */
+  .gradient-border-safari {
+    position: relative;
+    background: transparent;
+    border-radius: inherit;
+  }
+
+  .gradient-border-safari::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(
+      90deg,
+      #0078D4,
+      #6366F1,
+      #8B5CF6,
+      #06B6D4,
+      #0078D4
+    );
+    background-size: 400% 400%;
+    animation: gradient-flow 3s ease infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Animated gradient line for processing state */
+  .gradient-line-animation {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      #0078D4 20%,
+      #6366F1 40%,
+      #8B5CF6 60%,
+      #06B6D4 80%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: gradient-line-flow 2s linear infinite;
+  }
+
+  @keyframes gradient-line-flow {
+    0% {
+      background-position: 100% 0%;
+    }
+    100% {
+      background-position: -100% 0%;
+    }
+  }
+
+  @keyframes gradient-flow {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Alternative subtle pulse for dark mode */
+  @keyframes subtle-pulse {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .processing-glow {
+    animation: subtle-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(0, 120, 212, 0.3), 0 0 40px rgba(99, 102, 241, 0.2);
+  }
 }

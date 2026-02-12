@@ -114,23 +114,29 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
       <button
         type="button"
         onClick={handleOpenDropdown}
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-secondary-bg/80 dark:hover:bg-dark-secondary-bg/80 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
+          bg-secondary-bg/80 dark:bg-dark-secondary-bg/80 
+          text-secondary-text dark:text-dark-secondary-text
+          border border-border-color/50 dark:border-dark-border-color/50
+          hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg
+          hover:border-border-color dark:hover:border-dark-border-color
+          transition-all duration-200 hover:shadow-sm"
       >
-        <MessageSquare className="w-3.5 h-3.5 text-secondary-text/50 dark:text-dark-secondary-text/50" />
-        <span className="text-xs text-secondary-text/80 dark:text-dark-secondary-text/80 truncate">
+        <MessageSquare className="w-3.5 h-3.5 opacity-60" />
+        <span className="truncate max-w-[160px]">
           {currentSession?.title || 'New Conversation'}
         </span>
-        <ChevronDown className="w-3 h-3 text-secondary-text/50 dark:text-dark-secondary-text/50" />
+        <ChevronDown className="w-3 h-3 opacity-60" />
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-lg shadow-xl overflow-hidden z-[100]">
+        <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-lg shadow-xl overflow-hidden z-[200]">
           <div className="flex items-center justify-between p-2 border-b border-border-color dark:border-dark-border-color">
-            <button
-              type="button"
-              onClick={handleCreateNewSession}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-primary dark:text-primary-dark hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
-            >
+              <button
+                type="button"
+                onClick={handleCreateNewSession}
+                className="flex items-center gap-2 px-3 py-2 text-xs text-primary dark:text-primary-dark hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
+              >
               <Plus className="w-4 h-4" />
               New Conversation
             </button>
@@ -170,7 +176,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-primary-text dark:text-dark-primary-text truncate flex-1">
+                    <span className="text-xs text-primary-text dark:text-dark-primary-text truncate flex-1">
                       {session.title}
                     </span>
                     {isFromServer && (
@@ -201,7 +207,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
               );
             })}
             {orderedSessions.length === 0 && (
-              <div className="px-3 py-4 text-sm text-secondary-text text-center">
+              <div className="px-3 py-4 text-xs text-secondary-text text-center">
                 No sessions found
               </div>
             )}

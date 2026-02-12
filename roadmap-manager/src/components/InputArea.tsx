@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Loader2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useSession } from '@/hooks/useSession';
 import { useSessionStore } from '@/store/sessionStore';
@@ -21,8 +21,10 @@ export const InputArea: React.FC = () => {
     }
   }, [inputValue]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (!inputValue.trim() || isProcessing) return;
 
     const prompt = inputValue.trim();
@@ -43,7 +45,7 @@ export const InputArea: React.FC = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      handleSubmit();
     }
   };
 
@@ -64,9 +66,8 @@ export const InputArea: React.FC = () => {
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          {/* Unified Input Card */}
-          <div className="bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-2xl shadow-lg">
+        {/* Main content card */}
+          <form onSubmit={handleSubmit} className="relative bg-white dark:bg-dark-card-bg rounded-2xl shadow-lg border border-border-color dark:border-dark-border-color">
             {/* Textarea Area */}
             <div className="px-4 pt-3 pb-2">
               <textarea
@@ -82,49 +83,35 @@ export const InputArea: React.FC = () => {
               />
             </div>
 
-            {/* Toolbar */}
-            <div className="px-2 py-2 border-t border-border-color/30 dark:border-dark-border-color/30 flex items-center justify-between bg-secondary-bg/20 dark:bg-dark-secondary-bg/20">
-              {/* Left: Session Controls */}
-              <div className="flex items-center gap-1">
-                <SessionList />
-                <button
-                  onClick={handleNewSession}
-                  className="p-1.5 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-                  title="New conversation"
-                  type="button"
-                >
-                  <Plus className="w-3.5 h-3.5 text-secondary-text/50 dark:text-dark-secondary-text/50" />
-                </button>
+            {/* Toolbar with animated gradient separator */}
+            <div className="relative">
+              {/* Animated gradient line in the middle */}
+              <div className="absolute left-0 right-0 top-0 h-px overflow-hidden">
+                <div className={`w-full h-full ${isProcessing ? 'gradient-line-animation' : ''}`} />
               </div>
+              
+              {/* Toolbar content */}
+              <div className="px-3 py-2 flex items-center justify-between bg-secondary-bg/30 dark:bg-dark-secondary-bg/30 rounded-b-2xl relative z-10">
+                {/* Left: Model Selector */}
+                <div className="flex items-center gap-2">
+                  <ModelSelector />
+                </div>
 
-              {/* Right: Model & Send */}
-              <div className="flex items-center gap-1">
-                <ModelSelector />
-                <motion.button
-                  type="submit"
-                  disabled={!inputValue.trim() || isProcessing}
-                  whileTap={{ scale: 0.95 }}
-                  className={`ml-2 p-1.5 rounded-md transition-all flex items-center justify-center ${
-                    !inputValue.trim() || isProcessing
-                      ? 'bg-secondary-bg/50 text-secondary-text/30 dark:bg-dark-secondary-bg/50 dark:text-dark-secondary-text/30 cursor-not-allowed'
-                      : 'bg-primary text-white hover:opacity-90 shadow-sm'
-                  }`}
-                >
-                  {isProcessing ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <Loader2 className="w-3.5 h-3.5" />
-                    </motion.div>
-                  ) : (
-                    <Send className="w-3.5 h-3.5" />
-                  )}
-                </motion.button>
+                {/* Right: Session Controls */}
+                <div className="flex items-center gap-1">
+                  <SessionList />
+                  <button
+                    onClick={handleNewSession}
+                    className="p-1.5 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
+                    title="New conversation"
+                    type="button"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-secondary-text/50 dark:text-dark-secondary-text/50" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
+          </form>
       </div>
     </div>
   );
