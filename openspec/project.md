@@ -2,59 +2,54 @@
 
 ## Overview
 
-Personal task management system using LLM-assisted semantic analysis to manage `roadmap.md` with natural language commands. Part of the OpenCode AI coding toolkit.
+macOS native desktop application for managing `roadmap.md` with Microsoft To Do-style UI. Part of the OpenCode AI coding toolkit.
 
 ## Tech Stack
 
-- **Runtime**: Node.js
-- **Language**: TypeScript/JavaScript
-- **Dependencies**: Zod (validation)
-- **Framework**: OpenCode Skills Framework
+- **Runtime**: Tauri (Rust backend)
+- **Frontend**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **Animation**: Framer Motion
+- **State Management**: Zustand
+- **Drag & Drop**: @dnd-kit
+- **Icons**: lucide-react
 
 ## Project Structure
 
 ```
 RoadMap/
-├── .opencode/
-│   ├── skills/
-│   │   └── roadmap/          # Roadmap skill implementation
-│   │       └── SKILL.md       # Roadmap skill definition
-│   ├── node_modules/
-│   └── ...
-├── openspec/                  # OpenSpec documentation
-├── roadmap.md                 # Main task roadmap
-└── roadmap.md.bak             # Backup
+├── roadmap-manager/            # Main Tauri application
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── services/           # API and file services
+│   │   ├── store/             # Zustand stores
+│   │   ├── utils/              # Utility functions
+│   │   └── constants/          # App constants
+│   └── package.json
+├── openspec/                   # OpenSpec documentation
+├── roadmap.md                  # Main task roadmap
+└── achievements.md             # Completed tasks archive
 ```
 
 ## Capabilities
 
-### Roadmap Skill
-- Natural language task creation and management
-- Hierarchical task structures with subtasks
-- Semantic intent recognition
-- Automatic completion tracking
-- Archive to achievements.md
+### input-interaction
+Form submission control - ensures input area only submits when user explicitly intends to send a prompt.
 
-## Conventions
+### modal-prompt
+Modal dialog interface for displaying results and confirmations.
 
-### Task Format
-```
-# Task Title [created: YYYY-MM-DD HH:MM]
-> Short description
+### model-selection
+Model selection dropdown for choosing AI models.
 
-## Subtasks
-* [ ] Subtask 1
-* [ ] Subtask 2
-```
-
-### Skill Structure
-Each skill contains:
-- `SKILL.md` - Skill definition and usage
-- Implementation code (if applicable)
+### session
+Session management - persistent conversation context across app restarts.
 
 ## Dependencies
 
-See `package.json` (if exists) for current dependencies.
+See `roadmap-manager/package.json` for current dependencies.
 
 ## Status
 

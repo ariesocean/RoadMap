@@ -20,6 +20,25 @@ metadata:
 
 > **Note**: Each prompt creates exactly ONE task (main or subtask) unless prompt explicitly says "add multiple tasks" or similar.
 
+## Relative Date Handling
+
+When prompt contains relative dates, MUST convert to actual date using bash first:
+
+| Prompt | Action |
+|--------|--------|
+| today | `date -v+0d "+%Y-%m-%d"` |
+| yesterday | `date -v-1d "+%Y-%m-%d"` |
+| tomorrow | `date -v+1d "+%Y-%m-%d"` |
+| last week | `date -v-7d "+%Y-%m-%d"` |
+| next week | `date -v+7d "+%Y-%m-%d"` |
+| this month | `date "+%Y-%m"` |
+| last month | `date -v-1m "+%Y-%m"` |
+| next month | `date -v+1m "+%Y-%m"` |
+| this year | `date "+%Y"` |
+| last year | `date -v-1y "+%Y"` |
+
+Use actual date in task, NOT the words "today/yesterday/etc".
+
 ## Available Tools
 
 - **Read**: Load roadmap.md, achievements.md (parallel)
@@ -30,6 +49,7 @@ metadata:
 ## Fast Workflow (5 Steps)
 
 1. **Bash Timestamp** - Execute bash command first to get current time
+1.5. **Relative Date Check** - If prompt contains relative dates (today/yesterday/tomorrow/etc), run additional date commands to get actual dates
 2. **Parallel Read** - Load roadmap.md + achievements.md simultaneously
 3. **One-Pass Parse** - Single LLM call determines action, hierarchy, and task content
 4. **Direct Modify** - Update task state in memory
