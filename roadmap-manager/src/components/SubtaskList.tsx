@@ -132,7 +132,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`flex items-center gap-2 py-2 px-2 rounded-md transition-colors cursor-grab active:cursor-grabbing ${
+      className={`flex items-center gap-2 py-2 px-2 rounded-md transition-colors ${
         isOverNesting 
           ? 'bg-primary/10 dark:bg-primary/20 border-2 border-primary border-dashed' 
           : 'hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg'
