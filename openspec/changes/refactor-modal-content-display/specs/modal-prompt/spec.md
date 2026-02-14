@@ -1,16 +1,12 @@
-# modal-prompt Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change add-modal-prompt-interface. Update Purpose after archive.
-## Requirements
 ### Requirement: Modal Prompt Interface
 The ResultModal component SHALL provide a prompt-only input interface when opened in prompt mode, allowing users to send follow-up messages to the OpenCode server without closing the modal.
 
-**Refactoring Note**: Event deduplication now uses centralized `eventProcessor.ts` utility.
-
 #### Scenario: Display mode with close option
 - **WHEN** a task is created and the modal opens in display mode
-- **THEN** the user sees the task execution results in a scrollable content area
+- **THEN** the user sees the task execution results in a structured message list
+- **AND** each message contains appropriate parts (text, reasoning, tool calls, tool results)
 - **AND** only a close button is available
 - **AND** the user cannot submit prompts until switching to prompt mode
 
@@ -22,31 +18,28 @@ The ResultModal component SHALL provide a prompt-only input interface when opene
 
 #### Scenario: Submitting follow-up prompt in modal
 - **WHEN** the user types a prompt in the modal input and submits
-- **THEN** the response streams into the modal content area
+- **THEN** the response streams into the modal as structured messages
 - **AND** the input field shows a loading indicator during processing
 - **AND** the user can continue to submit additional prompts in the same session
 
 ### Requirement: Modal-Only Prompt API
 The system SHALL provide a dedicated API endpoint for executing prompts within the modal context, separate from the main navigation flow.
 
-**Refactoring Note**: Event deduplication now uses centralized `eventProcessor.ts` utility.
-
 #### Scenario: API endpoint receives prompt
 - **WHEN** a POST request is sent to /api/execute-modal-prompt with a prompt
 - **THEN** the OpenCode server processes the prompt
 - **AND** the response is streamed back in Server-Sent Events format
-- **AND** the response events include 'text', 'tool-call', 'tool-result', and 'done' event types
+- **AND** the response events include 'text', 'tool-call', 'tool-result', 'reasoning', and 'done' event types
 
 #### Scenario: Streaming response handling
 - **WHEN** the modal receives streaming events from the modal prompt API
-- **THEN** each 'text' event appends content to the modal display area
-- **AND** tool calls are displayed with appropriate visual indicators
+- **THEN** each 'text' event creates a new text part in the current message
+- **AND** 'reasoning' events create reasoning parts
+- **AND** 'tool-call' events create tool call parts with appropriate metadata
 - **AND** the streaming status is tracked for UI feedback
 
 ### Requirement: Modal Prompt State Management
 The resultModalStore SHALL manage prompt-specific state separate from the main modal state.
-
-**Refactoring Note**: Timestamp handling now uses centralized `timestamp.ts` utility.
 
 #### Scenario: Prompt input state
 - **WHEN** the user types in the modal prompt input
@@ -61,14 +54,12 @@ The resultModalStore SHALL manage prompt-specific state separate from the main m
 
 #### Scenario: Error handling
 - **WHEN** a modal prompt fails to execute
-- **THEN** an error message is displayed in the content area
+- **THEN** an error message part is added to the content
 - **AND** promptError contains the error details
 - **AND** the user can attempt to submit again after correcting the issue
 
 ### Requirement: Event Deduplication
 The system SHALL implement event deduplication to prevent duplicate content from being displayed in the modal during prompt processing.
-
-**Refactoring Note**: Event deduplication now uses centralized `eventProcessor.ts` utility. Event ID generation now uses centralized `idGenerator.ts` utility.
 
 #### Scenario: Server-side event deduplication
 - **WHEN** the OpenCode server sends multiple events with the same content
@@ -90,8 +81,6 @@ The system SHALL implement event deduplication to prevent duplicate content from
 ### Requirement: Backend Deduplication Consistency
 Both `/api/execute-navigate` and `/api/execute-modal-prompt` endpoints SHALL use consistent deduplication mechanisms.
 
-**Refactoring Note**: Both endpoints now use centralized `eventProcessor.ts` utility for consistent deduplication behavior.
-
 #### Scenario: Navigate endpoint deduplication
 - **WHEN** events are streamed from the OpenCode server to `/api/execute-navigate`
 - **THEN** the endpoint SHALL maintain a `processedEvents` Set
@@ -103,3 +92,42 @@ Both `/api/execute-navigate` and `/api/execute-modal-prompt` endpoints SHALL use
 - **THEN** the endpoint SHALL maintain a `processedEvents` Set
 - **AND** eventId generation SHALL use an incrementing counter
 - **AND** duplicate events SHALL not reach the client
+
+## ADDED Requirements
+
+### Requirement: Structured Content Display
+The modal SHALL display content in a structured format that distinguishes between different event types, providing clear visual separation between AI responses, thinking processes, tool invocations, and tool outputs.
+
+#### Scenario: Text content display
+- **WHEN** the AI generates text content
+- **THEN** the text SHALL be rendered with markdown support
+- **AND** code blocks SHALL be displayed in a code block format
+- **AND** links SHALL be clickable
+
+#### Scenario: Reasoning/thinking display
+- **WHEN** the AI is processing or reasoning
+- **THEN** reasoning content SHALL be displayed in a distinct block
+- **AND** the reasoning block SHALL be visually differentiated (e.g., dimmed text, border)
+- **AND** the reasoning block SHALL be expanded by default
+
+#### Scenario: Tool call visualization
+- **WHEN** the AI invokes a tool
+- **THEN** the tool call SHALL be displayed with an appropriate icon
+- **AND** the tool name SHALL be clearly visible
+- **AND** tool-specific details SHALL be shown (e.g., command for bash, file path for read)
+
+#### Scenario: Tool result display
+- **WHEN** a tool completes execution
+- **THEN** the result SHALL be displayed in a dedicated block
+- **AND** success results SHALL be visually distinguished from errors
+- **AND** full output SHALL be displayed without truncation
+
+### Requirement: Message Metadata Display
+The modal SHALL display metadata about each assistant message including the model used, agent type, and execution duration.
+
+#### Scenario: Metadata visibility
+- **WHEN** a message is complete
+- **THEN** metadata SHALL be displayed at the end of the message
+- **AND** the model identifier SHALL be shown
+- **AND** the agent type SHALL be shown
+- **AND** the execution duration SHALL be shown
