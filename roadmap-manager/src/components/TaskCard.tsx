@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, CheckCircle2, GripVertical } from 'lucide-react';
+import { ChevronDown, CheckCircle2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Task } from '@/store/types';
@@ -47,29 +47,28 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           ref={setNodeRef}
           style={style}
           {...attributes}
-          {...listeners}
-          className="flex items-center gap-2 cursor-grab active:cursor-grabbing"
+          className="flex-1"
         >
-          <GripVertical className="w-4 h-4 text-secondary-text/50" />
-          <div className="flex-1">
-            <h3 className="text-base font-semibold text-primary-text dark:text-dark-primary-text mb-1 transition-colors duration-300">
-              {task.title}
-            </h3>
+          <h3
+            {...listeners}
+            className="text-base font-semibold text-primary-text dark:text-dark-primary-text mb-1 transition-colors duration-300 cursor-grab active:cursor-grabbing"
+          >
+            {task.title}
+          </h3>
 
-            {task.originalPrompt && (
-              <p className="text-sm text-secondary-text dark:text-dark-secondary-text mb-2 italic transition-colors duration-300">
-                "{task.originalPrompt}"
-              </p>
+          {task.originalPrompt && (
+            <p className="text-sm text-secondary-text dark:text-dark-secondary-text mb-2 italic transition-colors duration-300">
+              "{task.originalPrompt}"
+            </p>
+          )}
+
+          <div className="flex items-center gap-4 text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
+            {task.totalSubtasks > 0 && (
+              <div className="flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>{task.completedSubtasks}/{task.totalSubtasks} completed</span>
+              </div>
             )}
-
-            <div className="flex items-center gap-4 text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
-              {task.totalSubtasks > 0 && (
-                <div className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>{task.completedSubtasks}/{task.totalSubtasks} completed</span>
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
