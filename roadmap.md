@@ -29,8 +29,7 @@
 > Get ready for AI Agent Build step by step
 
 ## Subtasks
-* [ ] Research and select web browser tool for AI agent
-  * [ ] Install and test Browser-use
+* [x] Research and select web browser tool for AI agent
 * [ ] Build AI-Bridge CLI for OpenCode serve communication
 
 **Last Updated:** 2026-02-15 23:55
@@ -47,27 +46,25 @@
 > Roadmap Manager Refine
 
 ## Subtasks
-* [ ] taskCard功能优化
-  * [ ] taskCard支持手动拖动排序
-  * [ ] Main task description支持点击编辑
-* [ ] 支持手动删除子任务
-  * [ ] 点击输入框清空则删除整行任务
+* [x] taskCard功能优化
+  * [x] taskCard支持手动拖动排序
+  * [x] Main task description支持点击编辑
+* [x] 支持手动删除子任务
+  * [x] 点击输入框清空则删除整行任务
 
 **Last Updated:** 2026-02-15 23:55
 
 ---
 # 春节前后行程 [created: 2026-02-12 11:20]
-> 春节前后的行程安排
+> 2月13日到2月24日的日程安排
 
 ## Subtasks
-* [ ] 今天做大扫除（2月14日）
-  * [ ] 深度清洗扫地机器人
-  * [ ] 清洗被罩
-* [ ] 13 号 抵达第一天
+* [x] 今天做大扫除（2月14日）
+  * [x] 深度清洗扫地机器人
+* [x] 13 号 抵达第一天
   * [x] 13 号上午到武汉后先去搞一碗牛肉粉，去雪松路看看
-  * [ ] 13 号中午去永旺买碱面，纯芝麻酱，酸豆角
+  * [x] 13 号中午去永旺买碱面，纯芝麻酱，酸豆角
   * [x] 去看家家
-* [ ] 爸爸朋友一起聚会
 * [ ] 年夜饭看春晚（2月16日）
 * [x] 购买返程的车票，挑选日期
 
