@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, CheckCircle2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
@@ -14,7 +14,47 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
-  const { toggleTaskExpanded } = useTaskStore();
+  const { toggleTaskExpanded, updateTaskDescription } = useTaskStore();
+
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editDescription, setEditDescription] = useState(task.originalPrompt);
+  const descriptionInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setEditDescription(task.originalPrompt);
+  }, [task.originalPrompt]);
+
+  useEffect(() => {
+    if (isEditingDescription && descriptionInputRef.current) {
+      descriptionInputRef.current.focus();
+      descriptionInputRef.current.select();
+    }
+  }, [isEditingDescription]);
+
+  const handleDescriptionDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditingDescription(true);
+    setEditDescription(task.originalPrompt);
+  };
+
+  const handleDescriptionKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (editDescription.trim() !== task.originalPrompt) {
+        await updateTaskDescription(task.id, editDescription.trim());
+      }
+      setIsEditingDescription(false);
+    } else if (e.key === 'Escape') {
+      setIsEditingDescription(false);
+      setEditDescription(task.originalPrompt);
+    }
+  };
+
+  const handleDescriptionBlur = async () => {
+    if (editDescription.trim() !== task.originalPrompt) {
+      await updateTaskDescription(task.id, editDescription.trim());
+    }
+    setIsEditingDescription(false);
+  };
 
   const {
     attributes,
@@ -56,11 +96,27 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
             {task.title}
           </h3>
 
-          {task.originalPrompt && (
-            <p className="text-sm text-secondary-text dark:text-dark-secondary-text mb-2 italic transition-colors duration-300">
-              "{task.originalPrompt}"
-            </p>
-          )}
+          {task.originalPrompt ? (
+            isEditingDescription ? (
+              <input
+                ref={descriptionInputRef}
+                type="text"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                onKeyDown={handleDescriptionKeyDown}
+                onBlur={handleDescriptionBlur}
+                onClick={(e) => e.stopPropagation()}
+                className="flex-1 text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-2 py-1 outline-none text-primary-text dark:text-dark-primary-text italic w-full"
+              />
+            ) : (
+              <p
+                className="text-sm text-secondary-text dark:text-dark-secondary-text mb-2 italic transition-colors duration-300 cursor-text"
+                onDoubleClick={handleDescriptionDoubleClick}
+              >
+                "{task.originalPrompt}"
+              </p>
+            )
+          ) : null}
 
           <div className="flex items-center gap-4 text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
             {task.totalSubtasks > 0 && (
