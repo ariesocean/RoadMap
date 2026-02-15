@@ -54,7 +54,7 @@ export const TaskList: React.FC = () => {
     isLoading,
     searchQuery,
     refreshTasks,
-    setTasks,
+    reorderTasks,
   } = useTaskStore();
 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -91,7 +91,7 @@ export const TaskList: React.FC = () => {
     if (task) setActiveTask(task);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
     if (!over || active.id === over.id) return;
@@ -103,7 +103,7 @@ export const TaskList: React.FC = () => {
     const [movedItem] = newOrder.splice(oldIndex, 1);
     newOrder.splice(newIndex, 0, movedItem);
 
-    setTasks(newOrder);
+    await reorderTasks(newOrder);
   };
 
   if (isLoading) {
