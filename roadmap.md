@@ -1,4 +1,4 @@
-# arbitrage_strategy development(ASD) [created: 2026-02-15 23:15]
+# arbitrage_strategy development(ASD) [created: 2026-02-11 03:53]
 > arbitrage_strategy development(ASD)
 
 ## Subtasks
@@ -7,11 +7,10 @@
 * [ ] 开发FutSpotTrade继承ArbitrageTrade, 用于期限套利
 * [ ] 开发ScalpTrade继承ArbitrageTrade, 用于极限套利
 
-**Last Updated:** 2026-02-15 23:15
+**Last Updated:** 2026-02-15 23:55
 
 ---
-
-# trade-gateway test (TGT) [created: 2026-02-15 23:15]
+# trade-gateway test (TGT) [created: 2026-02-11 04:06]
 > trade-gateway test (TGT)
 
 ## Subtasks
@@ -23,55 +22,42 @@
   * [ ] 整理所有碰到过的失败订单信息
   * [x] login逻辑加loginstatus检查
 
-**Last Updated:** 2026-02-15 23:15
+**Last Updated:** 2026-02-15 23:55
 
 ---
-
-# Design Gold Trade System(GTS) [created: 2026-02-15 23:15]
-> Design GoldTrade System(GTS)
-
-**Last Updated:** 2026-02-15 23:15
-
----
-
-# AI Agent Development [created: 2026-02-15 23:15]
+# AI Agent Development [created: 2026-02-15 13:58]
 > Get ready for AI Agent Build step by step
 
 ## Subtasks
-* [x] Research and select web browser tool for AI agent:Playwright
+* [ ] Research and select web browser tool for AI agent
   * [ ] Install and test Browser-use
-  * [ ] Evaluate Browser-use integration with GPT-4/Claude/DeepSeek
-  * [ ] Compare BrowserBee and Nanobrowser alternatives
-  * [ ] Finalize solution and write integration documentation
 * [ ] Build AI-Bridge CLI for OpenCode serve communication
-  * [ ] Design AI-Bridge CLI architecture
-  * [ ] Implement OpenCode serve integration module
-  * [ ] Build CLI command structure and argument parsing
-  * [ ] Create AI communication protocol handler
-  * [ ] Implement response parsing and display
-  * [ ] Add configuration management for AI endpoints
-  * [ ] Write unit tests and documentation
 
-**Last Updated:** 2026-02-15 23:15
+**Last Updated:** 2026-02-15 23:55
 
 ---
+# Design Gold Trade System(GTS) [created: 2026-02-15 15:47]
+> Design Gold Trade System(GTS)
 
-# Roadmap Manager Refine [created: 2026-02-15 23:15]
+
+**Last Updated:** 2026-02-15 23:55
+
+---
+# Roadmap Manager Refine [created: 2026-02-15 14:34]
 > Roadmap Manager Refine
 
 ## Subtasks
 * [ ] taskCard功能优化
-  * [x] taskCard 支持手动拖动排序
-  * [x] Main task description支持点击编辑
-* [ ] 支持在页面手动删除子任务，点击输入框清空则删除整行任务
+  * [ ] taskCard支持手动拖动排序
+  * [ ] Main task description支持点击编辑
+* [ ] 支持手动删除子任务
   * [ ] 点击输入框清空则删除整行任务
 
-**Last Updated:** 2026-02-15 23:15
+**Last Updated:** 2026-02-15 23:55
 
 ---
-
-# 春节前后行程 [created: 2026-02-15 23:15]
-> 2月13日到2月24日的日程安排
+# 春节前后行程 [created: 2026-02-12 11:20]
+> 春节前后的行程安排
 
 ## Subtasks
 * [ ] 今天做大扫除（2月14日）
@@ -85,4 +71,4 @@
 * [ ] 年夜饭看春晚（2月16日）
 * [x] 购买返程的车票，挑选日期
 
-**Last Updated:** 2026-02-15 23:15
+**Last Updated:** 2026-02-15 23:55

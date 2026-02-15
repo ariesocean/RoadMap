@@ -1,6 +1,6 @@
 import type { Task, Subtask, Achievement } from '@/store/types';
 import { generateTaskId as generateTaskIdUtil, generateSubtaskId as generateSubtaskIdUtil } from '@/utils/idGenerator';
-import { getCurrentISOString } from '@/utils/timestamp';
+import { getCurrentISOString, formatDate } from '@/utils/timestamp';
 
 export function generateTaskId(): string {
   return generateTaskIdUtil();
@@ -24,6 +24,20 @@ export function extractCreatedDate(title: string): { title: string; createdAt: s
     return { title: title.slice(0, -match[0].length - 1).trim(), createdAt: match[1] };
   }
   return { title, createdAt: null };
+}
+
+export function appendCreatedDate(title: string, createdAt: string): string {
+  const date = new Date(createdAt);
+  const formattedDate = date.toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).replace(/\//g, '-');
+  return `${title} [created: ${formattedDate}]`;
 }
 
 function extractIdFromSubtask(content: string): { content: string; id: string | null } {
@@ -150,39 +164,53 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
 export function generateMarkdownFromTasks(tasks: Task[], achievements: Achievement[]): string {
   let markdown = '';
 
-  tasks.forEach(task => {
-    markdown += `# ${task.title}\n`;
+  tasks.forEach((task, index) => {
+    const titleWithCreated = appendCreatedDate(task.title, task.createdAt);
+    markdown += `# ${titleWithCreated}\n`;
     if (task.originalPrompt) {
       markdown += `> ${task.originalPrompt}\n`;
     }
     markdown += '\n';
 
-    task.subtasks.forEach(subtask => {
-      const indent = '  '.repeat(subtask.nestedLevel);
-      const checkbox = subtask.completed ? '[x]' : '[ ]';
-      markdown += `${indent}- ${checkbox} ${subtask.content}\n`;
-    });
+    if (task.subtasks.length > 0) {
+      markdown += '## Subtasks\n';
+      task.subtasks.forEach(subtask => {
+        const indent = '  '.repeat(subtask.nestedLevel);
+        const checkbox = subtask.completed ? '[x]' : '[ ]';
+        markdown += `${indent}* ${checkbox} ${subtask.content}\n`;
+      });
+    }
 
-    markdown += '\n';
+    markdown += `\n**Last Updated:** ${formatDate(task.updatedAt)}\n`;
+
+    if (index < tasks.length - 1) {
+      markdown += '\n---\n';
+    }
   });
 
   if (achievements.length > 0) {
-    markdown += '## Achievements\n\n';
+    markdown += '\n## Achievements\n\n';
 
-    achievements.forEach(achievement => {
-      markdown += `# ${achievement.title}\n`;
+    achievements.forEach((achievement, index) => {
+      markdown += `# ${achievement.title} [completed: ${formatDate(achievement.completedAt)}]\n`;
       if (achievement.originalPrompt) {
         markdown += `> ${achievement.originalPrompt}\n`;
       }
       markdown += '\n';
 
+      if (achievement.subtasks.length > 0) {
         achievement.subtasks.forEach(subtask => {
           const indent = '  '.repeat(subtask.nestedLevel);
           const checkbox = subtask.completed ? '[x]' : '[ ]';
-          markdown += `${indent}- ${checkbox} ${subtask.content}\n`;
+          markdown += `${indent}* ${checkbox} ${subtask.content}\n`;
         });
+      }
 
-      markdown += '\n';
+      markdown += `\n**Archived:** ${formatDate(achievement.completedAt)}\n`;
+
+      if (index < achievements.length - 1) {
+        markdown += '\n---\n';
+      }
     });
   }
 
