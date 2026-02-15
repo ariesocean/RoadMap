@@ -1,8 +1,52 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ClipboardList } from 'lucide-react';
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useTaskStore } from '@/store/taskStore';
 import { TaskCard } from './TaskCard';
+import type { Task } from '@/store/types';
+
+const SortableTaskCard = ({ task, index }: { task: Task; index: number }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <div {...listeners}>
+        <TaskCard task={task} index={index} />
+      </div>
+    </div>
+  );
+};
 
 export const TaskList: React.FC = () => {
   const {
@@ -11,6 +55,19 @@ export const TaskList: React.FC = () => {
     searchQuery,
     refreshTasks,
   } = useTaskStore();
+
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     refreshTasks();
@@ -27,6 +84,27 @@ export const TaskList: React.FC = () => {
       )
     );
   });
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const task = filteredTasks.find(t => t.id === event.active.id);
+    if (task) setActiveTask(task);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = filteredTasks.findIndex(t => t.id === active.id);
+    const newIndex = filteredTasks.findIndex(t => t.id === over.id);
+
+    const newOrder = [...filteredTasks];
+    const [movedItem] = newOrder.splice(oldIndex, 1);
+    newOrder.splice(newIndex, 0, movedItem);
+
+    const { setTasks } = useTaskStore.getState();
+    setTasks(newOrder);
+  };
 
   if (isLoading) {
     return (
@@ -62,12 +140,32 @@ export const TaskList: React.FC = () => {
   }
 
   return (
-    <div className="max-w-[800px] mx-auto px-6 space-y-3">
-      <AnimatePresence mode="popLayout">
-        {filteredTasks.map((task, index) => (
-          <TaskCard key={task.id} task={task} index={index} />
-        ))}
-      </AnimatePresence>
-    </div>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={filteredTasks.map(t => t.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="max-w-[800px] mx-auto px-6 space-y-3">
+          <AnimatePresence mode="popLayout">
+            {filteredTasks.map((task, index) => (
+              <SortableTaskCard key={task.id} task={task} index={index} />
+            ))}
+          </AnimatePresence>
+        </div>
+      </SortableContext>
+      
+      <DragOverlay>
+        {activeTask ? (
+          <div className="opacity-90 shadow-2xl scale-105">
+            <TaskCard task={activeTask} index={0} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
