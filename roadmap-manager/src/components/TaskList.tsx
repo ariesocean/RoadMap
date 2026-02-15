@@ -54,6 +54,7 @@ export const TaskList: React.FC = () => {
     isLoading,
     searchQuery,
     refreshTasks,
+    setTasks,
   } = useTaskStore();
 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -86,7 +87,7 @@ export const TaskList: React.FC = () => {
   });
 
   const handleDragStart = (event: DragStartEvent) => {
-    const task = filteredTasks.find(t => t.id === event.active.id);
+    const task = tasks.find(t => t.id === event.active.id);
     if (task) setActiveTask(task);
   };
 
@@ -95,14 +96,13 @@ export const TaskList: React.FC = () => {
     setActiveTask(null);
     if (!over || active.id === over.id) return;
 
-    const oldIndex = filteredTasks.findIndex(t => t.id === active.id);
-    const newIndex = filteredTasks.findIndex(t => t.id === over.id);
+    const oldIndex = tasks.findIndex(t => t.id === active.id);
+    const newIndex = tasks.findIndex(t => t.id === over.id);
 
-    const newOrder = [...filteredTasks];
+    const newOrder = [...tasks];
     const [movedItem] = newOrder.splice(oldIndex, 1);
     newOrder.splice(newIndex, 0, movedItem);
 
-    const { setTasks } = useTaskStore.getState();
     setTasks(newOrder);
   };
 
