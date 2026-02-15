@@ -21,8 +21,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const descriptionInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setEditDescription(task.originalPrompt);
-  }, [task.originalPrompt]);
+    if (!isEditingDescription) {
+      setEditDescription(task.originalPrompt);
+    }
+  }, [task.originalPrompt, isEditingDescription]);
 
   useEffect(() => {
     if (isEditingDescription && descriptionInputRef.current) {
