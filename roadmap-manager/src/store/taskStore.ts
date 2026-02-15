@@ -416,4 +416,19 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       setError(err instanceof Error ? err.message : 'Failed to change subtask nested level');
     }
   },
+
+  reorderTasks: async (newOrder: Task[]) => {
+    const { setTasks, setError } = get();
+    
+    try {
+      setError(null);
+      setTasks(newOrder);
+      
+      const content = await readRoadmapFile();
+      // TODO: 实现 markdown 重排逻辑
+      await writeRoadmapFile(content);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reorder tasks');
+    }
+  },
 }));
