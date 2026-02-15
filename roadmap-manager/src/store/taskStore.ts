@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { TaskStore, Task, Achievement, Subtask } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
-import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown } from '@/utils/markdownUtils';
+import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown, updateTaskDescriptionInMarkdown } from '@/utils/markdownUtils';
 import { useResultModalStore } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
@@ -414,6 +414,33 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to change subtask nested level');
+    }
+  },
+
+  updateTaskDescription: async (taskId: string, description: string) => {
+    const { setError, tasks, setTasks } = get();
+
+    try {
+      setError(null);
+
+      const targetTask = tasks.find(t => t.id === taskId);
+      if (!targetTask) return;
+      if (targetTask.originalPrompt === description) return;
+
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          return { ...task, originalPrompt: description };
+        }
+        return task;
+      });
+
+      setTasks(updatedTasks);
+
+      const content = await readRoadmapFile();
+      const updatedMarkdown = updateTaskDescriptionInMarkdown(content, targetTask.title, description);
+      await writeRoadmapFile(updatedMarkdown);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task description');
     }
   },
 
