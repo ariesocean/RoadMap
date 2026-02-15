@@ -362,6 +362,8 @@ export function updateTaskDescriptionInMarkdown(
   taskTitle: string,
   newDescription: string
 ): string {
+  const PROMPT_PREFIX = '> ';
+  const sanitizedDescription = newDescription.replace(/[\n\r]/g, ' ');
   const lines = markdown.split('\n');
   let inTargetTask = false;
   let descriptionUpdated = false;
@@ -371,7 +373,7 @@ export function updateTaskDescriptionInMarkdown(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    if (line.startsWith('## Achievements')) {
+    if (line.trim().startsWith('## Achievements')) {
       if (inTargetTask) break;
       continue;
     }
@@ -394,8 +396,8 @@ export function updateTaskDescriptionInMarkdown(
       const promptMatch = line.match(/^> (.+)$/);
       if (promptMatch) {
         promptLineIndex = i;
-        if (newDescription) {
-          lines[i] = `> ${newDescription}`;
+        if (sanitizedDescription) {
+          lines[i] = `${PROMPT_PREFIX}${sanitizedDescription}`;
         } else {
           lines[i] = '';
         }
@@ -405,9 +407,9 @@ export function updateTaskDescriptionInMarkdown(
 
       const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
       if (subtaskMatch || line.match(/^##\s+Subtasks?$/i)) {
-        if (newDescription && promptLineIndex === -1) {
+        if (sanitizedDescription && promptLineIndex === -1) {
           const insertIndex = lines.slice(0, i).filter(l => l.trim()).length > taskStartIndex + 1 ? i : taskStartIndex + 1;
-          lines.splice(insertIndex, 0, `> ${newDescription}`);
+          lines.splice(insertIndex, 0, `${PROMPT_PREFIX}${sanitizedDescription}`);
           descriptionUpdated = true;
         }
         break;
@@ -415,9 +417,9 @@ export function updateTaskDescriptionInMarkdown(
     }
   }
 
-  if (!descriptionUpdated && newDescription && taskStartIndex !== -1) {
-    lines.splice(taskStartIndex + 1, 0, `> ${newDescription}`);
+  if (!descriptionUpdated && sanitizedDescription && taskStartIndex !== -1) {
+    lines.splice(taskStartIndex + 1, 0, `${PROMPT_PREFIX}${sanitizedDescription}`);
   }
 
-  return lines.join('\n');
+  return lines.join('\n') + '\n';
 }
