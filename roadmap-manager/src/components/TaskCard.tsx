@@ -143,7 +143,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
               className="p-1 hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
             >
               <motion.div
-                animate={{ rotate: task.isExpanded ? 180 : 0 }}
+                animate={{ rotate: task.isExpanded ? 0 : -180 }}
                 transition={{ duration: 0.2 }}
               >
                 <ChevronDown className="w-5 h-5 text-secondary-text dark:text-dark-secondary-text transition-colors duration-300" />
