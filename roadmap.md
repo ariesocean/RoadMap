@@ -74,11 +74,7 @@
 
 ## Subtasks
 
-* [ ] Define system architecture and core components
-* [ ] Design trading strategies (scalping, arbitrage, trend following)
-* [ ] Plan risk management and position sizing
-* [ ] Outline order execution and market data flow
-* [ ] Specify backtesting and performance metrics
+
 
 ---
 **Last Updated:** 2026-02-15 15:47
