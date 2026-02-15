@@ -32,3 +32,41 @@
 * [ ] 爸爸朋友一起聚会
 - [ ] 年夜饭看春晚（2月16日）
 - [x] 购买返程的车票，挑选日期
+---
+# AI Agent Development [created: 2026-02-15 13:58]
+
+> AI Agent Development
+
+## Subtasks
+
+* [ ] Research and select web browser tool for AI agent
+  * [ ] Install and test Browser-use
+  * [ ] Evaluate Browser-use integration with GPT-4/Claude/DeepSeek
+  * [ ] Compare BrowserBee and Nanobrowser alternatives
+  * [ ] Finalize solution and write integration documentation
+* [ ] Build AI-Bridge CLI for OpenCode serve communication
+  * [ ] Design AI-Bridge CLI architecture
+  * [ ] Implement OpenCode serve integration module
+  * [ ] Build CLI command structure and argument parsing
+  * [ ] Create AI communication protocol handler
+  * [ ] Implement response parsing and display
+  * [ ] Add configuration management for AI endpoints
+  * [ ] Write unit tests and documentation
+
+---
+**Last Updated:** 2026-02-15 13:58
+
+# Roadmap Manager Refine [created: 2026-02-15 14:34]
+
+> Roadmap Manager Refine
+
+## Subtasks
+
+* [ ] taskCard功能优化
+  * [ ] taskCard支持手动拖动排序
+  * [ ] Main task description支持点击编辑
+* [ ] 支持手动删除子任务
+  * [ ] 点击输入框清空则删除整行任务
+
+---
+**Last Updated:** 2026-02-15 14:34
