@@ -110,6 +110,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
   };
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     if (e.key === 'Enter') {
       if (editValue.trim() && editValue !== subtask.content) {
         await updateSubtaskContent(taskId, subtask.id, editValue.trim());
@@ -167,6 +168,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
+          onMouseDown={(e) => e.stopPropagation()}
           className="flex-1 text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-2 py-1 outline-none text-primary-text dark:text-dark-primary-text"
         />
       ) : (
