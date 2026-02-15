@@ -4,7 +4,7 @@
 
 **Goal:** 为 TaskList 中的 TaskCard 添加手动拖动排序功能，排序结果持久化到 roadmap.md 文件。
 
-**Architecture:** 使用 @dnd-kit/sortable 实现拖拽，拖拽结束后更新 Zustand 状态并同步写入 markdown 文件。标题行可拖拽，其他区域不可拖。
+**Architecture:** 使用 @dnd-kit/sortable + DragOverlay 实现悬浮拖拽，拖拽结束后更新 Zustand 状态并同步写入 markdown 文件。标题行可拖拽，其他区域不可拖。
 
 **Tech Stack:** React, @dnd-kit/sortable, Zustand, TypeScript
 
@@ -77,7 +77,7 @@ git commit -m "feat: add sortable to TaskCard"
 
 ---
 
-### Task 2: 修改 TaskList 添加 DndContext
+### Task 2: 修改 TaskList 添加 DndContext + DragOverlay
 
 **Files:**
 - Modify: `roadmap-manager/src/components/TaskList.tsx:1-73`
@@ -87,32 +87,47 @@ git commit -m "feat: add sortable to TaskCard"
 ```typescript
 import {
   DndContext,
+  DragOverlay,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import type { Task } from '@/store/types';
 ```
 
-**Step 2: 添加 sensors 和 dragEndHandler**
+**Step 2: 添加 state 和 handlers**
 
 ```typescript
+const [activeTask, setActiveTask] = useState<Task | null>(null);
+
 const sensors = useSensors(
-  useSensor(PointerSensor),
+  useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 8, // 移动 8px 后才激活拖拽
+    },
+  }),
   useSensor(KeyboardSensor, {
     coordinateGetter: sortableKeyboardCoordinates,
   })
 );
 
+const handleDragStart = (event: DragStartEvent) => {
+  const task = filteredTasks.find(t => t.id === event.active.id);
+  if (task) setActiveTask(task);
+};
+
 const handleDragEnd = (event: DragEndEvent) => {
   const { active, over } = event;
+  setActiveTask(null);
   if (!over || active.id === over.id) return;
   
   const oldIndex = filteredTasks.findIndex(t => t.id === active.id);
@@ -122,16 +137,17 @@ const handleDragEnd = (event: DragEndEvent) => {
   const [movedItem] = newOrder.splice(oldIndex, 1);
   newOrder.splice(newIndex, 0, movedItem);
   
-  // TODO: call reorderTasks
+  await reorderTasks(newOrder);
 };
 ```
 
-**Step 3: 包装 TaskCard 列表**
+**Step 3: 修改 JSX 结构**
 
 ```tsx
 <DndContext
   sensors={sensors}
   collisionDetection={closestCenter}
+  onDragStart={handleDragStart}
   onDragEnd={handleDragEnd}
 >
   <SortableContext
@@ -144,6 +160,14 @@ const handleDragEnd = (event: DragEndEvent) => {
       ))}
     </AnimatePresence>
   </SortableContext>
+  
+  <DragOverlay>
+    {activeTask ? (
+      <div className="opacity-90 shadow-2xl scale-105">
+        <TaskCard task={activeTask} index={0} />
+      </div>
+    ) : null}
+  </DragOverlay>
 </DndContext>
 ```
 
@@ -160,9 +184,17 @@ const SortableTaskCard = ({ task, index }: { task: Task; index: number }) => {
     isDragging,
   } = useSortable({ id: task.id });
   
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+  
   return (
-    <div ref={setNodeRef} transform={transform} transition={transition} {...attributes} {...listeners}>
-      <TaskCard task={task} index={index} />
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <div {...listeners}>
+        <TaskCard task={task} index={index} />
+      </div>
     </div>
   );
 };
@@ -172,7 +204,7 @@ const SortableTaskCard = ({ task, index }: { task: Task; index: number }) => {
 
 ```bash
 git add roadmap-manager/src/components/TaskList.tsx
-git commit -m "feat: add DndContext to TaskList"
+git commit -m "feat: add DndContext with DragOverlay to TaskList"
 ```
 
 ---
