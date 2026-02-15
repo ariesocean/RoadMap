@@ -423,3 +423,21 @@ export function updateTaskDescriptionInMarkdown(
 
   return lines.join('\n') + '\n';
 }
+
+export function deleteSubtaskFromMarkdown(
+  markdown: string,
+  subtaskContent: string
+): string {
+  const lines = markdown.split('\n');
+
+  const updatedLines = lines.filter(line => {
+    const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
+    if (subtaskMatch) {
+      const content = subtaskMatch[3].trim();
+      return content !== subtaskContent;
+    }
+    return true;
+  });
+
+  return updatedLines.join('\n');
+}

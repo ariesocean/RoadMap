@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Pencil } from 'lucide-react';
+import { Check, Pencil, Trash } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -86,6 +86,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
   const { toggleSubtask, updateSubtaskContent } = useTaskStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(subtask.content);
+  const [showDeleteButton, setShowDeleteButton] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -112,13 +113,19 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation();
     if (e.key === 'Enter') {
+      if (editValue.trim() === '') {
+        setShowDeleteButton(true);
+        return;
+      }
       if (editValue.trim() && editValue !== subtask.content) {
         await updateSubtaskContent(taskId, subtask.id, editValue.trim());
       }
       setIsEditing(false);
+      setShowDeleteButton(false);
     } else if (e.key === 'Escape') {
       setIsEditing(false);
       setEditValue(subtask.content);
+      setShowDeleteButton(false);
     }
   };
 
@@ -126,7 +133,26 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
     if (editValue.trim() && editValue !== subtask.content) {
       await updateSubtaskContent(taskId, subtask.id, editValue.trim());
     }
+    if (!editValue.trim()) {
+      setShowDeleteButton(true);
+      return;
+    }
     setIsEditing(false);
+    setShowDeleteButton(false);
+  };
+
+  const handleDelete = async () => {
+    const { deleteSubtask, toggleTaskExpanded } = useTaskStore.getState();
+    
+    await deleteSubtask(taskId, subtask.id);
+    
+    const updatedTask = useTaskStore.getState().tasks.find(t => t.id === taskId);
+    if (updatedTask && updatedTask.subtasks.length === 0) {
+      toggleTaskExpanded(taskId);
+    }
+    
+    setIsEditing(false);
+    setShowDeleteButton(false);
   };
 
   return (
@@ -161,16 +187,31 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
       </motion.div>
 
       {isEditing ? (
-        <input
-          ref={inputRef}
-          type="text"
-          value={editValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-          onMouseDown={(e) => e.stopPropagation()}
-          className="flex-1 text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-2 py-1 outline-none text-primary-text dark:text-dark-primary-text"
-        />
+        <div className="flex-1 relative">
+          <input
+            ref={inputRef}
+            type="text"
+            value={editValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="w-full text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-2 py-1 outline-none text-primary-text dark:text-dark-primary-text pr-8"
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            {showDeleteButton ? (
+              <button
+                onClick={handleDelete}
+                className="p-1 text-red-500 hover:text-red-600 transition-colors"
+                title="Delete subtask"
+              >
+                <Trash className="w-4 h-4" />
+              </button>
+            ) : (
+              <div className="w-4" />
+            )}
+          </div>
+        </div>
       ) : (
         <span
           className={`flex-1 text-sm transition-all group-hover:text-primary-text dark:group-hover:text-dark-primary-text ${

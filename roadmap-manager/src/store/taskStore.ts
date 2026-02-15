@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { TaskStore, Task, Achievement, Subtask } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
-import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown, updateTaskDescriptionInMarkdown } from '@/utils/markdownUtils';
+import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown, updateTaskDescriptionInMarkdown, deleteSubtaskFromMarkdown } from '@/utils/markdownUtils';
 import { useResultModalStore } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
@@ -456,6 +456,43 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       await writeRoadmapFile(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder tasks');
+    }
+  },
+
+  deleteSubtask: async (taskId: string, subtaskId: string) => {
+    const { setError, tasks, setTasks } = get();
+
+    try {
+      setError(null);
+
+      const targetTask = tasks.find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      const targetSubtask = targetTask.subtasks.find(s => s.id === subtaskId);
+      if (!targetSubtask) return;
+
+      const updatedSubtasks = targetTask.subtasks.filter(s => s.id !== subtaskId);
+      const completedSubtasks = updatedSubtasks.filter(s => s.completed).length;
+
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          return {
+            ...task,
+            subtasks: updatedSubtasks,
+            totalSubtasks: updatedSubtasks.length,
+            completedSubtasks,
+          };
+        }
+        return task;
+      });
+
+      setTasks(updatedTasks);
+
+      const content = await readRoadmapFile();
+      const updatedMarkdown = deleteSubtaskFromMarkdown(content, targetSubtask.content);
+      await writeRoadmapFile(updatedMarkdown);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete subtask');
     }
   },
 }));
