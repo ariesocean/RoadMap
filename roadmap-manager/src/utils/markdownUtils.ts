@@ -348,3 +348,11 @@ export function updateSubtasksOrderInMarkdown(
 
   return [...beforeTask, newTaskSection, ...afterTask].join('\n');
 }
+
+export function reorderTasksInMarkdown(
+  markdown: string,
+  newOrder: Task[]
+): string {
+  const { achievements } = parseMarkdownTasks(markdown);
+  return generateMarkdownFromTasks(newOrder, achievements);
+}
