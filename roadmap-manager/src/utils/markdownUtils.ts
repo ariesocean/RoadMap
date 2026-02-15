@@ -356,3 +356,68 @@ export function reorderTasksInMarkdown(
   const { achievements } = parseMarkdownTasks(markdown);
   return generateMarkdownFromTasks(newOrder, achievements);
 }
+
+export function updateTaskDescriptionInMarkdown(
+  markdown: string,
+  taskTitle: string,
+  newDescription: string
+): string {
+  const lines = markdown.split('\n');
+  let inTargetTask = false;
+  let descriptionUpdated = false;
+  let taskStartIndex = -1;
+  let promptLineIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('## Achievements')) {
+      if (inTargetTask) break;
+      continue;
+    }
+
+    const taskMatch = line.match(/^# (.+)$/);
+    if (taskMatch) {
+      const title = taskMatch[1].trim();
+      const { title: cleanTitle } = extractCreatedDate(title);
+
+      if (cleanTitle === taskTitle) {
+        inTargetTask = true;
+        taskStartIndex = i;
+      } else if (inTargetTask) {
+        break;
+      }
+      continue;
+    }
+
+    if (inTargetTask) {
+      const promptMatch = line.match(/^> (.+)$/);
+      if (promptMatch) {
+        promptLineIndex = i;
+        if (newDescription) {
+          lines[i] = `> ${newDescription}`;
+        } else {
+          lines[i] = '';
+        }
+        descriptionUpdated = true;
+        continue;
+      }
+
+      const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
+      if (subtaskMatch || line.match(/^##\s+Subtasks?$/i)) {
+        if (newDescription && promptLineIndex === -1) {
+          const insertIndex = lines.slice(0, i).filter(l => l.trim()).length > taskStartIndex + 1 ? i : taskStartIndex + 1;
+          lines.splice(insertIndex, 0, `> ${newDescription}`);
+          descriptionUpdated = true;
+        }
+        break;
+      }
+    }
+  }
+
+  if (!descriptionUpdated && newDescription && taskStartIndex !== -1) {
+    lines.splice(taskStartIndex + 1, 0, `> ${newDescription}`);
+  }
+
+  return lines.join('\n');
+}
