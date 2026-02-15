@@ -184,7 +184,7 @@ const roadmapPlugin = {
 
           // Prepare the payload for OpenCode Server
           const payload: any = {
-            parts: [{ type: 'text', text: `navigate: ${prompt}` }]
+            parts: [{ type: 'text', text: `use skill navigate: ${prompt}` }]
           };
 
           // Include model if provided

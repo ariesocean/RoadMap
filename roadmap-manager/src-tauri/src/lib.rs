@@ -32,7 +32,7 @@ async fn toggle_subtask(subtask_id: String) -> Result<(), String> {
 #[tauri::command]
 async fn execute_navigate(prompt: String) -> Result<String, String> {
     let mut child = Command::new("opencode")
-        .args(["run", &format!("navigate: {}", prompt)])
+        .args(["run", &format!("use skill navigate: {}", prompt)])
         .current_dir("/Users/SparkingAries/VibeProjects/RoadMap")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

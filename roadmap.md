@@ -68,5 +68,19 @@
 * [ ] 支持手动删除子任务
   * [ ] 点击输入框清空则删除整行任务
 
+# Design Gold Trade System(GTS) [created: 2026-02-15 15:47]
+
+> Design Gold Trade System(GTS)
+
+## Subtasks
+
+* [ ] Define system architecture and core components
+* [ ] Design trading strategies (scalping, arbitrage, trend following)
+* [ ] Plan risk management and position sizing
+* [ ] Outline order execution and market data flow
+* [ ] Specify backtesting and performance metrics
+
 ---
-**Last Updated:** 2026-02-15 14:34
+**Last Updated:** 2026-02-15 15:47
+
+
