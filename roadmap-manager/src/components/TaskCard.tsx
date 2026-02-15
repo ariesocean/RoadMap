@@ -40,6 +40,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   };
 
   const handleDescriptionKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     if (e.key === 'Enter') {
       if (editDescription.trim() !== task.originalPrompt) {
         await updateTaskDescription(task.id, editDescription.trim());
@@ -108,6 +109,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                 onKeyDown={handleDescriptionKeyDown}
                 onBlur={handleDescriptionBlur}
                 onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 className="flex-1 text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-2 py-1 outline-none text-primary-text dark:text-dark-primary-text italic w-full"
               />
             ) : (
