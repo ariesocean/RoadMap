@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, CheckCircle2, GripVertical } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Task } from '@/store/types';
 import { useTaskStore } from '@/store/taskStore';
 import { formatDate } from '@/utils/dateUtils';
@@ -14,6 +16,21 @@ interface TaskCardProps {
 export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const { toggleTaskExpanded } = useTaskStore();
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   const progressPercentage = task.totalSubtasks > 0
     ? (task.completedSubtasks / task.totalSubtasks) * 100
     : 0;
@@ -26,24 +43,33 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
       className="card mb-3"
     >
       <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="text-base font-semibold text-primary-text dark:text-dark-primary-text mb-1 transition-colors duration-300">
-            {task.title}
-          </h3>
+        <div
+          ref={setNodeRef}
+          style={style}
+          {...attributes}
+          {...listeners}
+          className="flex items-center gap-2 cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="w-4 h-4 text-secondary-text/50" />
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-primary-text dark:text-dark-primary-text mb-1 transition-colors duration-300">
+              {task.title}
+            </h3>
 
-          {task.originalPrompt && (
-            <p className="text-sm text-secondary-text dark:text-dark-secondary-text mb-2 italic transition-colors duration-300">
-              "{task.originalPrompt}"
-            </p>
-          )}
-
-          <div className="flex items-center gap-4 text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
-            {task.totalSubtasks > 0 && (
-              <div className="flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>{task.completedSubtasks}/{task.totalSubtasks} completed</span>
-              </div>
+            {task.originalPrompt && (
+              <p className="text-sm text-secondary-text dark:text-dark-secondary-text mb-2 italic transition-colors duration-300">
+                "{task.originalPrompt}"
+              </p>
             )}
+
+            <div className="flex items-center gap-4 text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
+              {task.totalSubtasks > 0 && (
+                <div className="flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>{task.completedSubtasks}/{task.totalSubtasks} completed</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
