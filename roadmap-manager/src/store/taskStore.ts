@@ -2,29 +2,10 @@ import { create } from 'zustand';
 import type { TaskStore, Task, Achievement, Subtask } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
 import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown, updateTaskDescriptionInMarkdown, deleteSubtaskFromMarkdown } from '@/utils/markdownUtils';
-import { useResultModalStore } from './resultModalStore';
+import { useResultModalStore, type ContentSegment } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
 import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
-
-const INTENT_CONFIGS = [
-  { keywords: ['create', '新增', '新建', '添加', '增加'], emoji: '📝', action: 'Creating new task' },
-  { keywords: ['update', '修改', '更新', '改变'], emoji: '✏️', action: 'Updating task' },
-  { keywords: ['delete', '删除', '移除', 'remove'], emoji: '🗑️', action: 'Removing task' },
-  { keywords: ['complete', '完成', 'done', 'mark'], emoji: '✅', action: 'Completing task' },
-] as const;
-
-function getInitialModalMessage(prompt: string): string {
-  const promptLower = prompt.toLowerCase();
-
-  for (const config of INTENT_CONFIGS) {
-    if (config.keywords.some(keyword => promptLower.includes(keyword))) {
-      return `${config.emoji} ${config.action}\nAnalyzing your request...\n\n`;
-    }
-  }
-
-  return `🔄 Processing request\nAnalyzing your request...\n\n`;
-}
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
@@ -74,28 +55,40 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     if (isProcessing) return;
 
     const { setProcessing, setCurrentPrompt, refreshTasks, setError } = get();
-    const { openModal, setContent, appendContent, setStreaming } = useResultModalStore.getState();
+    const { openModal, appendSegment, setStreaming } = useResultModalStore.getState();
     const { createOrUpdateSessionFromAPI, currentSession } = useSessionStore.getState();
     const { selectedModel } = useModelStore.getState();
 
+    let sessionInfo: { title: string; prompt: string } | undefined = undefined;
+    if (currentSession) {
+      sessionInfo = {
+        title: currentSession.title,
+        prompt: prompt,
+      };
+    }
+
+    let modelInfo: { providerID: string; modelID: string } | undefined = undefined;
+    if (selectedModel) {
+      modelInfo = {
+        providerID: selectedModel.providerID,
+        modelID: selectedModel.modelID,
+      };
+    }
+
+    openModal('Processing', sessionInfo, modelInfo);
+
+    const createSegment = (type: ContentSegment['type'], content: string, metadata?: ContentSegment['metadata']): ContentSegment => ({
+      id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      content,
+      timestamp: Date.now(),
+      metadata,
+    });
+
     try {
-      setProcessing(true);
-      setError(null);
-      setCurrentPrompt(prompt);
-
-      openModal('Processing', getInitialModalMessage(prompt));
-
       const body: any = currentSession
         ? { prompt, sessionId: currentSession.id }
         : { prompt };
-
-      // Include model if selected
-      if (selectedModel) {
-        body.model = {
-          providerID: selectedModel.providerID,
-          modelID: selectedModel.modelID
-        };
-      }
 
       const response = await fetch('/api/execute-navigate', {
         method: 'POST',
@@ -114,7 +107,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       const decoder = new TextDecoder();
       setStreaming(true);
-      let resultContent = '';
       let isFinished = false;
       let eventCounter = 0;
       const processedEvents = new Set<string>();
@@ -145,45 +137,25 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             }
 
             if (eventType === 'start' || eventType === 'started') {
-              processEvent(eventId, () => appendContent(data.message || ''));
+              processEvent(eventId, () => appendSegment(createSegment('text', data.message || '')));
             } else if (eventType === 'text') {
-              processEvent(eventId, () => {
-                const content = data.content || '';
-                resultContent += content;
-                appendContent(content);
-              });
+              processEvent(eventId, () => appendSegment(createSegment('text', data.content || '')));
             } else if (eventType === 'tool-call') {
-              processEvent(eventId, () => {
-                const toolInfo = `\n🔧 Using tool: ${data.name || 'unknown'}\n`;
-                resultContent += toolInfo;
-                appendContent(toolInfo);
-              });
+              // SKIP - don't display
             } else if (eventType === 'tool-result') {
-              processEvent(eventId, () => {
-                const toolResult = `✓ ${data.name || 'tool'} completed\n`;
-                resultContent += toolResult;
-                appendContent(toolResult);
-              });
+              processEvent(eventId, () => appendSegment(createSegment('tool-result', '', { tool: data.name || 'unknown' })));
             } else if (eventType === 'step-start') {
-              processEvent(eventId, () => {
-                const stepInfo = `\n📋 ${data.snapshot || 'Step'}\n`;
-                resultContent += stepInfo;
-                appendContent(stepInfo);
-              });
+              // SKIP - don't display
             } else if (eventType === 'step-end') {
-              processEvent(eventId, () => appendContent('\n'));
+              // SKIP - don't display
             } else if (eventType === 'reasoning') {
-              processEvent(eventId, () => {
-                const reasoning = data.content || '';
-                resultContent += reasoning;
-                appendContent(reasoning);
-              });
+              processEvent(eventId, () => appendSegment(createSegment('reasoning', data.content || '')));
             } else if (eventType === 'message-complete') {
-              processEvent(eventId, () => appendContent('\n'));
+              // SKIP - don't display
             } else if (eventType === 'done' || eventType === 'success') {
               if (!isFinished) {
                 isFinished = true;
-                appendContent(data.message || '\n✅ Completed!\n');
+                appendSegment(createSegment('done', data.message || ''));
                 setStreaming(false);
                 setTimeout(async () => {
                   await refreshTasks();
@@ -193,20 +165,15 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             } else if (eventType === 'error' || eventType === 'failed') {
               if (!isFinished) {
                 isFinished = true;
-                appendContent(data.message || 'Error');
+                appendSegment(createSegment('error', data.message || 'Error'));
                 setError(data.message || 'Command failed');
                 setStreaming(false);
               }
             } else if (eventType === 'timeout') {
               if (!isFinished) {
                 isFinished = true;
-                appendContent(data.message || '\n⏱️ Timeout\n');
+                appendSegment(createSegment('timeout', data.message || ''));
                 setStreaming(false);
-              }
-            } else if (eventType === 'message.updated') {
-              const info = data.properties?.info || {};
-              if (info.role === 'assistant' && info.completed) {
-                processEvent(eventId, () => appendContent('\n'));
               }
             }
           } catch {
@@ -219,12 +186,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         isFinished = true;
         setStreaming(false);
       }
-
-      setContent(resultContent);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to process prompt';
       setError(errorMsg);
-      appendContent(`\n\n❌ 错误: ${errorMsg}`);
+      appendSegment(createSegment('error', `\n\n❌ 错误: ${errorMsg}`));
       setStreaming(false);
     } finally {
       setProcessing(false);

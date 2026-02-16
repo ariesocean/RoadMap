@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
-type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool-result' | 'done' | 'error' | 'timeout';
+export type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool-result' | 'done' | 'error' | 'timeout';
 
-interface ContentSegment {
+export interface ContentSegment {
   id: string;
   type: SegmentType;
   content: string;
