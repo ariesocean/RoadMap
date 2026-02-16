@@ -259,7 +259,7 @@ const roadmapPlugin = {
                       } else if (partType === 'step-end') {
                         sendEvent({ type: 'step-end' });
                       } else if (partType === 'reasoning') {
-                        sendEvent({ type: 'reasoning', content: part.reasoning || '' });
+                        sendEvent({ type: 'reasoning', content: part.text || '' });
                       }
                     } else if (eventType === 'message.updated') {
                       const info = props.info || {};
@@ -436,7 +436,7 @@ const roadmapPlugin = {
                     } else if (partType === 'step-end') {
                       sendEvent({ type: 'step-end' });
                     } else if (partType === 'reasoning') {
-                      sendEvent({ type: 'reasoning', content: part.reasoning || '' });
+                      sendEvent({ type: 'reasoning', content: part.text || '' });
                     }
                   } else if (eventType === 'message.updated') {
                     const info = props.info || {};
