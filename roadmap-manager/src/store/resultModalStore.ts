@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool-result' | 'done' | 'error' | 'timeout';
+export type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool' | 'tool-result' | 'done' | 'error' | 'timeout';
 
 export interface ContentSegment {
   id: string;
@@ -30,6 +30,7 @@ interface ResultModalState {
   modelInfo: ModelInfo | null;
   onCloseCallback: (() => void) | null;
   isStreaming: boolean;
+  currentSessionId: string | null;
 
   isPromptMode: boolean;
   promptInput: string;
@@ -41,6 +42,7 @@ interface ResultModalState {
   appendSegment: (segment: ContentSegment) => void;
   clearSegments: () => void;
   setStreaming: (streaming: boolean) => void;
+  setCurrentSessionId: (sessionId: string | null) => void;
   setPromptMode: (enabled: boolean) => void;
   setPromptInput: (input: string) => void;
   setPromptStreaming: (streaming: boolean) => void;
@@ -56,6 +58,7 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
   modelInfo: null,
   onCloseCallback: null,
   isStreaming: false,
+  currentSessionId: null,
 
   isPromptMode: false,
   promptInput: '',
@@ -71,6 +74,7 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
       modelInfo: modelInfo || null,
       onCloseCallback: onClose || null,
       isStreaming: false,
+      currentSessionId: null,
       isPromptMode: false,
       promptInput: '',
       promptStreaming: false,
@@ -88,6 +92,7 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
       modelInfo: null,
       onCloseCallback: null,
       isStreaming: false,
+      currentSessionId: null,
       isPromptMode: false,
       promptInput: '',
       promptStreaming: false,
@@ -112,6 +117,10 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
 
   setStreaming: (streaming: boolean) => {
     set({ isStreaming: streaming });
+  },
+
+  setCurrentSessionId: (sessionId: string | null) => {
+    set({ currentSessionId: sessionId });
   },
 
   setPromptMode: (enabled: boolean) => {

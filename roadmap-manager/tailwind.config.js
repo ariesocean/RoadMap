@@ -28,6 +28,7 @@ export default {
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Monaco', 'Menlo', 'Consolas', 'monospace'],
       },
       boxShadow: {
         'card': '0 2px 8px rgba(0, 0, 0, 0.08)',

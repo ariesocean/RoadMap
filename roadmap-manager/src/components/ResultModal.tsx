@@ -3,7 +3,7 @@ import { Loader2, Send, Sparkles, X } from 'lucide-react';
 import { useResultModalStore } from '@/store/resultModalStore';
 import { useModalPrompt } from '@/hooks/useModalPrompt';
 
-const HIDDEN_TYPES = ['tool-call', 'step-start', 'step-end', 'message-complete'] as const;
+const HIDDEN_TYPES = ['step-start', 'step-end', 'message-complete'] as const;
 type HiddenType = typeof HIDDEN_TYPES[number];
 
 export const ResultModal: React.FC = () => {
@@ -33,7 +33,7 @@ export const ResultModal: React.FC = () => {
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      submitPrompt();
+      submitPrompt(undefined);
     }
   }, [submitPrompt]);
 
@@ -59,18 +59,29 @@ export const ResultModal: React.FC = () => {
             <X className="w-4 h-4" />
           </button>
         </div>
-        {sessionInfo && (
-          <div className="px-4 py-2 bg-gray-100 dark:bg-gray-900 text-xs text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-            <div>Session: {sessionInfo.title}</div>
-            <div>Prompt: {sessionInfo.prompt}</div>
-            {modelInfo && <div>Model: {modelInfo.providerID}/{modelInfo.modelID}</div>}
-          </div>
-        )}
-        <div className="px-4 py-3">
+        <div className="px-4 py-4">
           <div
             ref={preRef}
-            className="text-sm whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded max-h-[50vh] overflow-auto"
+            className="text-[13px] whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-900 p-4 rounded max-h-[50vh] overflow-auto"
           >
+            {sessionInfo && (
+              <div className="mb-4 text-sm">
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Session: </span>
+                  <span className="text-gray-700 dark:text-gray-300">{sessionInfo.title}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">Prompt: </span>
+                  <span className="text-gray-700 dark:text-gray-300">{sessionInfo.prompt}</span>
+                </div>
+                {modelInfo && (
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Model: </span>
+                    <span className="text-gray-700 dark:text-gray-300">{modelInfo.providerID}/{modelInfo.modelID}</span>
+                  </div>
+                )}
+              </div>
+            )}
             {segments.length === 0 ? (
               <span className="text-gray-500 dark:text-gray-400">
                 {isProcessing ? 'Waiting for response...' : 'Task completed'}
@@ -80,51 +91,43 @@ export const ResultModal: React.FC = () => {
                 if (HIDDEN_TYPES.includes(segment.type as HiddenType)) return null;
                 const content = segment.content ?? '';
                 const segmentKey = segment.id ?? `segment-${index}`;
+                const isReasoning = segment.type === 'reasoning';
 
-                switch (segment.type) {
-                  case 'reasoning':
-                    return (
-                      <div key={segmentKey} className="text-white italic">
-                        Thinking: {content}
+                return (
+                  <React.Fragment key={segmentKey}>
+                    {isReasoning ? (
+                      <div className="opacity-60">
+                        <span className="text-purple-600 dark:text-purple-400">Thinking: </span>
+                        <span className="text-gray-500 dark:text-gray-400">{content}</span>
                       </div>
-                    );
-                  case 'text':
-                    return (
-                      <div key={segmentKey} className="text-white font-bold">
+                    ) : segment.type === 'text' ? (
+                      <div className="text-gray-800 dark:text-gray-200">
                         {content}
                       </div>
-                    );
-                  case 'tool-result':
-                    return (
-                      <div key={segmentKey} className="text-cyan-400">
-                        tool {segment.metadata?.tool || 'unknown'}
+                    ) : segment.type === 'tool' || segment.type === 'tool-call' || segment.type === 'tool-result' ? (
+                      <div className="text-cyan-500 dark:text-cyan-300 opacity-80">
+                        tool {segment.metadata?.tool || segment.content || 'unknown'}
                       </div>
-                    );
-                  case 'done':
-                    return (
-                      <div key={segmentKey} className="text-green-400">
-                        ✅ {content || 'Completed!'}
+                    ) : segment.type === 'done' ? (
+                      <div className="text-gray-600 dark:text-gray-400">
+                        {content || 'Completed!'}
                       </div>
-                    );
-                  case 'error':
-                    return (
-                      <div key={segmentKey} className="text-red-400">
-                        ❌ {content}
-                      </div>
-                    );
-                  case 'timeout':
-                    return (
-                      <div key={segmentKey} className="text-yellow-400">
-                        ⏱️ {content}
-                      </div>
-                    );
-                  default:
-                    return (
-                      <div key={segmentKey} className="text-gray-300">
+                    ) : segment.type === 'error' ? (
+                      <div className="text-red-600 dark:text-red-400">
                         {content}
                       </div>
-                    );
-                }
+                    ) : segment.type === 'timeout' ? (
+                      <div className="text-yellow-600 dark:text-yellow-400">
+                        {content}
+                      </div>
+                    ) : (
+                      <div className="text-gray-700 dark:text-gray-300">
+                        {content}
+                      </div>
+                    )}
+                    {isReasoning && <div className="my-2" />}
+                  </React.Fragment>
+                );
               })
             )}
           </div>
@@ -142,7 +145,7 @@ export const ResultModal: React.FC = () => {
               className="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-60"
             />
             <button
-              onClick={submitPrompt}
+              onClick={() => submitPrompt(undefined)}
               disabled={!promptInput.trim() || promptStreaming}
               className="absolute right-1.5 p-1.5 bg-purple-600 text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed hover:bg-purple-700 transition-all"
             >

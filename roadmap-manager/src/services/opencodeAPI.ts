@@ -1,6 +1,5 @@
 import type { OpenCodeHealthResponse, OpenCodePromptResponse, Session } from '@/store/types';
 import { loadTasksFromFile, saveTasksToFile } from '@/services/fileService';
-import { useSessionStore } from '@/store/sessionStore';
 import { useModelStore } from '@/store/modelStore';
 
 export interface ServerSessionResponse {
@@ -190,18 +189,20 @@ export async function toggleSubtaskCompletion(subtaskId: string): Promise<void> 
 
 export async function executeModalPrompt(
   prompt: string,
+  sessionId: string | undefined | null,
   onText: (text: string) => void,
   onToolCall: (name: string) => void,
   onToolResult: (name: string) => void,
   onDone: () => void,
-  onError: (error: string) => void
+  onError: (error: string) => void,
+  onReasoning?: (text: string) => void,
+  onSessionId?: (sessionId: string) => void
 ): Promise<void> {
   try {
-    const { currentSession } = useSessionStore.getState();
     const { selectedModel } = useModelStore.getState();
 
-    const body: any = currentSession
-      ? { prompt, sessionId: currentSession.id }
+    const body: any = sessionId
+      ? { prompt, sessionId }
       : { prompt };
 
     if (selectedModel) {
@@ -251,10 +252,20 @@ export async function executeModalPrompt(
           const data = JSON.parse(line.slice(6));
           const eventId = data.id || `${data.type}-${data.sessionId}-${Date.now()}`;
 
-          if (data.type === 'text') {
+          if (data.type === 'session' && data.sessionId) {
+            if (onSessionId) {
+              onSessionId(data.sessionId);
+            }
+          } else if (data.type === 'text') {
             processEvent(eventId, () => onText(data.content || ''));
+          } else if (data.type === 'reasoning') {
+            if (onReasoning && data.content && data.content.trim()) {
+              processEvent(eventId, () => onReasoning(data.content));
+            }
           } else if (data.type === 'tool-call') {
             processEvent(eventId, () => onToolCall(data.name || 'unknown'));
+          } else if (data.type === 'tool') {
+            processEvent(eventId, () => onToolCall(data.name || 'tool'));
           } else if (data.type === 'tool-result') {
             processEvent(eventId, () => onToolResult(data.name || 'tool'));
           } else if (data.type === 'done' || data.type === 'success') {

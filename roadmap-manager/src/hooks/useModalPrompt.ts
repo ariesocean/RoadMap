@@ -21,41 +21,51 @@ export function useModalPrompt() {
     promptError,
     isPromptMode,
     closeModal,
+    currentSessionId,
+    setCurrentSessionId,
   } = useResultModalStore();
 
-  const submitPrompt = useCallback(async () => {
+  const submitPrompt = useCallback(async (sessionId?: string) => {
     if (!promptInput.trim() || promptStreaming) return;
 
+    const input = promptInput.trim();
     setPromptInput('');
     setPromptError(null);
     setPromptStreaming(true);
 
     try {
       await executeModalPrompt(
-        promptInput.trim(),
+        input,
+        currentSessionId || sessionId,
         (text) => {
           appendSegment(createSegment('text', text));
         },
-        (_name) => {
-          // tool-call - skip
+        (name) => {
+          appendSegment(createSegment('tool-call', '', { tool: name }));
         },
         (name) => {
           appendSegment(createSegment('tool-result', '', { tool: name }));
         },
         () => {
-          appendSegment(createSegment('done', '✅ 完成!'));
+          appendSegment(createSegment('done', '完成!'));
           setPromptStreaming(false);
         },
         (error) => {
           appendSegment(createSegment('error', `错误: ${error}`));
           setPromptError(error);
           setPromptStreaming(false);
+        },
+        (reasoning) => {
+          appendSegment(createSegment('reasoning', reasoning));
+        },
+        (newSessionId) => {
+          setCurrentSessionId(newSessionId);
         }
       );
     } catch {
       setPromptStreaming(false);
     }
-  }, [promptInput, promptStreaming, setPromptInput, setPromptError, setPromptStreaming, appendSegment]);
+  }, [promptInput, promptStreaming, setPromptInput, setPromptError, setPromptStreaming, appendSegment, currentSessionId, setCurrentSessionId]);
 
   return {
     promptInput,

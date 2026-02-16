@@ -136,12 +136,17 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
               createOrUpdateSessionFromAPI(data.sessionId, data.sessionName);
             }
 
-            if (eventType === 'start' || eventType === 'started') {
+            if (eventType === 'session' && data.sessionId) {
+              const { setCurrentSessionId } = useResultModalStore.getState();
+              setCurrentSessionId(data.sessionId);
+            } else if (eventType === 'start' || eventType === 'started') {
               // SKIP - internal backend messages, not actual AI output
             } else if (eventType === 'text') {
               processEvent(eventId, () => appendSegment(createSegment('text', data.content || '')));
             } else if (eventType === 'tool-call') {
               // SKIP - don't display
+            } else if (eventType === 'tool') {
+              processEvent(eventId, () => appendSegment(createSegment('tool', '', { tool: data.name || 'unknown' })));
             } else if (eventType === 'tool-result') {
               processEvent(eventId, () => appendSegment(createSegment('tool-result', '', { tool: data.name || 'unknown' })));
             } else if (eventType === 'step-start') {
@@ -149,7 +154,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             } else if (eventType === 'step-end') {
               // SKIP - don't display
             } else if (eventType === 'reasoning') {
-              processEvent(eventId, () => appendSegment(createSegment('reasoning', data.content || '')));
+              if (data.content && data.content.trim()) {
+                processEvent(eventId, () => appendSegment(createSegment('reasoning', data.content || '')));
+              }
             } else if (eventType === 'message-complete') {
               // SKIP - don't display
             } else if (eventType === 'done' || eventType === 'success') {
@@ -189,7 +196,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to process prompt';
       setError(errorMsg);
-      appendSegment(createSegment('error', `\n\n❌ 错误: ${errorMsg}`));
+      appendSegment(createSegment('error', `\n\n错误: ${errorMsg}`));
       setStreaming(false);
     } finally {
       setProcessing(false);

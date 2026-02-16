@@ -153,7 +153,7 @@ const roadmapPlugin = {
           const isHealthy = await checkServerHealth();
 
           if (!isHealthy) {
-            sendEvent({ type: 'error', message: '❌ OpenCode Server 未运行\n\n请先运行: npm run opencode:server' });
+            sendEvent({ type: 'error', message: 'OpenCode Server 未运行\n\n请先运行: npm run opencode:server' });
             res.end();
             return;
           }
@@ -172,7 +172,7 @@ const roadmapPlugin = {
             }, JSON.stringify({ title: `navigate: ${prompt}` }));
 
             if (createSessionRes.status !== 200) {
-              sendEvent({ type: 'error', message: '❌ 创建会话失败' });
+              sendEvent({ type: 'error', message: '创建会话失败' });
               res.end();
               return;
             }
@@ -183,8 +183,9 @@ const roadmapPlugin = {
           sendEvent({ type: 'session', sessionId });
 
           // Prepare the payload for OpenCode Server
+          const navigatePrompt = `use navigate: ${prompt}`;
           const payload: any = {
-            parts: [{ type: 'text', text: `use skill navigate: ${prompt}` }]
+            parts: [{ type: 'text', text: navigatePrompt }]
           };
 
           // Include model if provided
@@ -205,7 +206,7 @@ const roadmapPlugin = {
 
           if (sendMessageRes.status !== 204) {
             console.error('[Roadmap] Send message failed:', sendMessageRes.status, sendMessageRes.data);
-            sendEvent({ type: 'error', message: `❌ 发送消息失败 (${sendMessageRes.status}): ${JSON.stringify(sendMessageRes.data)}` });
+            sendEvent({ type: 'error', message: `发送消息失败 (${sendMessageRes.status}): ${JSON.stringify(sendMessageRes.data)}` });
             res.end();
             return;
           }
@@ -235,40 +236,41 @@ const roadmapPlugin = {
                     const props = wrapper.properties || {};
                     const part = props.part || {};
                     const eventId = wrapper.id || part.id || `${wrapper.type}-${sessionId}-${eventCounter++}`;
-                    if (processedEvents.has(eventId)) continue;
-                    processedEvents.add(eventId);
-
                     const eventType = wrapper.type;
+                    
+                    // Don't filter message.part.updated - these are updates that may contain new content
+                    if (eventType !== 'message.part.updated' && processedEvents.has(eventId)) {
+                      continue;
+                    }
+                    if (eventType !== 'message.part.updated') {
+                      processedEvents.add(eventId);
+                    }
 
-                    if (eventType === 'session.status') {
-                      const status = props.status?.type;
-                      if (status === 'idle' && !isCompleted) {
-                        isCompleted = true;
-                        sendEvent({ type: 'done', message: '\n✅ 执行完成!' });
-                        res.end();
-                      }
-                    } else if (eventType === 'message.part.updated') {
+                    if (eventType === 'message.part.updated') {
                       const partType = part.type;
 
                       if (partType === 'text' && part.text) {
                         sendEvent({ type: 'text', content: part.text });
-                      } else if (partType === 'tool') {
-                        sendEvent({ type: 'tool-call', name: part.name || 'tool' });
+                      } else if (partType === 'tool' && part.state?.status === 'completed') {
+                        sendEvent({ type: 'tool', name: part.tool || part.name || 'tool' });
                       } else if (partType === 'step-start') {
                         sendEvent({ type: 'step-start', snapshot: part.snapshot || '' });
                       } else if (partType === 'step-end') {
                         sendEvent({ type: 'step-end' });
                       } else if (partType === 'reasoning') {
-                        sendEvent({ type: 'reasoning', content: part.text || '' });
+                        sendEvent({ type: 'reasoning', content: part.text || part.summary || part.thought || '' });
                       }
-                    } else if (eventType === 'message.updated') {
-                      const info = props.info || {};
-                      if (info.role === 'assistant' && info.completed) {
-                        sendEvent({ type: 'message-complete' });
+                    } else if (eventType === 'session.status') {
+                      const status = props.status?.type;
+                      if (status === 'idle' && !isCompleted) {
+                        isCompleted = true;
+                        sendEvent({ type: 'done', message: '\n执行完成!' });
+                        res.end();
                       }
                     }
-                  } catch (e) {
-                  }
+                } catch (e) {
+                  // Skip invalid JSON lines
+                }
                 }
               }
             });
@@ -281,19 +283,19 @@ const roadmapPlugin = {
           });
 
           eventReq.on('error', (err: Error) => {
-            sendEvent({ type: 'error', message: `\n❌ 事件流错误: ${err.message}` });
+            sendEvent({ type: 'error', message: `\n事件流错误: ${err.message}` });
             res.end();
           });
 
           eventReq.setTimeout(300000, () => {
             eventReq.destroy();
-            sendEvent({ type: 'timeout', message: '\n⏱️ 执行超时' });
+            sendEvent({ type: 'timeout', message: '\n执行超时' });
             res.end();
           });
 
         } catch (error) {
           const errMsg = error instanceof Error ? error.message : String(error);
-          res.write(`data: ${JSON.stringify({ type: 'error', message: `❌ 错误: ${errMsg}` })}\n\n`);
+          res.write(`data: ${JSON.stringify({ type: 'error', message: `错误: ${errMsg}` })}\n\n`);
           res.end();
         }
       } else {
@@ -326,7 +328,7 @@ const roadmapPlugin = {
           const isHealthy = await checkServerHealth();
 
           if (!isHealthy) {
-            sendEvent({ type: 'error', message: '❌ OpenCode Server 未运行\n\n请先运行: npm run opencode:server' });
+            sendEvent({ type: 'error', message: 'OpenCode Server 未运行\n\n请先运行: npm run opencode:server' });
             res.end();
             return;
           }
@@ -345,7 +347,7 @@ const roadmapPlugin = {
             }, JSON.stringify({ title: `modal-prompt: ${prompt}` }));
 
             if (createSessionRes.status !== 200) {
-              sendEvent({ type: 'error', message: '❌ 创建会话失败' });
+              sendEvent({ type: 'error', message: '创建会话失败' });
               res.end();
               return;
             }
@@ -378,7 +380,7 @@ const roadmapPlugin = {
 
           if (sendMessageRes.status !== 204) {
             console.error('[Modal Prompt] Send message failed:', sendMessageRes.status, sendMessageRes.data);
-            sendEvent({ type: 'error', message: `❌ 发送消息失败 (${sendMessageRes.status}): ${JSON.stringify(sendMessageRes.data)}` });
+            sendEvent({ type: 'error', message: `发送消息失败 (${sendMessageRes.status}): ${JSON.stringify(sendMessageRes.data)}` });
             res.end();
             return;
           }
@@ -410,35 +412,40 @@ const roadmapPlugin = {
                   const part = props.part || {};
                   const eventId = wrapper.id || part.id || `${wrapper.type}-${sessionId}-${eventCounter++}`;
 
-                  if (processedEvents.has(eventId)) continue;
-                  processedEvents.add(eventId);
-
                   const eventType = wrapper.type;
+                  
+                  // Don't filter message.part.updated - these are updates that may contain new content
+                  if (eventType !== 'message.part.updated' && processedEvents.has(eventId)) {
+                    continue;
+                  }
+                  if (eventType !== 'message.part.updated') {
+                    processedEvents.add(eventId);
+                  }
 
                   if (eventType === 'session.status') {
                     const status = props.status?.type;
                     if (status === 'idle' && !isCompleted) {
                       isCompleted = true;
-                      sendEvent({ type: 'done', message: '\n✅ Completed!' });
+sendEvent({ type: 'done', message: '\nCompleted!' });
                       res.end();
                     }
-                   } else if (eventType === 'message.part.updated') {
-                     const partType = part.type;
+                    } else if (eventType === 'message.part.updated') {
+                      const partType = part.type;
 
-                     if (partType === 'text' && part.text) {
-                      sendEvent({ type: 'text', content: part.text });
-                    } else if (partType === 'tool') {
-                      sendEvent({ type: 'tool-call', name: part.name || 'tool' });
-                    } else if (partType === 'tool-result') {
-                      sendEvent({ type: 'tool-result', name: part.name || 'tool' });
-                    } else if (partType === 'step-start') {
-                      sendEvent({ type: 'step-start', snapshot: part.snapshot || '' });
-                    } else if (partType === 'step-end') {
-                      sendEvent({ type: 'step-end' });
-                    } else if (partType === 'reasoning') {
-                      sendEvent({ type: 'reasoning', content: part.text || '' });
-                    }
-                  } else if (eventType === 'message.updated') {
+                      if (partType === 'text' && part.text) {
+                        sendEvent({ type: 'text', content: part.text });
+                      } else if (partType === 'tool' && part.state?.status === 'completed') {
+                        sendEvent({ type: 'tool', name: part.tool || part.name || 'tool' });
+                      } else if (partType === 'tool-result') {
+                        sendEvent({ type: 'tool-result', name: part.name || 'tool' });
+                      } else if (partType === 'step-start') {
+                        sendEvent({ type: 'step-start', snapshot: part.snapshot || '' });
+                      } else if (partType === 'step-end') {
+                        sendEvent({ type: 'step-end' });
+                      } else if (partType === 'reasoning') {
+                        sendEvent({ type: 'reasoning', content: part.text || part.summary || part.thought || '' });
+                      }
+                    } else if (eventType === 'message.updated') {
                     const info = props.info || {};
                     if (info.role === 'assistant' && info.completed) {
                       sendEvent({ type: 'message-complete' });
@@ -458,19 +465,19 @@ const roadmapPlugin = {
           });
 
           eventReq.on('error', (err: Error) => {
-            sendEvent({ type: 'error', message: `\n❌ Event stream error: ${err.message}` });
+            sendEvent({ type: 'error', message: `\nEvent stream error: ${err.message}` });
             res.end();
           });
 
           eventReq.setTimeout(300000, () => {
             eventReq.destroy();
-            sendEvent({ type: 'timeout', message: '\n⏱️ Timeout' });
+            sendEvent({ type: 'timeout', message: '\nTimeout' });
             res.end();
           });
 
         } catch (error) {
           const errMsg = error instanceof Error ? error.message : String(error);
-          res.write(`data: ${JSON.stringify({ type: 'error', message: `❌ Error: ${errMsg}` })}\n\n`);
+          res.write(`data: ${JSON.stringify({ type: 'error', message: `Error: ${errMsg}` })}\n\n`);
           res.end();
         }
       } else {
