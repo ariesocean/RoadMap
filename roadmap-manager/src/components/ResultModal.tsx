@@ -1,13 +1,18 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { Loader2, Send, Sparkles, X } from 'lucide-react';
 import { useResultModalStore } from '@/store/resultModalStore';
 import { useModalPrompt } from '@/hooks/useModalPrompt';
+
+const HIDDEN_TYPES = ['tool-call', 'step-start', 'step-end', 'message-complete'] as const;
+type HiddenType = typeof HIDDEN_TYPES[number];
 
 export const ResultModal: React.FC = () => {
   const {
     isOpen,
     title,
-    content,
+    segments,
+    sessionInfo,
+    modelInfo,
     closeModal,
     isStreaming,
     promptStreaming,
@@ -17,22 +22,22 @@ export const ResultModal: React.FC = () => {
     setPromptInput,
     submitPrompt,
   } = useModalPrompt();
-  const preRef = useRef<HTMLPreElement>(null);
+  const preRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && preRef.current) {
-      preRef.current.scrollTop = preRef.current.scrollHeight;
+      preRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [content, isOpen, promptStreaming]);
+  }, [segments, isOpen, promptStreaming]);
 
   if (!isOpen) return null;
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       submitPrompt();
     }
-  };
+  }, [submitPrompt]);
 
   const isProcessing = isStreaming || promptStreaming;
 
@@ -54,13 +59,75 @@ export const ResultModal: React.FC = () => {
             <X className="w-4 h-4" />
           </button>
         </div>
+        {sessionInfo && (
+          <div className="px-4 py-2 bg-gray-100 dark:bg-gray-900 text-xs text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+            <div>Session: {sessionInfo.title}</div>
+            <div>Prompt: {sessionInfo.prompt}</div>
+            {modelInfo && <div>Model: {modelInfo.providerID}/{modelInfo.modelID}</div>}
+          </div>
+        )}
         <div className="px-4 py-3">
-          <pre
+          <div
             ref={preRef}
-            className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded max-h-[50vh] overflow-auto"
+            className="text-sm whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded max-h-[50vh] overflow-auto"
           >
-            {content || (isProcessing ? 'Waiting for response...' : 'Task completed')}
-          </pre>
+            {segments.length === 0 ? (
+              <span className="text-gray-500 dark:text-gray-400">
+                {isProcessing ? 'Waiting for response...' : 'Task completed'}
+              </span>
+            ) : (
+              segments.map((segment) => {
+                if (HIDDEN_TYPES.includes(segment.type as HiddenType)) return null;
+                const content = segment.content ?? '';
+                const segmentKey = segment.id ?? `segment-${segment.type}-${Math.random()}`;
+
+                switch (segment.type) {
+                  case 'reasoning':
+                    return (
+                      <div key={segmentKey} className="text-white italic">
+                        Thinking: {content}
+                      </div>
+                    );
+                  case 'text':
+                    return (
+                      <div key={segmentKey} className="text-white font-bold">
+                        {content}
+                      </div>
+                    );
+                  case 'tool-result':
+                    return (
+                      <div key={segmentKey} className="text-cyan-400">
+                        tool {segment.metadata?.tool || 'unknown'}
+                      </div>
+                    );
+                  case 'done':
+                    return (
+                      <div key={segmentKey} className="text-green-400">
+                        ✅ {content || 'Completed!'}
+                      </div>
+                    );
+                  case 'error':
+                    return (
+                      <div key={segmentKey} className="text-red-400">
+                        ❌ {content}
+                      </div>
+                    );
+                  case 'timeout':
+                    return (
+                      <div key={segmentKey} className="text-yellow-400">
+                        ⏱️ {content}
+                      </div>
+                    );
+                  default:
+                    return (
+                      <div key={segmentKey} className="text-gray-300">
+                        {content}
+                      </div>
+                    );
+                }
+              })
+            )}
+          </div>
         </div>
 
         <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
