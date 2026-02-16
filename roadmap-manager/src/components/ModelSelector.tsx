@@ -56,6 +56,7 @@ export const ModelSelector: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       {/* Minimal text-style button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
           flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium

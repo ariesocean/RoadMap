@@ -20,7 +20,8 @@
       ".pytest_cache/**",
       ".mypy_cache/**",
       ".gradle/**",
-      "target/**"
+      "target/**",
+      "docs/**"
     ]
   }
 }

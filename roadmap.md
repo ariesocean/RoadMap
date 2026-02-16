@@ -31,6 +31,7 @@
 ## Subtasks
 * [x] Research and select web browser tool for AI agent
 * [ ] Build AI-Bridge CLI for OpenCode serve communication
+  * [ ] Test opencode-cli
 
 **Last Updated:** 2026-02-15 23:55
 
@@ -51,6 +52,7 @@
   * [x] Main task description支持点击编辑
 * [x] 支持手动删除子任务
   * [x] 点击输入框清空则删除整行任务
+- [ ] opencode-cli准备好后，接入 Roadmap Manager
 
 **Last Updated:** 2026-02-15 23:55
 
@@ -66,6 +68,7 @@
   * [x] 13 号中午去永旺买碱面，纯芝麻酱，酸豆角
   * [x] 去看家家
 * [ ] 年夜饭看春晚（2月16日）
+* [ ] 制定除夕夜计划
 * [x] 购买返程的车票，挑选日期
 
 **Last Updated:** 2026-02-15 23:55
