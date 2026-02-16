@@ -1,13 +1,21 @@
 import { useCallback } from 'react';
-import { useResultModalStore } from '@/store/resultModalStore';
+import { useResultModalStore, type ContentSegment } from '@/store/resultModalStore';
 import { executeModalPrompt } from '@/services/opencodeAPI';
+
+const createSegment = (type: ContentSegment['type'], content: string, metadata?: ContentSegment['metadata']): ContentSegment => ({
+  id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  type,
+  content,
+  timestamp: Date.now(),
+  metadata,
+});
 
 export function useModalPrompt() {
   const {
     setPromptInput,
     setPromptStreaming,
     setPromptError,
-    appendContent,
+    appendSegment,
     promptInput,
     promptStreaming,
     promptError,
@@ -26,20 +34,20 @@ export function useModalPrompt() {
       await executeModalPrompt(
         promptInput.trim(),
         (text) => {
-          appendContent(text);
+          appendSegment(createSegment('text', text));
+        },
+        (_name) => {
+          // tool-call - skip
         },
         (name) => {
-          appendContent(`\n🔧 使用工具: ${name}\n`);
-        },
-        (name) => {
-          appendContent(`✓ ${name} 完成\n`);
+          appendSegment(createSegment('tool-result', '', { tool: name }));
         },
         () => {
-          appendContent('\n✅ 完成!\n');
+          appendSegment(createSegment('done', '✅ 完成!'));
           setPromptStreaming(false);
         },
         (error) => {
-          appendContent(`\n\n❌ 错误: ${error}`);
+          appendSegment(createSegment('error', `错误: ${error}`));
           setPromptError(error);
           setPromptStreaming(false);
         }
@@ -47,7 +55,7 @@ export function useModalPrompt() {
     } catch {
       setPromptStreaming(false);
     }
-  }, [promptInput, promptStreaming, setPromptInput, setPromptError, setPromptStreaming, appendContent]);
+  }, [promptInput, promptStreaming, setPromptInput, setPromptError, setPromptStreaming, appendSegment]);
 
   return {
     promptInput,
