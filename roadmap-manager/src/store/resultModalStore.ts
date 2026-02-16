@@ -48,7 +48,7 @@ interface ResultModalState {
   clearPrompt: () => void;
 }
 
-export const useResultModalStore = create<ResultModalState>((set) => ({
+export const useResultModalStore = create<ResultModalState>((set, get) => ({
   isOpen: false,
   title: '',
   segments: [],
@@ -134,7 +134,3 @@ export const useResultModalStore = create<ResultModalState>((set) => ({
     set({ promptInput: '', promptStreaming: false, promptError: null });
   },
 }));
-
-function get() {
-  return useResultModalStore.getState();
-}
