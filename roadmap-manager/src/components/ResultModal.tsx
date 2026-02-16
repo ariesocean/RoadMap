@@ -30,14 +30,14 @@ export const ResultModal: React.FC = () => {
     }
   }, [segments, isOpen, promptStreaming]);
 
-  if (!isOpen) return null;
-
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       submitPrompt();
     }
   }, [submitPrompt]);
+
+  if (!isOpen) return null;
 
   const isProcessing = isStreaming || promptStreaming;
 
