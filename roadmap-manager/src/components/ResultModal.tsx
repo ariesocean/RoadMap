@@ -76,10 +76,10 @@ export const ResultModal: React.FC = () => {
                 {isProcessing ? 'Waiting for response...' : 'Task completed'}
               </span>
             ) : (
-              segments.map((segment) => {
+              segments.map((segment, index) => {
                 if (HIDDEN_TYPES.includes(segment.type as HiddenType)) return null;
                 const content = segment.content ?? '';
-                const segmentKey = segment.id ?? `segment-${segment.type}-${Math.random()}`;
+                const segmentKey = segment.id ?? `segment-${index}`;
 
                 switch (segment.type) {
                   case 'reasoning':
