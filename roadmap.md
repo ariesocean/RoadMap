@@ -31,7 +31,7 @@
 ## Subtasks
 * [x] Research and select web browser tool for AI agent
 * [ ] Build AI-Bridge CLI for OpenCode serve communication
-  * [ ] Test opencode-cli
+  * [x] Test opencode-cli
 
 **Last Updated:** 2026-02-15 23:55
 
@@ -58,6 +58,7 @@
 
 ---
 # 春节前后行程 [created: 2026-02-12 11:20]
+
 > 2月13日到2月21日的日程安排
 
 ## Subtasks
@@ -67,9 +68,27 @@
   * [x] 13 号上午到武汉后先去搞一碗牛肉粉，去雪松路看看
   * [x] 13 号中午去永旺买碱面，纯芝麻酱，酸豆角
   * [x] 去看家家
-* [ ] 年夜饭看春晚（2月16日）
-* [ ] 制定除夕夜计划
 * [x] 购买返程的车票，挑选日期
+* [ ] 除夕当天安排（2月16日）
+  * [ ] 年夜饭看春晚
+  * [ ] 接外婆回家
+* [ ] 今天下午去江辰天街看看西昊的人工椅
+  * [ ] 选中合适的椅子型号
+  * [ ] 京东下单，次日送达家里
+  * [ ] 去江辰天街买零食（巧克力、蛋糕等）
+  * [ ] 买饮料（可乐、奶茶等）
+* [ ] 挑选电动车
+* [ ] 初六返程（2月21日）
+
+**Last Updated:** 2026-02-16 14:14
 
 **Last Updated:** 2026-02-15 23:55
+
+**Last Updated:** 2026-02-15 23:55
+
+**Last Updated:** 2026-02-15 23:55
+
+**Last Updated:** 2026-02-15 23:55
+
+---
 

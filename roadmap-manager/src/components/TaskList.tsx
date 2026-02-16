@@ -23,30 +23,43 @@ import { useTaskStore } from '@/store/taskStore';
 import { TaskCard } from './TaskCard';
 import type { Task } from '@/store/types';
 
-const SortableTaskCard = ({ task, index }: { task: Task; index: number }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
+const SortableTaskCard = React.forwardRef<HTMLDivElement, { task: Task; index: number }>(
+  ({ task, index }, ref) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: task.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.3 : 1,
-  };
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.3 : 1,
+    };
 
-  return (
-    <div ref={setNodeRef} style={style} {...attributes}>
-      <div {...listeners}>
-        <TaskCard task={task} index={index} />
+    const combinedRef = (node: HTMLDivElement | null) => {
+      setNodeRef(node);
+      if (typeof ref === 'function') {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    };
+
+    return (
+      <div ref={combinedRef} style={style} {...attributes}>
+        <div {...listeners}>
+          <TaskCard task={task} index={index} />
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
+
+SortableTaskCard.displayName = 'SortableTaskCard';
 
 export const TaskList: React.FC = () => {
   const {
