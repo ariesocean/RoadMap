@@ -1,9 +1,33 @@
 import { create } from 'zustand';
 
+type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool-result' | 'done' | 'error' | 'timeout';
+
+interface ContentSegment {
+  id: string;
+  type: SegmentType;
+  content: string;
+  timestamp: number;
+  metadata?: {
+    tool?: string;
+  };
+}
+
+interface SessionInfo {
+  title: string;
+  prompt: string;
+}
+
+interface ModelInfo {
+  providerID: string;
+  modelID: string;
+}
+
 interface ResultModalState {
   isOpen: boolean;
   title: string;
-  content: string;
+  segments: ContentSegment[];
+  sessionInfo: SessionInfo | null;
+  modelInfo: ModelInfo | null;
   onCloseCallback: (() => void) | null;
   isStreaming: boolean;
 
@@ -12,10 +36,10 @@ interface ResultModalState {
   promptStreaming: boolean;
   promptError: string | null;
 
-  openModal: (title: string, content: string, onClose?: () => void) => void;
+  openModal: (title: string, sessionInfo?: SessionInfo, modelInfo?: ModelInfo, onClose?: () => void) => void;
   closeModal: () => void;
-  setContent: (content: string) => void;
-  appendContent: (text: string) => void;
+  appendSegment: (segment: ContentSegment) => void;
+  clearSegments: () => void;
   setStreaming: (streaming: boolean) => void;
   setPromptMode: (enabled: boolean) => void;
   setPromptInput: (input: string) => void;
@@ -27,7 +51,9 @@ interface ResultModalState {
 export const useResultModalStore = create<ResultModalState>((set) => ({
   isOpen: false,
   title: '',
-  content: '',
+  segments: [],
+  sessionInfo: null,
+  modelInfo: null,
   onCloseCallback: null,
   isStreaming: false,
 
@@ -36,11 +62,13 @@ export const useResultModalStore = create<ResultModalState>((set) => ({
   promptStreaming: false,
   promptError: null,
 
-  openModal: (title: string, content: string, onClose?: () => void) => {
+  openModal: (title: string, sessionInfo?: SessionInfo, modelInfo?: ModelInfo, onClose?: () => void) => {
     set({
       isOpen: true,
       title,
-      content,
+      segments: [],
+      sessionInfo: sessionInfo || null,
+      modelInfo: modelInfo || null,
       onCloseCallback: onClose || null,
       isStreaming: false,
       isPromptMode: false,
@@ -55,7 +83,9 @@ export const useResultModalStore = create<ResultModalState>((set) => ({
     set({
       isOpen: false,
       title: '',
-      content: '',
+      segments: [],
+      sessionInfo: null,
+      modelInfo: null,
       onCloseCallback: null,
       isStreaming: false,
       isPromptMode: false,
@@ -66,12 +96,18 @@ export const useResultModalStore = create<ResultModalState>((set) => ({
     if (callback) callback();
   },
 
-  setContent: (content: string) => {
-    set({ content });
+  appendSegment: (segment: ContentSegment) => {
+    set((state) => {
+      const newSegments = [...state.segments, segment];
+      if (newSegments.length > 500) {
+        newSegments.shift();
+      }
+      return { segments: newSegments };
+    });
   },
 
-  appendContent: (text: string) => {
-    set((state) => ({ content: state.content + text }));
+  clearSegments: () => {
+    set({ segments: [] });
   },
 
   setStreaming: (streaming: boolean) => {
