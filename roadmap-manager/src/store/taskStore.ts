@@ -137,7 +137,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             }
 
             if (eventType === 'start' || eventType === 'started') {
-              processEvent(eventId, () => appendSegment(createSegment('text', data.message || '')));
+              // SKIP - internal backend messages, not actual AI output
             } else if (eventType === 'text') {
               processEvent(eventId, () => appendSegment(createSegment('text', data.content || '')));
             } else if (eventType === 'tool-call') {
