@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Session, Message } from './types';
-import { fetchSessionsFromServer, convertServerSessionToLocal, showToastNotification } from '@/services/opencodeAPI';
+import { fetchSessionsFromServer, convertServerSessionToLocal, showToastNotification, type ServerSession } from '@/services/opencodeAPI';
 import { generateUUID, generateMessageId } from '@/utils/idGenerator';
 import { getCurrentISOString } from '@/utils/timestamp';
 import { saveToLocalStorage, loadFromLocalStorage, removeFromLocalStorage } from '@/utils/storage';

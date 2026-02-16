@@ -7,6 +7,7 @@ import { useTaskStore } from '@/store/taskStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useSession } from '@/hooks/useSession';
 import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
+import { initializeModelStore } from '@/store/modelStore';
 
 export const App: React.FC = () => {
   const { refreshTasks } = useTaskStore();
@@ -16,6 +17,8 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     initOpencodeSDK().catch(console.error);
+
+    initializeModelStore();
 
     const savedTheme = localStorage.getItem('theme-storage');
     if (savedTheme) {

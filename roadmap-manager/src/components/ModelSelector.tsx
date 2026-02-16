@@ -76,7 +76,6 @@ export const ModelSelector: React.FC = () => {
               Select Model
             </div>
             {AVAILABLE_MODELS.map((model) => {
-              const modelColors = getProviderColor(model.providerID);
               const isSelected = currentModel.displayName === model.displayName;
               
               return (
