@@ -7,9 +7,10 @@
 * [ ] 开发FutSpotTrade继承ArbitrageTrade, 用于期限套利
 * [ ] 开发ScalpTrade继承ArbitrageTrade, 用于极限套利
 
-**Last Updated:** 2026-02-15 23:55
+**Last Updated:** 2026-02-11 03:53
 
 ---
+
 # trade-gateway test (TGT) [created: 2026-02-11 04:06]
 > trade-gateway test (TGT)
 
@@ -22,9 +23,10 @@
   * [ ] 整理所有碰到过的失败订单信息
   * [x] login逻辑加loginstatus检查
 
-**Last Updated:** 2026-02-15 23:55
+**Last Updated:** 2026-02-11 04:06
 
 ---
+
 # AI Agent Development [created: 2026-02-15 13:58]
 > Get ready for AI Agent Build step by step
 
@@ -33,16 +35,20 @@
 * [ ] Build AI-Bridge CLI for OpenCode serve communication
   * [x] Test opencode-cli
 
-**Last Updated:** 2026-02-15 23:55
+**Last Updated:** 2026-02-15 13:58
 
 ---
+
 # Design Gold Trade System(GTS) [created: 2026-02-15 15:47]
 > Design Gold Trade System(GTS)
 
+## Subtasks
 
-**Last Updated:** 2026-02-15 23:55
+
+**Last Updated:** 2026-02-15 15:47
 
 ---
+
 # Roadmap Manager Refine [created: 2026-02-15 14:34]
 > Roadmap Manager Refine
 
@@ -59,15 +65,15 @@
 * [ ] 实现核心API接口
 * [ ] 测试验证API功能
 
-**Last Updated:** 2026-02-17 10:09
+**Last Updated:** 2026-02-15 14:34
 
 ---
-# 春节前后行程 [created: 2026-02-12 11:20]
 
+# 春节前后行程 [created: 2026-02-12 11:20]
 > 2月13日到2月21日的日程安排
 
 ## Subtasks
-* [x] 今天做大扫除（2月14日）
+- [x] 做大扫除（2月14日）
   * [x] 深度清洗扫地机器人
 * [x] 13 号 抵达第一天
   * [x] 13 号上午到武汉后先去搞一碗牛肉粉，去雪松路看看
@@ -77,14 +83,10 @@
 * [ ] 除夕当天安排（2月16日）
   * [x] 贴对联
   * [ ] 年夜饭（烤羊排）看春晚
-  * [ ] 接外婆回家
-* [ ] 去江辰天街（2月17日）
+* [x] 去江辰天街（2月17日）
   * [ ] 看看西昊的人工椅
   * [ ] 选中合适的椅子型号
+- [x] 今天去看望大舅舅和舅爹（2月17日）
 * [ ] 初六返程（2月21日）
 
-**Last Updated:** 2026-02-16 14:14
-
----
-
-**Last Updated:** 2026-02-17 08:08
+**Last Updated:** 2026-02-12 11:20

@@ -27,7 +27,7 @@
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
     "macOS": {
       "entitlements": null,
       "exceptionDomain": "",

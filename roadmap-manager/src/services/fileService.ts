@@ -1,22 +1,32 @@
 import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
 import type { Task, Achievement } from '@/store/types';
 
+const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+
+async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+  if (isTauri) {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return invoke<T>(cmd, args);
+  }
+  throw new Error('Not running in Tauri');
+}
+
 export async function readRoadmapFile(): Promise<string> {
+  if (isTauri) {
+    try {
+      return await invoke<string>('read_roadmap');
+    } catch (error) {
+      console.warn('Could not read roadmap via Tauri API:', error);
+    }
+  }
+
   try {
-    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-      const { readTextFile, BaseDirectory } = await import('@tauri-apps/plugin-fs');
-      const content = await readTextFile('roadmap.md', {
-        baseDir: BaseDirectory.AppData,
-      });
-      return content;
-    } else {
-      const response = await fetch('/api/read-roadmap');
-      if (response.ok) {
-        return await response.text();
-      }
+    const response = await fetch('/api/read-roadmap');
+    if (response.ok) {
+      return await response.text();
     }
   } catch {
-    console.warn('Could not read roadmap via Tauri API');
+    console.warn('Could not read roadmap via API');
   }
 
   try {
@@ -32,19 +42,21 @@ export async function readRoadmapFile(): Promise<string> {
 }
 
 export async function writeRoadmapFile(content: string): Promise<void> {
-  try {
-    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-      const { writeTextFile, BaseDirectory } = await import('@tauri-apps/plugin-fs');
-      await writeTextFile('roadmap.md', content, {
-        baseDir: BaseDirectory.AppData,
-      });
-    } else {
-      await fetch('/api/write-roadmap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
-      });
+  if (isTauri) {
+    try {
+      await invoke('write_roadmap', { content });
+      return;
+    } catch (error) {
+      console.warn('Could not write roadmap via Tauri API:', error);
     }
+  }
+
+  try {
+    await fetch('/api/write-roadmap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'Failed to write roadmap file');
   }

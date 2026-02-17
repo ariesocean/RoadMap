@@ -2,6 +2,16 @@ import type { OpenCodeHealthResponse, OpenCodePromptResponse, Session } from '@/
 import { loadTasksFromFile, saveTasksToFile } from '@/services/fileService';
 import { useModelStore } from '@/store/modelStore';
 
+const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+
+async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+  if (isTauri) {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return invoke<T>(cmd, args);
+  }
+  throw new Error('Not running in Tauri');
+}
+
 export interface ServerSessionResponse {
   sessions: ServerSession[];
 }
@@ -40,6 +50,15 @@ function getAuthHeader(): string {
 }
 
 export async function fetchSessionsFromServer(): Promise<ServerSession[]> {
+  if (isTauri) {
+    try {
+      const sessions = await invoke<ServerSession[]>('get_sessions');
+      return sessions;
+    } catch (error) {
+      console.warn('Could not fetch sessions via Tauri API:', error);
+    }
+  }
+
   try {
     const response = await fetch('/session', {
       method: 'GET',
