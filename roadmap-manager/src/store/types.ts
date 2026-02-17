@@ -95,4 +95,5 @@ export interface TaskStore extends UIState {
   reorderTasks: (newOrder: Task[]) => Promise<void>;
   updateTaskDescription: (taskId: string, description: string) => Promise<void>;
   deleteSubtask: (taskId: string, subtaskId: string) => Promise<void>;
+  addSubtask: (taskId: string, content: string, nestedLevel?: number) => Promise<void>;
 }
