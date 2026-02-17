@@ -158,6 +158,16 @@ export async function processPrompt(
       providerID: selectedModel.providerID,
       modelID: selectedModel.modelID
     } : undefined;
+
+    if (isTauri) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('execute_navigate', {
+        prompt,
+        sessionId,
+        model: modelInfo,
+      });
+      return { success: true, message: 'Command executed' };
+    }
     
     const body = sessionId 
       ? { prompt, sessionId, model: modelInfo }
@@ -227,6 +237,74 @@ export async function executeModalPrompt(
 ): Promise<void> {
   try {
     const { selectedModel } = useModelStore.getState();
+    const modelInfo = selectedModel ? {
+      providerID: selectedModel.providerID,
+      modelID: selectedModel.modelID
+    } : undefined;
+
+    if (isTauri) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const { listen } = await import('@tauri-apps/api/event');
+
+      const processedEvents = new Set<string>();
+
+      const processEvent = (eventId: string, handler: () => void) => {
+        if (processedEvents.has(eventId)) return;
+        processedEvents.add(eventId);
+        handler();
+      };
+
+      let eventCounter = 0;
+      let isFinished = false;
+
+      const unlisten = await listen<any>('execute-modal-prompt-event', (event) => {
+        const data = event.payload;
+        const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
+
+        if (data.type === 'session' && data.sessionId) {
+          if (onSessionId) {
+            onSessionId(data.sessionId);
+          }
+        } else if (data.type === 'text') {
+          processEvent(eventId, () => onText(data.content || ''));
+        } else if (data.type === 'reasoning') {
+          if (onReasoning && data.content && data.content.trim()) {
+            processEvent(eventId, () => onReasoning(data.content));
+          }
+        } else if (data.type === 'tool-call') {
+          processEvent(eventId, () => onToolCall(data.name || 'unknown'));
+        } else if (data.type === 'tool') {
+          processEvent(eventId, () => onToolCall(data.name || 'tool'));
+        } else if (data.type === 'tool-result') {
+          processEvent(eventId, () => onToolResult(data.name || 'tool'));
+        } else if (data.type === 'done' || data.type === 'success') {
+          if (!isFinished) {
+            isFinished = true;
+            unlisten();
+            onDone();
+            return;
+          }
+        } else if (data.type === 'error' || data.type === 'failed') {
+          throw new Error(data.message || 'Command failed');
+        }
+      });
+
+      await invoke('execute_modal_prompt', {
+        prompt,
+        sessionId: sessionId || null,
+        model: modelInfo,
+      });
+
+      setTimeout(() => {
+        unlisten();
+        if (!isFinished) {
+          isFinished = true;
+          onDone();
+        }
+      }, 2000);
+
+      return;
+    }
 
     const body: any = sessionId
       ? { prompt, sessionId }

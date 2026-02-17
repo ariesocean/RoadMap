@@ -4,7 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import http from 'http'
 
-const OPENCODE_PORT = 51432
+const OPENCODE_PORT = 51466
 const OPENCODE_HOST = '127.0.0.1'
 
 async function checkServerHealth(): Promise<boolean> {

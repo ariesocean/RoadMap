@@ -9,6 +9,8 @@ import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
 import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
 
+const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
   achievements: [],
@@ -93,6 +95,87 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         ? { prompt, sessionId: currentSession.id, model: modelInfo }
         : { prompt, model: modelInfo };
 
+      setStreaming(true);
+
+      if (isTauri) {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const { listen } = await import('@tauri-apps/api/event');
+
+        const processedEvents = new Set<string>();
+        let eventCounter = 0;
+        let isFinished = false;
+
+        const processEvent = (eventId: string, handler: () => void) => {
+          if (processedEvents.has(eventId)) return;
+          processedEvents.add(eventId);
+          handler();
+        };
+
+        const unlisten = await listen<any>('execute-navigate-event', (event) => {
+          const data = event.payload;
+          const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
+          const eventType = data.type;
+
+          if (data.sessionId && data.sessionName) {
+            createOrUpdateSessionFromAPI(data.sessionId, data.sessionName);
+          }
+
+          if (eventType === 'session' && data.sessionId) {
+            const { setCurrentSessionId } = useResultModalStore.getState();
+            setCurrentSessionId(data.sessionId);
+          } else if (eventType === 'start' || eventType === 'started') {
+            // SKIP
+          } else if (eventType === 'text') {
+            processEvent(eventId, () => appendSegment(createSegment('text', data.content || '')));
+          } else if (eventType === 'tool-call') {
+            // SKIP
+          } else if (eventType === 'tool') {
+            processEvent(eventId, () => appendSegment(createSegment('tool', '', { tool: data.name || 'unknown' })));
+          } else if (eventType === 'tool-result') {
+            processEvent(eventId, () => appendSegment(createSegment('tool-result', '', { tool: data.name || 'unknown' })));
+          } else if (eventType === 'reasoning') {
+            if (data.content && data.content.trim()) {
+              processEvent(eventId, () => appendSegment(createSegment('reasoning', data.content || '')));
+            }
+          } else if (eventType === 'done' || eventType === 'success') {
+            if (!isFinished) {
+              isFinished = true;
+              appendSegment(createSegment('done', data.message || ''));
+              setStreaming(false);
+              setTimeout(async () => {
+                await refreshTasks();
+                setCurrentPrompt('');
+              }, 500);
+            }
+          } else if (eventType === 'error' || eventType === 'failed') {
+            if (!isFinished) {
+              isFinished = true;
+              appendSegment(createSegment('error', data.message || 'Error'));
+              setError(data.message || 'Command failed');
+              setStreaming(false);
+            }
+          } else if (eventType === 'timeout') {
+            if (!isFinished) {
+              isFinished = true;
+              appendSegment(createSegment('timeout', data.message || ''));
+              setStreaming(false);
+            }
+          }
+        });
+
+        await listen('execute-navigate-done', () => {
+          unlisten();
+        });
+
+        await invoke('execute_navigate', {
+          prompt,
+          sessionId: currentSession?.id,
+          model: modelInfo,
+        });
+
+        return;
+      }
+
       const response = await fetch('/api/execute-navigate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,7 +192,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       }
 
       const decoder = new TextDecoder();
-      setStreaming(true);
       let isFinished = false;
       let eventCounter = 0;
       const processedEvents = new Set<string>();

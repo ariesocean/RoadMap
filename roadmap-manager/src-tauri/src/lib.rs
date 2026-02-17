@@ -1,22 +1,21 @@
-use tauri::Manager;
+use tauri::{Manager, Emitter};
 use std::process::{Command, Child, Stdio};
 use std::fs;
 use std::net::TcpStream;
 use std::time::Duration;
+use std::sync::Mutex;
+use std::collections::HashSet;
+use futures_util::stream::StreamExt;
 
-const APP_DATA_DIR: &str = "/Users/SparkingAries/Library/Application Support/roadmap-manager.app";
+const APP_DATA_DIR: &str = "/Users/SparkingAries/Library/Application Support/roadmap-manager";
 const OPENCODE_PORT: u16 = 51466;
 
-fn is_dev_mode() -> bool {
-    std::env::var("TAURI_DEBUG").is_ok()
+struct AppState {
+    processed_events: Mutex<HashSet<String>>,
 }
 
 fn get_roadmap_path() -> std::path::PathBuf {
-    if is_dev_mode() {
-        std::path::Path::new("/Users/SparkingAries/VibeProjects/RoadMap/roadmap.md").to_path_buf()
-    } else {
-        std::path::Path::new(APP_DATA_DIR).join("roadmap.md")
-    }
+    std::path::Path::new(APP_DATA_DIR).join("roadmap.md")
 }
 
 fn is_port_available(port: u16) -> bool {
@@ -67,23 +66,184 @@ fn stop_opencode_server() {
         });
 }
 
+#[derive(serde::Deserialize)]
+struct ModelInfo {
+    #[serde(rename = "providerID")]
+    provider_id: String,
+    #[serde(rename = "modelID")]
+    model_id: String,
+}
+
 #[tauri::command]
-async fn execute_navigate(prompt: String) -> Result<String, String> {
+async fn execute_navigate(
+    prompt: String,
+    session_id: Option<String>,
+    model: Option<ModelInfo>,
+    window: tauri::Window,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
     let url = format!("http://127.0.0.1:{}/api/execute-navigate", OPENCODE_PORT);
+
+    let mut request_body = serde_json::json!({ "prompt": prompt });
+    
+    if let Some(ref sid) = session_id {
+        request_body["sessionId"] = serde_json::json!(sid);
+    }
+    
+    if let Some(ref m) = model {
+        request_body["model"] = serde_json::json!({
+            "providerID": m.provider_id,
+            "modelID": m.model_id
+        });
+    }
 
     let client = reqwest::Client::new();
     let response = client.post(&url)
-        .json(&serde_json::json!({ "prompt": prompt }))
+        .json(&request_body)
         .send()
         .await
         .map_err(|e| format!("Failed to execute navigate: {}", e))?;
 
-    if response.status().is_success() {
-        Ok("Command executed successfully".to_string())
-    } else {
+    if !response.status().is_success() {
         let error = response.text().await.unwrap_or_default();
-        Err(format!("Execute failed: {}", error))
+        return Err(format!("Execute failed: {}", error));
     }
+
+    let mut event_counter: u64 = 0;
+
+    let reader = response.bytes_stream();
+    tokio::pin!(reader);
+
+    while let Some(chunk) = reader.next().await {
+        let mut processed_events_guard = match state.processed_events.lock() {
+            Ok(guard) => guard,
+            Err(e) => return Err(e.to_string()),
+        };
+
+        match chunk {
+            Ok(bytes) => {
+                if let Ok(text) = String::from_utf8(bytes.to_vec()) {
+                    let lines = text.split('\n');
+                    
+                    for line in lines {
+                        if !line.trim().starts_with("data: ") {
+                            continue;
+                        }
+                        
+                        if let Ok(data) = serde_json::from_str::<serde_json::Value>(line.trim().strip_prefix("data: ").unwrap_or("")) {
+                            let event_type = data.get("type").and_then(|v| v.as_str()).unwrap_or("");
+                            let event_id = data.get("id")
+                                .and_then(|v| v.as_str())
+                                .map(String::from)
+                                .unwrap_or_else(|| format!("{}-{}-{}", event_type, session_id.as_deref().unwrap_or(""), event_counter));
+                            
+                            if processed_events_guard.contains(&event_id) {
+                                continue;
+                            }
+                            processed_events_guard.insert(event_id.clone());
+                            event_counter += 1;
+                            
+                            let _ = window.emit("execute-navigate-event", data);
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Error reading stream: {}", e);
+                break;
+            }
+        }
+    }
+
+    let _ = window.emit("execute-navigate-done", serde_json::json!({}));
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn execute_modal_prompt(
+    prompt: String,
+    session_id: Option<String>,
+    model: Option<ModelInfo>,
+    window: tauri::Window,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    let url = format!("http://127.0.0.1:{}/api/execute-modal-prompt", OPENCODE_PORT);
+
+    let mut request_body = serde_json::json!({ "prompt": prompt });
+    
+    if let Some(ref sid) = session_id {
+        request_body["sessionId"] = serde_json::json!(sid);
+    }
+    
+    if let Some(ref m) = model {
+        request_body["model"] = serde_json::json!({
+            "providerID": m.provider_id,
+            "modelID": m.model_id
+        });
+    }
+
+    let client = reqwest::Client::new();
+    let response = client.post(&url)
+        .json(&request_body)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to execute modal prompt: {}", e))?;
+
+    if !response.status().is_success() {
+        let error = response.text().await.unwrap_or_default();
+        return Err(format!("Execute failed: {}", error));
+    }
+
+    let mut event_counter: u64 = 0;
+
+    let reader = response.bytes_stream();
+    tokio::pin!(reader);
+
+    while let Some(chunk) = reader.next().await {
+        let mut processed_events_guard = match state.processed_events.lock() {
+            Ok(guard) => guard,
+            Err(e) => return Err(e.to_string()),
+        };
+
+        match chunk {
+            Ok(bytes) => {
+                if let Ok(text) = String::from_utf8(bytes.to_vec()) {
+                    let lines = text.split('\n');
+                    
+                    for line in lines {
+                        if !line.trim().starts_with("data: ") {
+                            continue;
+                        }
+                        
+                        if let Ok(data) = serde_json::from_str::<serde_json::Value>(line.trim().strip_prefix("data: ").unwrap_or("")) {
+                            let event_type = data.get("type").and_then(|v| v.as_str()).unwrap_or("");
+                            let event_id = data.get("id")
+                                .and_then(|v| v.as_str())
+                                .map(String::from)
+                                .unwrap_or_else(|| format!("modal-{}-{}-{}", event_type, session_id.as_deref().unwrap_or(""), event_counter));
+                            
+                            if processed_events_guard.contains(&event_id) {
+                                continue;
+                            }
+                            processed_events_guard.insert(event_id.clone());
+                            event_counter += 1;
+                            
+                            let _ = window.emit("execute-modal-prompt-event", data);
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Error reading stream: {}", e);
+                break;
+            }
+        }
+    }
+
+    let _ = window.emit("execute-modal-prompt-done", serde_json::json!({}));
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -131,11 +291,7 @@ async fn get_sessions() -> Result<Vec<serde_json::Value>, String> {
         vec![]
     };
 
-    let project_dir = if is_dev_mode() {
-        "/Users/SparkingAries/VibeProjects/RoadMap"
-    } else {
-        APP_DATA_DIR
-    };
+    let project_dir = APP_DATA_DIR;
 
     let filtered: Vec<serde_json::Value> = sessions.into_iter()
         .filter(|s| {
@@ -156,10 +312,14 @@ async fn get_sessions() -> Result<Vec<serde_json::Value>, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(AppState {
+            processed_events: Mutex::new(HashSet::new()),
+        })
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             execute_navigate,
+            execute_modal_prompt,
             read_roadmap,
             write_roadmap,
             get_sessions

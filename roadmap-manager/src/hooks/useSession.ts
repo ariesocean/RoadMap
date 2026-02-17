@@ -2,6 +2,8 @@ import { useCallback, useEffect } from 'react';
 import { useSessionStore } from '@/store/sessionStore';
 import { useModelStore } from '@/store/modelStore';
 
+const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+
 export function useSession() {
   const {
     sessions,
@@ -81,6 +83,52 @@ export function useSession() {
           providerID: selectedModel.providerID,
           modelID: selectedModel.modelID
         } : undefined;
+
+        if (isTauri) {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const { listen } = await import('@tauri-apps/api/event');
+
+          let resultContent = '';
+          let isFinished = false;
+
+          const unlisten = await listen<any>('execute-navigate-event', (event) => {
+            const data = event.payload;
+
+            if (data.type === 'text') {
+              resultContent += data.content || '';
+            } else if (data.type === 'done' || data.type === 'success') {
+              if (!isFinished) {
+                isFinished = true;
+                if (resultContent) {
+                  addMessage(activeSessionId, 'assistant', resultContent);
+                }
+                if (currentSession.title === 'New Conversation' && resultContent) {
+                  const title = resultContent.length > 50
+                    ? resultContent.substring(0, 50) + '...'
+                    : resultContent;
+                  updateSessionTitle(activeSessionId, title);
+                }
+                onComplete?.();
+              }
+            }
+          });
+
+          await invoke('execute_navigate', {
+            prompt,
+            sessionId: activeSessionId,
+            model: modelInfo,
+          });
+
+          setTimeout(() => {
+            unlisten();
+            if (!isFinished && resultContent) {
+              addMessage(activeSessionId, 'assistant', resultContent);
+              onComplete?.();
+            }
+          }, 2000);
+
+          return;
+        }
         
         const response = await fetch('/api/execute-navigate', {
           method: 'POST',
