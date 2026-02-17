@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Pencil, Trash } from 'lucide-react';
+import { Check, Pencil, Trash, Plus } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -242,11 +242,16 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
 };
 
 export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) => {
-  const { reorderSubtasks } = useTaskStore();
+  const { reorderSubtasks, addSubtask } = useTaskStore();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [localSubtasks, setLocalSubtasks] = useState(subtasks);
   const [isInNestingMode, setIsInNestingMode] = useState(false);
   const [targetNestingLevel, setTargetNestingLevel] = useState<number | null>(null);
+
+  // States for adding new subtask
+  const [isAdding, setIsAdding] = useState(false);
+  const [newSubtaskContent, setNewSubtaskContent] = useState('');
+  const addInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLocalSubtasks(subtasks);
@@ -333,12 +338,36 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
       }
     }
   };
-  
+
+  // Handlers for adding new subtask
+  const handleAddClick = () => {
+    setIsAdding(true);
+    setTimeout(() => addInputRef.current?.focus(), 0);
+  };
+
+  const handleAddKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && newSubtaskContent.trim()) {
+      await addSubtask(taskId, newSubtaskContent.trim(), 0);
+      setNewSubtaskContent('');
+      setIsAdding(false);
+    } else if (e.key === 'Escape') {
+      setIsAdding(false);
+      setNewSubtaskContent('');
+    }
+  };
+
+  const handleAddBlur = () => {
+    if (!newSubtaskContent.trim()) {
+      setIsAdding(false);
+    }
+  };
+
   const activeSubtask = activeId
     ? localSubtasks.find(s => s.id === activeId)
     : null;
 
   return (
+    <>
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
@@ -374,5 +403,33 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
         ) : null}
       </DragOverlay>
     </DndContext>
+
+    {/* Add new subtask area at bottom */}
+    {isAdding ? (
+      <div className="mt-2 flex items-center gap-2 py-2 px-2">
+        <div className="w-5 h-5 rounded border-2 border-border-color dark:border-dark-border-color" />
+        <input
+          ref={addInputRef}
+          type="text"
+          value={newSubtaskContent}
+          onChange={(e) => setNewSubtaskContent(e.target.value)}
+          onKeyDown={handleAddKeyDown}
+          onBlur={handleAddBlur}
+          placeholder="输入任务内容..."
+          className="flex-1 text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-2 py-1 outline-none text-primary-text dark:text-dark-primary-text"
+        />
+      </div>
+    ) : (
+      <div
+        onClick={handleAddClick}
+        className="mt-2 h-2 hover:h-8 border-t border-dashed border-border-color/30 hover:border-primary/50 hover:bg-secondary-bg/30 dark:hover:bg-dark-secondary-bg/30 flex items-center justify-center cursor-pointer transition-all duration-200 ease-in-out group"
+      >
+        <span className="opacity-0 group-hover:opacity-100 text-sm text-secondary-text dark:text-dark-secondary-text hover:text-primary flex items-center gap-1 transition-opacity duration-200">
+          <Plus className="w-4 h-4" />
+          添加任务
+        </span>
+      </div>
+    )}
+    </>
   );
 };
