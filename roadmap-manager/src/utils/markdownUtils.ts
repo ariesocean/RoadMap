@@ -469,3 +469,92 @@ export function deleteSubtaskFromMarkdown(
 
   return updatedLines.join('\n');
 }
+
+export function appendSubtaskToMarkdown(
+  markdown: string,
+  taskTitle: string,
+  newSubtask: Subtask
+): string {
+  const lines = markdown.split('\n');
+  let inTargetTask = false;
+  let inAchievements = false;
+  let taskStartIndex = -1;
+  let lastSubtaskIndex = -1;
+  let hasSubtasksHeader = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('## Achievements')) {
+      inAchievements = true;
+      if (inTargetTask) break;
+      continue;
+    }
+
+    const taskMatch = line.match(/^# (.+)$/);
+    if (taskMatch) {
+      const title = taskMatch[1].trim();
+      const { title: cleanTitle } = extractCreatedDate(title);
+
+      if (cleanTitle === taskTitle) {
+        inTargetTask = true;
+        taskStartIndex = i;
+      } else if (inTargetTask && !inAchievements) {
+        break;
+      }
+      continue;
+    }
+
+    if (inTargetTask && !inAchievements) {
+      // Check for Subtasks header
+      if (line.match(/^##\s+Subtasks?$/i)) {
+        hasSubtasksHeader = true;
+        continue;
+      }
+
+      // Track last subtask position
+      const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
+      if (subtaskMatch) {
+        lastSubtaskIndex = i;
+        continue;
+      }
+    }
+  }
+
+  if (taskStartIndex === -1) {
+    return markdown;
+  }
+
+  // Build new subtask line
+  const indent = '  '.repeat(Math.min(newSubtask.nestedLevel, 6));
+  const newSubtaskLine = `${indent}* [ ] ${newSubtask.content}`;
+
+  // Determine insert position
+  let insertIndex;
+  if (lastSubtaskIndex !== -1) {
+    // Insert after last subtask
+    insertIndex = lastSubtaskIndex + 1;
+  } else if (hasSubtasksHeader) {
+    // Insert after Subtasks header
+    const subtasksHeaderIndex = lines.findIndex((line, idx) =>
+      idx > taskStartIndex && line.match(/^##\s+Subtasks?$/i)
+    );
+    insertIndex = subtasksHeaderIndex + 1;
+  } else {
+    // No Subtasks header yet, need to add it
+    let insertPos = taskStartIndex + 1;
+    while (insertPos < lines.length &&
+           (lines[insertPos].trim() === '' || lines[insertPos].startsWith('>'))) {
+      insertPos++;
+    }
+
+    // Insert Subtasks header
+    lines.splice(insertPos, 0, '', '## Subtasks');
+    insertIndex = insertPos + 2;
+  }
+
+  // Insert new subtask
+  lines.splice(insertIndex, 0, newSubtaskLine);
+
+  return lines.join('\n');
+}
