@@ -1,8 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useSessionStore } from '@/store/sessionStore';
 import { useModelStore } from '@/store/modelStore';
-
-const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+import { isTauri } from '@tauri-apps/api/core';
 
 export function useSession() {
   const {
@@ -84,48 +83,101 @@ export function useSession() {
           modelID: selectedModel.modelID
         } : undefined;
 
-        if (isTauri) {
-          const { invoke } = await import('@tauri-apps/api/core');
-          const { listen } = await import('@tauri-apps/api/event');
+        if (isTauri()) {
+          // Tauri 模式：直接调用 OpenCode 原生 API，不需要 Vite 服务器
+          const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+          const baseUrl = `http://127.0.0.1:51466`;
 
+          // 创建新会话
+          const createRes = await tauriFetch(`${baseUrl}/session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: `navigate: ${prompt}` }),
+          });
+
+          if (!createRes.ok) {
+            throw new Error('Failed to create session');
+          }
+
+          const sessionData = await createRes.json();
+          const sessionId = sessionData.id;
+
+          // 发送消息
+          const payload: any = {
+            parts: [{ type: 'text', text: `use navigate: ${prompt}` }]
+          };
+          if (modelInfo) {
+            payload.model = modelInfo;
+          }
+
+          const sendRes = await tauriFetch(`${baseUrl}/session/${sessionId}/prompt_async`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!sendRes.ok) {
+            throw new Error('Failed to send prompt');
+          }
+
+          // 监听事件
+          const response = await tauriFetch(`${baseUrl}/event?session=${sessionId}`, {
+            method: 'GET',
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to start command');
+          }
+
+          const reader = response.body?.getReader();
+          if (!reader) {
+            throw new Error('No response body');
+          }
+
+          const decoder = new TextDecoder();
           let resultContent = '';
           let isFinished = false;
 
-          const unlisten = await listen<any>('execute-navigate-event', (event) => {
-            const data = event.payload;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-            if (data.type === 'text') {
-              resultContent += data.content || '';
-            } else if (data.type === 'done' || data.type === 'success') {
-              if (!isFinished) {
-                isFinished = true;
-                if (resultContent) {
-                  addMessage(activeSessionId, 'assistant', resultContent);
+            const text = decoder.decode(value);
+            const lines = text.split('\n');
+
+            for (const line of lines) {
+              if (!line.trim().startsWith('data: ')) continue;
+
+              try {
+                const data = JSON.parse(line.trim().slice(6));
+
+                if (data.type === 'text') {
+                  resultContent += data.content || '';
+                } else if (data.type === 'done' || data.type === 'success') {
+                  if (!isFinished) {
+                    isFinished = true;
+                    if (resultContent) {
+                      addMessage(activeSessionId, 'assistant', resultContent);
+                    }
+                    if (currentSession.title === 'New Conversation' && resultContent) {
+                      const title = resultContent.length > 50
+                        ? resultContent.substring(0, 50) + '...'
+                        : resultContent;
+                      updateSessionTitle(activeSessionId, title);
+                    }
+                    onComplete?.();
+                  }
                 }
-                if (currentSession.title === 'New Conversation' && resultContent) {
-                  const title = resultContent.length > 50
-                    ? resultContent.substring(0, 50) + '...'
-                    : resultContent;
-                  updateSessionTitle(activeSessionId, title);
-                }
-                onComplete?.();
+              } catch (e) {
+                console.error('Failed to parse event:', e);
               }
             }
-          });
+          }
 
-          await invoke('execute_navigate', {
-            prompt,
-            sessionId: activeSessionId,
-            model: modelInfo,
-          });
-
-          setTimeout(() => {
-            unlisten();
-            if (!isFinished && resultContent) {
-              addMessage(activeSessionId, 'assistant', resultContent);
-              onComplete?.();
-            }
-          }, 2000);
+          if (!isFinished && resultContent) {
+            addMessage(activeSessionId, 'assistant', resultContent);
+            onComplete?.();
+          }
 
           return;
         }

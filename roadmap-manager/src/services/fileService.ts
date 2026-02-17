@@ -1,10 +1,9 @@
 import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
 import type { Task, Achievement } from '@/store/types';
-
-const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+import { isTauri } from '@tauri-apps/api/core';
 
 async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
-  if (isTauri) {
+  if (isTauri()) {
     const { invoke } = await import('@tauri-apps/api/core');
     return invoke<T>(cmd, args);
   }
@@ -12,18 +11,25 @@ async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T
 }
 
 export async function readRoadmapFile(): Promise<string> {
-  if (isTauri) {
+  console.log('[fileService] readRoadmapFile called, isTauri:', isTauri());
+  if (isTauri()) {
     try {
-      return await invoke<string>('read_roadmap');
+      console.log('[fileService] Attempting Tauri invoke...');
+      const result = await invoke<string>('read_roadmap');
+      console.log('[fileService] Tauri invoke success, content length:', result.length);
+      return result;
     } catch (error) {
-      console.warn('Could not read roadmap via Tauri API:', error);
+      console.error('[fileService] Tauri invoke failed:', error);
     }
   }
 
+  console.log('[fileService] Falling back to /api/read-roadmap...');
   try {
     const response = await fetch('/api/read-roadmap');
     if (response.ok) {
-      return await response.text();
+      const text = await response.text();
+      console.log('[fileService] API success, content length:', text.length);
+      return text;
     }
   } catch {
     console.warn('Could not read roadmap via API');
@@ -42,7 +48,7 @@ export async function readRoadmapFile(): Promise<string> {
 }
 
 export async function writeRoadmapFile(content: string): Promise<void> {
-  if (isTauri) {
+  if (isTauri()) {
     try {
       await invoke('write_roadmap', { content });
       return;

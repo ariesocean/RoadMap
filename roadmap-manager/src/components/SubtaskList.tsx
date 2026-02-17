@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Pencil, Trash, Plus } from 'lucide-react';
+import { Check, Pencil, Trash } from 'lucide-react';
 import {
   DndContext,
   closestCenter,

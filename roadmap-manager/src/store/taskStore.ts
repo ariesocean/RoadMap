@@ -8,8 +8,7 @@ import { useResultModalStore, type ContentSegment } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
 import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
-
-const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+import { isTauri } from '@tauri-apps/api/core';
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
@@ -97,13 +96,63 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       setStreaming(true);
 
-      if (isTauri) {
-        const { invoke } = await import('@tauri-apps/api/core');
-        const { listen } = await import('@tauri-apps/api/event');
+      if (isTauri()) {
+        // Tauri 模式：直接调用 OpenCode 原生 API，不需要 Vite 服务器
+        const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+        const OPENCODE_PORT = 51466;
+        const baseUrl = `http://127.0.0.1:${OPENCODE_PORT}`;
 
-        const processedEvents = new Set<string>();
-        let eventCounter = 0;
+        // 如果没有 session，先创建
+        let actualSessionId = currentSession?.id;
+        if (!actualSessionId) {
+          const createRes = await tauriFetch(`${baseUrl}/session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: `navigate: ${prompt}` }),
+          });
+          if (createRes.ok) {
+            const data = await createRes.json();
+            actualSessionId = data.id;
+          }
+        }
+
+        // 发送消息到 OpenCode
+        const navigatePrompt = `use navigate: ${prompt}`;
+        const payload: any = {
+          parts: [{ type: 'text', text: navigatePrompt }]
+        };
+        if (modelInfo) {
+          payload.model = modelInfo;
+        }
+
+        const sendRes = await tauriFetch(`${baseUrl}/session/${actualSessionId}/prompt_async`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!sendRes.ok) {
+          throw new Error('Failed to send prompt');
+        }
+
+        // 监听事件流
+        const response = await tauriFetch(`${baseUrl}/event?session=${actualSessionId}`, {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to start command');
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        const decoder = new TextDecoder();
         let isFinished = false;
+        let eventCounter = 0;
+        const processedEvents = new Set<string>();
 
         const processEvent = (eventId: string, handler: () => void) => {
           if (processedEvents.has(eventId)) return;
@@ -111,67 +160,71 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           handler();
         };
 
-        const unlisten = await listen<any>('execute-navigate-event', (event) => {
-          const data = event.payload;
-          const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
-          const eventType = data.type;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-          if (data.sessionId && data.sessionName) {
-            createOrUpdateSessionFromAPI(data.sessionId, data.sessionName);
+          const text = decoder.decode(value);
+          const lines = text.split('\n');
+
+          for (const line of lines) {
+            if (!line.trim().startsWith('data: ')) continue;
+
+            try {
+              const data = JSON.parse(line.trim().slice(6));
+              const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
+              const eventType = data.type;
+
+              if (data.sessionId && data.sessionName) {
+                createOrUpdateSessionFromAPI(data.sessionId, data.sessionName);
+              }
+
+              if (eventType === 'session' && data.sessionId) {
+                const { setCurrentSessionId } = useResultModalStore.getState();
+                setCurrentSessionId(data.sessionId);
+              } else if (eventType === 'start' || eventType === 'started') {
+                // SKIP
+              } else if (eventType === 'text') {
+                processEvent(eventId, () => appendSegment(createSegment('text', data.content || '')));
+              } else if (eventType === 'tool-call') {
+                // SKIP
+              } else if (eventType === 'tool') {
+                processEvent(eventId, () => appendSegment(createSegment('tool', '', { tool: data.name || 'unknown' })));
+              } else if (eventType === 'tool-result') {
+                processEvent(eventId, () => appendSegment(createSegment('tool-result', '', { tool: data.name || 'unknown' })));
+              } else if (eventType === 'reasoning') {
+                if (data.content && data.content.trim()) {
+                  processEvent(eventId, () => appendSegment(createSegment('reasoning', data.content || '')));
+                }
+              } else if (eventType === 'done' || eventType === 'success') {
+                if (!isFinished) {
+                  isFinished = true;
+                  appendSegment(createSegment('done', data.message || ''));
+                  setStreaming(false);
+                  setTimeout(async () => {
+                    await refreshTasks();
+                    setCurrentPrompt('');
+                  }, 500);
+                }
+              } else if (eventType === 'error' || eventType === 'failed') {
+                if (!isFinished) {
+                  isFinished = true;
+                  appendSegment(createSegment('error', data.message || 'Error'));
+                  setError(data.message || 'Command failed');
+                  setStreaming(false);
+                }
+              } else if (eventType === 'timeout') {
+                if (!isFinished) {
+                  isFinished = true;
+                  appendSegment(createSegment('timeout', data.message || ''));
+                  setStreaming(false);
+                }
+              }
+            } catch (e) {
+              console.error('Failed to parse event:', e);
+            }
           }
-
-          if (eventType === 'session' && data.sessionId) {
-            const { setCurrentSessionId } = useResultModalStore.getState();
-            setCurrentSessionId(data.sessionId);
-          } else if (eventType === 'start' || eventType === 'started') {
-            // SKIP
-          } else if (eventType === 'text') {
-            processEvent(eventId, () => appendSegment(createSegment('text', data.content || '')));
-          } else if (eventType === 'tool-call') {
-            // SKIP
-          } else if (eventType === 'tool') {
-            processEvent(eventId, () => appendSegment(createSegment('tool', '', { tool: data.name || 'unknown' })));
-          } else if (eventType === 'tool-result') {
-            processEvent(eventId, () => appendSegment(createSegment('tool-result', '', { tool: data.name || 'unknown' })));
-          } else if (eventType === 'reasoning') {
-            if (data.content && data.content.trim()) {
-              processEvent(eventId, () => appendSegment(createSegment('reasoning', data.content || '')));
-            }
-          } else if (eventType === 'done' || eventType === 'success') {
-            if (!isFinished) {
-              isFinished = true;
-              appendSegment(createSegment('done', data.message || ''));
-              setStreaming(false);
-              setTimeout(async () => {
-                await refreshTasks();
-                setCurrentPrompt('');
-              }, 500);
-            }
-          } else if (eventType === 'error' || eventType === 'failed') {
-            if (!isFinished) {
-              isFinished = true;
-              appendSegment(createSegment('error', data.message || 'Error'));
-              setError(data.message || 'Command failed');
-              setStreaming(false);
-            }
-          } else if (eventType === 'timeout') {
-            if (!isFinished) {
-              isFinished = true;
-              appendSegment(createSegment('timeout', data.message || ''));
-              setStreaming(false);
-            }
-          }
-        });
-
-        await listen('execute-navigate-done', () => {
-          unlisten();
-        });
-
-        await invoke('execute_navigate', {
-          prompt,
-          sessionId: currentSession?.id,
-          model: modelInfo,
-        });
+        }
 
         return;
       }

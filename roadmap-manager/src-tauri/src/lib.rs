@@ -10,6 +10,26 @@ use futures_util::stream::StreamExt;
 const APP_DATA_DIR: &str = "/Users/SparkingAries/Library/Application Support/roadmap-manager";
 const OPENCODE_PORT: u16 = 51466;
 
+fn setup_panic_hook() {
+    std::panic::set_hook(Box::new(|panic_info| {
+        let msg = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+            s.to_string()
+        } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+            s.clone()
+        } else {
+            "Unknown panic".to_string()
+        };
+
+        let location = if let Some(loc) = panic_info.location() {
+            format!("{}:{}:{}", loc.file(), loc.line(), loc.column())
+        } else {
+            "unknown location".to_string()
+        };
+
+        eprintln!("PANIC at {}: {}", location, msg);
+    }));
+}
+
 struct AppState {
     processed_events: Mutex<HashSet<String>>,
 }
@@ -97,7 +117,11 @@ async fn execute_navigate(
         });
     }
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(300))
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+
     let response = client.post(&url)
         .json(&request_body)
         .send()
@@ -183,7 +207,11 @@ async fn execute_modal_prompt(
         });
     }
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(300))
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+
     let response = client.post(&url)
         .json(&request_body)
         .send()
@@ -311,6 +339,8 @@ async fn get_sessions() -> Result<Vec<serde_json::Value>, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    setup_panic_hook();
+
     tauri::Builder::default()
         .manage(AppState {
             processed_events: Mutex::new(HashSet::new()),

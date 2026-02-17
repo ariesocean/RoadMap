@@ -1,11 +1,10 @@
 import type { OpenCodeHealthResponse, OpenCodePromptResponse, Session } from '@/store/types';
 import { loadTasksFromFile, saveTasksToFile } from '@/services/fileService';
 import { useModelStore } from '@/store/modelStore';
-
-const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+import { isTauri } from '@tauri-apps/api/core';
 
 async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
-  if (isTauri) {
+  if (isTauri()) {
     const { invoke } = await import('@tauri-apps/api/core');
     return invoke<T>(cmd, args);
   }
@@ -50,7 +49,7 @@ function getAuthHeader(): string {
 }
 
 export async function fetchSessionsFromServer(): Promise<ServerSession[]> {
-  if (isTauri) {
+  if (isTauri()) {
     try {
       const sessions = await invoke<ServerSession[]>('get_sessions');
       return sessions;
@@ -159,13 +158,47 @@ export async function processPrompt(
       modelID: selectedModel.modelID
     } : undefined;
 
-    if (isTauri) {
-      const { invoke } = await import('@tauri-apps/api/core');
-      await invoke('execute_navigate', {
-        prompt,
-        sessionId,
-        model: modelInfo,
+    if (isTauri()) {
+      // Tauri 模式：直接调用 OpenCode 原生 API，不需要 Vite 服务器
+      const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+      const baseUrl = `http://127.0.0.1:51466`;
+
+      // 如果没有 session，先创建
+      let actualSessionId = sessionId;
+      if (!actualSessionId) {
+        const createRes = await tauriFetch(`${baseUrl}/session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: `navigate: ${prompt}` }),
+        });
+        if (createRes.ok) {
+          const data = await createRes.json();
+          actualSessionId = data.id;
+        }
+      }
+
+      if (!actualSessionId) {
+        return { success: false, message: 'Failed to create session' };
+      }
+
+      // 发送消息
+      const payload: any = {
+        parts: [{ type: 'text', text: `use navigate: ${prompt}` }]
+      };
+      if (modelInfo) {
+        payload.model = modelInfo;
+      }
+
+      const sendRes = await tauriFetch(`${baseUrl}/session/${actualSessionId}/prompt_async`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
+
+      if (!sendRes.ok) {
+        return { success: false, message: 'Failed to send prompt' };
+      }
+
       return { success: true, message: 'Command executed' };
     }
     
@@ -242,70 +275,53 @@ export async function executeModalPrompt(
       modelID: selectedModel.modelID
     } : undefined;
 
-    if (isTauri) {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const { listen } = await import('@tauri-apps/api/event');
+    if (isTauri()) {
+      // Tauri 模式：直接调用 OpenCode 原生 API
+      const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+      const baseUrl = `http://127.0.0.1:51466`;
 
-      const processedEvents = new Set<string>();
+      // 如果没有 session，先创建
+      let actualSessionId = sessionId;
+      if (!actualSessionId) {
+        const createRes = await tauriFetch(`${baseUrl}/session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: `modal-prompt: ${prompt}` }),
+        });
+        if (createRes.ok) {
+          const data = await createRes.json();
+          actualSessionId = data.id;
+        }
+      }
 
-      const processEvent = (eventId: string, handler: () => void) => {
-        if (processedEvents.has(eventId)) return;
-        processedEvents.add(eventId);
-        handler();
+      if (!actualSessionId) {
+        throw new Error('Failed to create session');
+      }
+
+      // 发送消息
+      const payload: any = {
+        parts: [{ type: 'text', text: prompt }]
       };
+      if (modelInfo) {
+        payload.model = modelInfo;
+      }
 
-      let eventCounter = 0;
-      let isFinished = false;
-
-      const unlisten = await listen<any>('execute-modal-prompt-event', (event) => {
-        const data = event.payload;
-        const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
-
-        if (data.type === 'session' && data.sessionId) {
-          if (onSessionId) {
-            onSessionId(data.sessionId);
-          }
-        } else if (data.type === 'text') {
-          processEvent(eventId, () => onText(data.content || ''));
-        } else if (data.type === 'reasoning') {
-          if (onReasoning && data.content && data.content.trim()) {
-            processEvent(eventId, () => onReasoning(data.content));
-          }
-        } else if (data.type === 'tool-call') {
-          processEvent(eventId, () => onToolCall(data.name || 'unknown'));
-        } else if (data.type === 'tool') {
-          processEvent(eventId, () => onToolCall(data.name || 'tool'));
-        } else if (data.type === 'tool-result') {
-          processEvent(eventId, () => onToolResult(data.name || 'tool'));
-        } else if (data.type === 'done' || data.type === 'success') {
-          if (!isFinished) {
-            isFinished = true;
-            unlisten();
-            onDone();
-            return;
-          }
-        } else if (data.type === 'error' || data.type === 'failed') {
-          throw new Error(data.message || 'Command failed');
-        }
+      const sendRes = await tauriFetch(`${baseUrl}/session/${actualSessionId}/prompt_async`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
-      await invoke('execute_modal_prompt', {
-        prompt,
-        sessionId: sessionId || null,
-        model: modelInfo,
-      });
+      if (!sendRes.ok) {
+        throw new Error('Failed to send prompt');
+      }
 
-      setTimeout(() => {
-        unlisten();
-        if (!isFinished) {
-          isFinished = true;
-          onDone();
-        }
-      }, 2000);
-
+      // TODO: 处理事件流
+      onDone();
       return;
     }
 
+    // Vite 模式
     const body: any = sessionId
       ? { prompt, sessionId }
       : { prompt };
@@ -335,6 +351,7 @@ export async function executeModalPrompt(
 
     const decoder = new TextDecoder();
     let isFinished = false;
+    let eventCounter = 0;
     const processedEvents = new Set<string>();
 
     const processEvent = (eventId: string, handler: () => void) => {
@@ -351,35 +368,37 @@ export async function executeModalPrompt(
       const lines = text.split('\n');
 
       for (const line of lines) {
-        if (!line.trim() || !line.startsWith('data: ')) continue;
+        if (!line.trim().startsWith('data: ')) continue;
 
         try {
-          const data = JSON.parse(line.slice(6));
-          const eventId = data.id || `${data.type}-${data.sessionId}-${Date.now()}`;
+          const data = JSON.parse(line.trim().slice(6));
+          const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
 
-          if (data.type === 'session' && data.sessionId) {
+          const eventType = data.type;
+          
+          if (eventType === 'session' && data.sessionId) {
             if (onSessionId) {
               onSessionId(data.sessionId);
             }
-          } else if (data.type === 'text') {
+          } else if (eventType === 'text') {
             processEvent(eventId, () => onText(data.content || ''));
-          } else if (data.type === 'reasoning') {
+          } else if (eventType === 'reasoning') {
             if (onReasoning && data.content && data.content.trim()) {
               processEvent(eventId, () => onReasoning(data.content));
             }
-          } else if (data.type === 'tool-call') {
+          } else if (eventType === 'tool-call') {
             processEvent(eventId, () => onToolCall(data.name || 'unknown'));
-          } else if (data.type === 'tool') {
+          } else if (eventType === 'tool') {
             processEvent(eventId, () => onToolCall(data.name || 'tool'));
-          } else if (data.type === 'tool-result') {
+          } else if (eventType === 'tool-result') {
             processEvent(eventId, () => onToolResult(data.name || 'tool'));
-          } else if (data.type === 'done' || data.type === 'success') {
+          } else if (eventType === 'done' || eventType === 'success') {
             if (!isFinished) {
               isFinished = true;
               onDone();
               return;
             }
-          } else if (data.type === 'error' || data.type === 'failed') {
+          } else if (eventType === 'error' || eventType === 'failed') {
             throw new Error(data.message || 'Command failed');
           }
         } catch {
