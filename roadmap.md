@@ -60,10 +60,12 @@
   * [x] 点击输入框清空则删除整行任务
 * [x] 切换方案: 通过OpenCode Serve API实现集成, 替代CLI方案
 * [ ] 调研 opencode serve 现有API接口
-* [ ] 分析 Roadmap Manager 实际需求
-* [ ] 设计满足需求的API接口方案
-* [ ] 实现核心API接口
-* [ ] 测试验证API功能
+  * [ ] 分析 Roadmap Manager 实际需求
+  * [ ] 设计满足需求的API接口方案
+  * [ ] 实现核心API接口
+  * [ ] 测试验证API功能
+- [ ] apply add-tauri-sse-streaming
+  - [ ] 查看以下文件是否会被更改 /Users/SparkingAries/VibeProjects/RoadMap/openspec/changes/archive/2026-02-17-migrate-vite-to-tauri/tasks.md
 
 **Last Updated:** 2026-02-15 14:34
 
@@ -80,9 +82,9 @@
   * [x] 13 号中午去永旺买碱面，纯芝麻酱，酸豆角
   * [x] 去看家家
 * [x] 购买返程的车票，挑选日期
-* [ ] 除夕当天安排（2月16日）
+- [x] 除夕当天安排（2月16日）
   * [x] 贴对联
-  * [ ] 年夜饭（烤羊排）看春晚
+  - [x] 年夜饭（烤羊排）看春晚
 * [x] 去江辰天街（2月17日）
   * [ ] 看看西昊的人工椅
   * [ ] 选中合适的椅子型号
