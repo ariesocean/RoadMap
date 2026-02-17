@@ -17,9 +17,7 @@ The system SHALL maintain a persistent session across application restarts, pres
 #### Scenario: Session storage location
 - **WHEN** running in web browser
 - **THEN** session data SHALL be stored in localStorage under key 'roadmap-sessions'
-- **WHEN** running in Tauri desktop app
-- **THEN** session data SHALL be stored using Tauri store API
-- **AND** session data format SHALL be consistent across both platforms
+- **AND** session data format SHALL be consistent
 
 #### Scenario: Session data validation
 - **WHEN** loading session data from persistent storage

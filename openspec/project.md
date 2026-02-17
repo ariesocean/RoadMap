@@ -6,7 +6,7 @@ macOS native desktop application for managing `roadmap.md` with Microsoft To Do-
 
 ## Tech Stack
 
-- **Runtime**: Tauri (Rust backend)
+- **Runtime**: Vite dev server
 - **Frontend**: React 18 + TypeScript
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS
@@ -19,18 +19,16 @@ macOS native desktop application for managing `roadmap.md` with Microsoft To Do-
 
 ```
 RoadMap/
-├── roadmap-manager/            # Main Tauri application
-│   ├── src/
-│   │   ├── components/        # React components
-│   │   ├── hooks/             # Custom React hooks
-│   │   ├── services/           # API and file services
-│   │   ├── store/             # Zustand stores
-│   │   ├── utils/              # Utility functions
-│   │   └── constants/          # App constants
-│   └── package.json
-├── openspec/                   # OpenSpec documentation
-├── roadmap.md                  # Main task roadmap
-└── achievements.md             # Completed tasks archive
+├── src/                       # React application
+│   ├── components/            # React components
+│   ├── hooks/                 # Custom React hooks
+│   ├── services/              # API and file services
+│   ├── store/                 # Zustand stores
+│   ├── utils/                # Utility functions
+│   └── constants/            # App constants
+├── openspec/                  # OpenSpec documentation
+├── roadmap.md                 # Main task roadmap
+└── achievements.md            # Completed tasks archive
 ```
 
 ## Capabilities
