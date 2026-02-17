@@ -137,19 +137,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
             {formatDate(task.createdAt)}
           </span>
 
-          {task.subtasks.length > 0 && (
-            <button
-              onClick={() => toggleTaskExpanded(task.id)}
-              className="p-1 hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
+          <button
+            onClick={() => toggleTaskExpanded(task.id)}
+            className="p-1 hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
+          >
+            <motion.div
+              animate={{ rotate: task.isExpanded ? 0 : -180 }}
+              transition={{ duration: 0.2 }}
             >
-              <motion.div
-                animate={{ rotate: task.isExpanded ? 0 : -180 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronDown className="w-5 h-5 text-secondary-text dark:text-dark-secondary-text transition-colors duration-300" />
-              </motion.div>
-            </button>
-          )}
+              <ChevronDown className="w-5 h-5 text-secondary-text dark:text-dark-secondary-text transition-colors duration-300" />
+            </motion.div>
+          </button>
         </div>
       </div>
 
@@ -162,7 +160,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
         </div>
       )}
 
-      {task.isExpanded && task.subtasks.length > 0 && (
+      {task.isExpanded && (
         <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
