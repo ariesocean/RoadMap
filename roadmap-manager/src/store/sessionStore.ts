@@ -78,9 +78,6 @@ export interface SessionStore {
   startBackgroundRefresh: () => void;
   stopBackgroundRefresh: () => void;
   selectDefaultSession: () => void;
-  isLocalSession: (sessionId: string) => boolean;
-  cleanupLocalSessions: () => void;
-  syncSessionToServer: (sessionId: string) => Promise<void>;
 }
 
 export const useSessionStore = create<SessionStore>((set, get) => {
@@ -365,79 +362,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
 
       if (sorted.length > 0 && sorted[0].id !== activeSessionId) {
         get().switchToSession(sorted[0].id);
-      }
-    },
-    
-    isLocalSession: (sessionId: string) => {
-      const session = sessions[sessionId];
-      if (!session) return false;
-      const isFromServer = serverSessions.some(s => s.id === sessionId);
-      return !isFromServer;
-    },
-    
-    cleanupLocalSessions: () => {
-      const localSessionIds = Object.keys(sessions).filter(id => {
-        const session = sessions[id];
-        if (!session.serverId) return true;
-        const existsOnServer = serverSessions.some(s => s.id === session.serverId);
-        return !existsOnServer;
-      });
-      
-      const newSessions: Record<string, Session> = {};
-      for (const [id, session] of Object.entries(sessions)) {
-        if (!localSessionIds.includes(id)) {
-          newSessions[id] = session;
-        }
-      }
-      
-      sessions = newSessions;
-      set({ sessions });
-      
-      if (activeSessionId && !sessions[activeSessionId]) {
-        const remaining = Object.keys(sessions);
-        if (remaining.length > 0) {
-          get().switchToSession(remaining[0]);
-        }
-      }
-    },
-    
-    syncSessionToServer: async (sessionId: string) => {
-      const session = sessions[sessionId];
-      if (!session) return;
-      
-      try {
-        const response = await fetch('/session', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${btoa('opencode:')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: session.title,
-            created_at: session.createdAt,
-            last_used_at: session.lastUsedAt,
-          }),
-        });
-        
-        if (!response.ok) return;
-        
-        const data = await response.json();
-        if (data.id) {
-          session.serverId = data.id;
-          session.id = data.id;
-          delete sessions[sessionId];
-          sessions[data.id] = session;
-          
-          if (activeSessionId === sessionId) {
-            activeSessionId = data.id;
-            currentSession = session;
-            setActiveSessionId(data.id);
-          }
-          
-          set({ sessions, activeSessionId, currentSession });
-        }
-      } catch (error) {
-        console.error('Failed to sync session to server:', error);
       }
     },
   };
