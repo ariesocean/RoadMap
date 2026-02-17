@@ -52,9 +52,14 @@
   * [x] Main task description支持点击编辑
 * [x] 支持手动删除子任务
   * [x] 点击输入框清空则删除整行任务
-- [ ] opencode-cli准备好后，接入 Roadmap Manager
+* [x] 切换方案: 通过OpenCode Serve API实现集成, 替代CLI方案
+* [ ] 调研 opencode serve 现有API接口
+* [ ] 分析 Roadmap Manager 实际需求
+* [ ] 设计满足需求的API接口方案
+* [ ] 实现核心API接口
+* [ ] 测试验证API功能
 
-**Last Updated:** 2026-02-15 23:55
+**Last Updated:** 2026-02-17 10:09
 
 ---
 # 春节前后行程 [created: 2026-02-12 11:20]
@@ -76,7 +81,6 @@
 * [ ] 去江辰天街（2月17日）
   * [ ] 看看西昊的人工椅
   * [ ] 选中合适的椅子型号
-  * [ ] 京东下单，次日送达家里
 * [ ] 初六返程（2月21日）
 
 **Last Updated:** 2026-02-16 14:14
