@@ -1,16 +1,8 @@
-const isTauri = typeof window !== 'undefined' && !!(window as any).__TAURI__;
-
 export async function initOpencodeSDK(): Promise<void> {
-  console.log('Running in Tauri mode:', isTauri);
+  console.log('Running in pure Vite mode');
 }
 
 export async function navigateWithOpencode(prompt: string): Promise<string> {
-  if (isTauri) {
-    const { invoke } = await import('@tauri-apps/api/core');
-    const result = await invoke('execute_navigate', { prompt });
-    return result as string;
-  }
-
   const { selectedModel } = await import('@/store/modelStore').then(m => m.useModelStore.getState());
   const modelInfo = selectedModel ? {
     providerID: selectedModel.providerID,
@@ -33,5 +25,5 @@ export async function navigateWithOpencode(prompt: string): Promise<string> {
 }
 
 export async function closeOpencodeSDK(): Promise<void> {
-  // Handled by Rust backend
+  // No cleanup needed for Vite mode
 }

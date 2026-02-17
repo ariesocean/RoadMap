@@ -6,21 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
-    "tauri": "tauri",
-    "tauri-dev": "tauri dev",
-    "tauri-build": "tauri build",
-    "opencode:server": "cd /Users/SparkingAries/VibeProjects/RoadMap && (OPENCODE_SERVER_PASSWORD=\"\" opencode serve --port 51432 &)",
-    "dev:all": "npm run opencode:server & npm run dev"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@opencode-ai/sdk": "^1.1.56",
-    "@tauri-apps/api": "^2.0.0",
-    "@tauri-apps/plugin-fs": "^2.0.0",
-    "@tauri-apps/plugin-http": "^2.0.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.330.0",
     "react": "^18.2.0",
@@ -28,7 +19,6 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.0.0",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",

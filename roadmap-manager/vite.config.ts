@@ -497,10 +497,6 @@ export default defineConfig({
   server: {
     port: 1430,
   },
-  envPrefix: ['VITE_', 'TAURI_'],
-  optimizeDeps: {
-    exclude: ['@opencode-ai/sdk'],
-  },
   build: {
     target: 'esnext',
   },
