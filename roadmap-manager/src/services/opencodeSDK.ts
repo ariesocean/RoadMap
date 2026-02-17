@@ -11,10 +11,16 @@ export async function navigateWithOpencode(prompt: string): Promise<string> {
     return result as string;
   }
 
+  const { selectedModel } = await import('@/store/modelStore').then(m => m.useModelStore.getState());
+  const modelInfo = selectedModel ? {
+    providerID: selectedModel.providerID,
+    modelID: selectedModel.modelID
+  } : undefined;
+
   const response = await fetch('/api/execute-navigate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, model: modelInfo }),
   });
 
   if (!response.ok) {

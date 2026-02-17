@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useSessionStore } from '@/store/sessionStore';
+import { useModelStore } from '@/store/modelStore';
 
 export function useSession() {
   const {
@@ -75,10 +76,16 @@ export function useSession() {
       addMessage(activeSessionId, 'user', prompt);
 
       try {
+        const { selectedModel } = useModelStore.getState();
+        const modelInfo = selectedModel ? {
+          providerID: selectedModel.providerID,
+          modelID: selectedModel.modelID
+        } : undefined;
+        
         const response = await fetch('/api/execute-navigate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, sessionId: activeSessionId }),
+          body: JSON.stringify({ prompt, sessionId: activeSessionId, model: modelInfo }),
         });
 
         if (!response.ok) {

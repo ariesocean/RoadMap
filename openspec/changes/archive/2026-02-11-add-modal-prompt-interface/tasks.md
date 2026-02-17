@@ -24,3 +24,7 @@
 - [x] 5.1 Verify streaming responses work in modal context
 - [x] 5.2 Test error handling for modal prompt failures
 - [x] 5.3 Validate modal can be closed after prompt completes
+
+## 6. Bug Fix: Scrollbar Styling
+- [x] 6.1 Fix scrollbar color to match background theme (add scrollbar-thin class)
+- [x] 6.2 Remove horizontal scrollbar with auto-wrap for long output (add break-all)

@@ -62,7 +62,7 @@ export const ResultModal: React.FC = () => {
         <div className="px-4 py-4">
           <div
             ref={preRef}
-            className="text-[13px] whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-900 p-4 rounded max-h-[50vh] overflow-auto"
+            className="text-[13px] whitespace-pre-wrap break-all font-mono bg-gray-50 dark:bg-gray-900 p-4 rounded max-h-[50vh] overflow-auto scrollbar-thin"
           >
             {sessionInfo && (
               <div className="mb-4 text-sm">

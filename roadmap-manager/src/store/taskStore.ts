@@ -90,8 +90,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
     try {
       const body: any = currentSession
-        ? { prompt, sessionId: currentSession.id }
-        : { prompt };
+        ? { prompt, sessionId: currentSession.id, model: modelInfo }
+        : { prompt, model: modelInfo };
 
       const response = await fetch('/api/execute-navigate', {
         method: 'POST',

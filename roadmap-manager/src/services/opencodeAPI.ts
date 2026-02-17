@@ -153,7 +153,15 @@ export async function processPrompt(
   sessionId?: string
 ): Promise<OpenCodePromptResponse> {
   try {
-    const body = sessionId ? { prompt, sessionId } : { prompt };
+    const { selectedModel } = useModelStore.getState();
+    const modelInfo = selectedModel ? {
+      providerID: selectedModel.providerID,
+      modelID: selectedModel.modelID
+    } : undefined;
+    
+    const body = sessionId 
+      ? { prompt, sessionId, model: modelInfo }
+      : { prompt, model: modelInfo };
     const response = await fetch('/api/execute-navigate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
