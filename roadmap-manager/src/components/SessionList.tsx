@@ -22,17 +22,6 @@ const sessionListStyles = `
   }
 `;
 
-function formatTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  
-  if (isToday) {
-    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-  }
-  return date.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
 export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
   const { 
     sessions, 
@@ -41,9 +30,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
     deleteSession, 
     createNewSession, 
     refreshSessions,
-    isLocalSession,
     isLoadingServerSessions,
-    serverSessions,
   } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -65,10 +52,6 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
 
     return a.title.localeCompare(b.title);
   });
-
-  const serverSessionsOnly = allSessions.filter(s => !isLocalSession(s.id));
-  const localSessionsOnly = allSessions.filter(s => isLocalSession(s.id));
-  const orderedSessions = [...serverSessionsOnly, ...localSessionsOnly];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -157,14 +140,11 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
           </div>
 
           <div className="p-2 text-xs text-secondary-text bg-gray-50 dark:bg-gray-800">
-            {allSessions.length} sessions ({serverSessions.length} from server)
+            {allSessions.length} sessions
           </div>
 
           <div className="max-h-64 overflow-y-auto session-dropdown-scroll">
-            {orderedSessions.map((session) => {
-              const serverSession = serverSessions.find(s => s.id === session.id);
-              const isFromServer = !!serverSession;
-              
+            {allSessions.map((session) => {
               return (
                 <div
                   key={session.id}
@@ -179,10 +159,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                     <span className="text-xs text-primary-text dark:text-dark-primary-text truncate flex-1">
                       {session.title}
                     </span>
-                    {isFromServer && (
-                      <span className="text-xs text-blue-500 ml-2">Server</span>
-                    )}
-                    {allSessions.length > 1 && isLocalSession(session.id) && (
+                    {allSessions.length > 1 && (
                       <button
                         type="button"
                         onClick={(e) => handleDeleteSession(e, session.id)}
@@ -193,20 +170,10 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                       </button>
                     )}
                   </div>
-                  {isFromServer && serverSession && (
-                    <div className="flex items-center gap-2 mt-1 text-xs text-secondary-text">
-                      <span>{formatTime(serverSession.time?.created || 0)}</span>
-                      {serverSession.summary && (
-                        <>
-                          <span>(+{serverSession.summary.additions}/-{serverSession.summary.deletions})</span>
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
               );
             })}
-            {orderedSessions.length === 0 && (
+            {allSessions.length === 0 && (
               <div className="px-3 py-4 text-xs text-secondary-text text-center">
                 No sessions found
               </div>
