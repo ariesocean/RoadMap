@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Trash2, Plus, RefreshCw, MessageSquare } from 'lucide-react';
+import { ChevronDown, Plus, RefreshCw, MessageSquare } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
 
 interface SessionListProps {
@@ -27,7 +27,6 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
     sessions, 
     currentSession, 
     switchToSession, 
-    deleteSession, 
     createNewSession, 
     refreshSessions,
     isLoadingServerSessions,
@@ -85,11 +84,6 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
     onSelect?.();
   };
 
-  const handleDeleteSession = (e: React.MouseEvent, sessionId: string) => {
-    e.stopPropagation();
-    deleteSession(sessionId);
-  };
-
   return (
     <>
       <style>{sessionListStyles}</style>
@@ -142,6 +136,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
 
           <div className="max-h-64 overflow-y-auto session-dropdown-scroll">
             {allSessions.map((session) => {
+              const isNavigate = /navigate:/i.test(session.title);
               return (
                 <div
                   key={session.id}
@@ -152,21 +147,9 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                       : ''
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-primary-text dark:text-dark-primary-text truncate flex-1">
-                      {session.title}
-                    </span>
-                    {allSessions.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteSession(e, session.id)}
-                        className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors ml-2"
-                        title="Delete session"
-                      >
-                        <Trash2 className="w-3 h-3 text-red-500" />
-                      </button>
-                    )}
-                  </div>
+                  <span className={`text-xs truncate flex-1 ${isNavigate ? 'text-primary-text dark:text-dark-primary-text' : 'text-secondary-text'}`}>
+                    {session.title}
+                  </span>
                 </div>
               );
             })}
