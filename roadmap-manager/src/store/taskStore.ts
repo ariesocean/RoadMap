@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import type { TaskStore, Task, Achievement, Subtask } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
-import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown, updateTaskDescriptionInMarkdown, deleteSubtaskFromMarkdown } from '@/utils/markdownUtils';
+import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown, updateTaskDescriptionInMarkdown, deleteSubtaskFromMarkdown, appendSubtaskToMarkdown } from '@/utils/markdownUtils';
+import { generateSubtaskId } from '@/utils/idGenerator';
+import { getCurrentISOString } from '@/utils/timestamp';
 import { useResultModalStore, type ContentSegment } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
@@ -465,6 +467,53 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       await writeRoadmapFile(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete subtask');
+    }
+  },
+
+  addSubtask: async (taskId: string, content: string, nestedLevel: number = 0) => {
+    const { setError, tasks, setTasks } = get();
+
+    try {
+      setError(null);
+
+      // Generate new subtask ID
+      const newSubtaskId = generateSubtaskId();
+
+      const newSubtask: Subtask = {
+        id: newSubtaskId,
+        content,
+        completed: false,
+        nestedLevel: Math.max(0, Math.min(nestedLevel, 6)),
+      };
+
+      // Update local state
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          return {
+            ...task,
+            subtasks: [...task.subtasks, newSubtask],
+            totalSubtasks: task.totalSubtasks + 1,
+            updatedAt: getCurrentISOString(),
+          };
+        }
+        return task;
+      });
+
+      setTasks(updatedTasks);
+
+      // Update Markdown file
+      const targetTask = tasks.find(t => t.id === taskId);
+      if (targetTask) {
+        const markdownContent = await readRoadmapFile();
+        const updatedMarkdown = appendSubtaskToMarkdown(
+          markdownContent,
+          targetTask.title,
+          newSubtask
+        );
+        await writeRoadmapFile(updatedMarkdown);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add subtask');
     }
   },
 }));
