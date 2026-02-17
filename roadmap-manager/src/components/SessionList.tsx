@@ -124,15 +124,20 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
               New Conversation
             </button>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleManualRefresh}
-                className={`p-1 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors ${isLoadingServerSessions ? 'animate-spin' : ''}`}
-                title="Refresh sessions"
-                disabled={isLoadingServerSessions}
-              >
-                <RefreshCw className={`w-4 h-4 text-secondary-text ${isLoadingServerSessions ? 'animate-spin' : ''}`} />
-              </button>
+              {isLoadingServerSessions ? (
+                <div className="p-1 rounded">
+                  <RefreshCw className="w-4 h-4 text-secondary-text animate-spin" />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleManualRefresh}
+                  className="p-1 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
+                  title="Refresh sessions"
+                >
+                  <RefreshCw className="w-4 h-4 text-secondary-text" />
+                </button>
+              )}
             </div>
           </div>
 
