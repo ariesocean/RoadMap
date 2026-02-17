@@ -5,61 +5,7 @@ import { generateUUID, generateMessageId } from '@/utils/idGenerator';
 import { getCurrentISOString } from '@/utils/timestamp';
 import { saveToLocalStorage, loadFromLocalStorage, removeFromLocalStorage } from '@/utils/storage';
 
-const SESSIONS_STORAGE_KEY = 'roadmap-sessions';
 const ACTIVE_SESSION_KEY = 'roadmap-active-session';
-
-function validateSession(session: unknown): session is Session {
-  if (!session || typeof session !== 'object') return false;
-  const s = session as Session;
-  return (
-    typeof s.id === 'string' &&
-    typeof s.title === 'string' &&
-    typeof s.createdAt === 'string' &&
-    typeof s.lastUsedAt === 'string' &&
-    Array.isArray(s.messages) &&
-    s.messages.every(
-      (m) =>
-        typeof m.id === 'string' &&
-        (m.role === 'user' || m.role === 'assistant') &&
-        typeof m.content === 'string' &&
-        typeof m.timestamp === 'string'
-    )
-  );
-}
-
-function loadSessionsFromStorage(): Record<string, Session> {
-  if (typeof window === 'undefined') return {};
-
-  try {
-    const stored = loadFromLocalStorage(SESSIONS_STORAGE_KEY);
-    if (!stored) return {};
-
-    const parsed = JSON.parse(stored);
-    if (typeof parsed !== 'object' || parsed === null) return {};
-
-    const sessions: Record<string, Session> = {};
-    for (const [id, session] of Object.entries(parsed)) {
-      if (validateSession(session)) {
-        sessions[id] = session;
-      }
-    }
-
-    return sessions;
-  } catch {
-    console.warn('Failed to load sessions from storage, starting fresh');
-    return {};
-  }
-}
-
-function saveSessionsToStorage(sessions: Record<string, Session>): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    saveToLocalStorage(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
-  } catch {
-    console.warn('Failed to save sessions to storage');
-  }
-}
 
 function getActiveSessionId(): string | null {
   if (typeof window === 'undefined') return null;
@@ -138,7 +84,7 @@ export interface SessionStore {
 }
 
 export const useSessionStore = create<SessionStore>((set, get) => {
-  let sessions = loadSessionsFromStorage();
+  let sessions: Record<string, Session> = {};
   let activeSessionId = getActiveSessionId();
   let currentSession: Session | null = null;
   let serverSessions: ServerSession[] = [];
@@ -148,24 +94,13 @@ export const useSessionStore = create<SessionStore>((set, get) => {
 
   if (activeSessionId && sessions[activeSessionId]) {
     currentSession = sessions[activeSessionId];
-  } else if (Object.keys(sessions).length > 0) {
-    const firstSessionId = Object.keys(sessions)[0];
-    activeSessionId = firstSessionId;
-    currentSession = sessions[firstSessionId];
-    setActiveSessionId(firstSessionId);
   } else {
     const newSession = createNewSession();
     sessions = { [newSession.id]: newSession };
     activeSessionId = newSession.id;
     currentSession = newSession;
     setActiveSessionId(newSession.id);
-    saveSessionsToStorage(sessions);
   }
-
-  const persistSessions = (newSessions: Record<string, Session>) => {
-    sessions = newSessions;
-    saveSessionsToStorage(sessions);
-  };
 
   return {
     sessions,
@@ -186,8 +121,7 @@ export const useSessionStore = create<SessionStore>((set, get) => {
         session = sessions[activeSessionId];
       } else {
         session = createNewSession(firstMessage);
-        const newSessions = { ...sessions, [session.id]: session };
-        persistSessions(newSessions);
+        sessions = { ...sessions, [session.id]: session };
         activeSessionId = session.id;
         setActiveSessionId(session.id);
       }
@@ -199,14 +133,13 @@ export const useSessionStore = create<SessionStore>((set, get) => {
 
     createNewSession: (firstMessage?: string) => {
       const session = createNewSession(firstMessage);
-      const newSessions = { ...sessions, [session.id]: session };
-      persistSessions(newSessions);
+      sessions = { ...sessions, [session.id]: session };
 
       activeSessionId = session.id;
       currentSession = session;
       setActiveSessionId(session.id);
 
-      set({ sessions: newSessions, activeSessionId, currentSession });
+      set({ sessions, activeSessionId, currentSession });
       return session;
     },
 
@@ -215,7 +148,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
 
       const session = sessions[sessionId];
       session.lastUsedAt = new Date().toISOString();
-      persistSessions(sessions);
 
       activeSessionId = sessionId;
       currentSession = session;
@@ -227,7 +159,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
     deleteSession: (sessionId: string) => {
       const newSessions = { ...sessions };
       delete newSessions[sessionId];
-      persistSessions(newSessions);
 
       if (activeSessionId === sessionId) {
         clearActiveSessionId();
@@ -235,7 +166,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
           const firstSessionId = Object.keys(newSessions)[0];
           const session = newSessions[firstSessionId];
           session.lastUsedAt = new Date().toISOString();
-          persistSessions(newSessions);
 
           activeSessionId = firstSessionId;
           currentSession = session;
@@ -243,16 +173,16 @@ export const useSessionStore = create<SessionStore>((set, get) => {
           set({ sessions: newSessions, activeSessionId, currentSession });
         } else {
           const newSession = createNewSession();
-          const finalSessions = { ...newSessions, [newSession.id]: newSession };
-          persistSessions(finalSessions);
+          sessions = { [newSession.id]: newSession };
 
           activeSessionId = newSession.id;
           currentSession = newSession;
           setActiveSessionId(newSession.id);
-          set({ sessions: finalSessions, activeSessionId, currentSession });
+          set({ sessions, activeSessionId, currentSession });
         }
       } else {
-        set({ sessions: newSessions });
+        sessions = newSessions;
+        set({ sessions });
       }
     },
 
@@ -275,7 +205,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
 
       session.messages = messages;
       session.lastUsedAt = new Date().toISOString();
-      persistSessions(sessions);
 
       if (activeSessionId === sessionId) {
         currentSession = session;
@@ -290,7 +219,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       if (!session) return;
 
       session.title = title;
-      persistSessions(sessions);
 
       if (activeSessionId === sessionId) {
         currentSession = session;
@@ -311,12 +239,7 @@ export const useSessionStore = create<SessionStore>((set, get) => {
     },
 
     cleanupAllSessions: () => {
-      const sessionIds = Object.keys(sessions);
-      const newSessions: Record<string, Session> = {};
-      sessionIds.forEach((id) => {
-        newSessions[id] = sessions[id];
-      });
-      persistSessions({});
+      sessions = {};
       clearActiveSessionId();
       set({ sessions: {}, activeSessionId: null, currentSession: null });
     },
@@ -327,7 +250,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       if (existingSession) {
         existingSession.title = apiSessionName;
         existingSession.lastUsedAt = new Date().toISOString();
-        persistSessions(sessions);
 
         if (activeSessionId === apiSessionId) {
           currentSession = existingSession;
@@ -348,14 +270,13 @@ export const useSessionStore = create<SessionStore>((set, get) => {
         messages: [],
       };
 
-      const newSessions = { ...sessions, [apiSessionId]: newSession };
-      persistSessions(newSessions);
+      sessions = { ...sessions, [apiSessionId]: newSession };
 
       activeSessionId = apiSessionId;
       currentSession = newSession;
       setActiveSessionId(apiSessionId);
 
-      set({ sessions: newSessions, activeSessionId, currentSession });
+      set({ sessions, activeSessionId, currentSession });
       return newSession;
     },
     fetchServerSessions: async () => {
@@ -378,25 +299,17 @@ export const useSessionStore = create<SessionStore>((set, get) => {
           };
         }
         
-        const mergedSessions = { ...localFromServer };
-        for (const [id, session] of Object.entries(sessions)) {
-          if (!localFromServer[id]) {
-            mergedSessions[id] = session;
-          }
-        }
-        
-        sessions = mergedSessions;
-        saveSessionsToStorage(sessions);
+        sessions = localFromServer;
         set({ sessions, serverSessions, lastServerFetchTime });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         
         if (errorMessage.includes('Authentication') || errorMessage.includes('401') || errorMessage.includes('403')) {
-          showToastNotification('Authentication failed - using local sessions only', 'warning');
+          showToastNotification('Authentication failed', 'warning');
         } else if (errorMessage.includes('Unable to connect') || errorMessage.includes('network')) {
-          showToastNotification('Server unavailable - using local sessions only', 'warning');
+          showToastNotification('Server unavailable', 'warning');
         } else if (errorMessage.includes('Server error') || errorMessage.includes('500')) {
-          showToastNotification('Server error - using local sessions only', 'error');
+          showToastNotification('Server error', 'error');
         }
       } finally {
         isLoadingServerSessions = false;
@@ -478,7 +391,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       }
       
       sessions = newSessions;
-      saveSessionsToStorage(sessions);
       set({ sessions });
       
       if (activeSessionId && !sessions[activeSessionId]) {
@@ -522,7 +434,6 @@ export const useSessionStore = create<SessionStore>((set, get) => {
             setActiveSessionId(data.id);
           }
           
-          saveSessionsToStorage(sessions);
           set({ sessions, activeSessionId, currentSession });
         }
       } catch (error) {
