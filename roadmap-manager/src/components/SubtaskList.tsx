@@ -35,6 +35,8 @@ interface SortableSubtaskItemProps {
   subtask: Subtask;
   taskId: string;
   isOverNesting?: boolean;
+  isEditing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }
 
 const dropAnimation: DropAnimation = {
@@ -49,7 +51,8 @@ const dropAnimation: DropAnimation = {
 
 const SortableSubtaskItem: React.FC<SortableSubtaskItemProps & { 
   isOverNesting?: boolean; 
-}> = ({ subtask, taskId, isOverNesting }) => {
+  isEditing?: boolean;
+}> = ({ subtask, taskId, isOverNesting, isEditing, onEditingChange }) => {
   const {
     attributes,
     listeners,
@@ -66,11 +69,24 @@ const SortableSubtaskItem: React.FC<SortableSubtaskItemProps & {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...(isEditing ? {} : listeners)}
+      data-subtask-editing={isEditing}
+      onPointerDown={(e) => {
+        if (isEditing) {
+          e.stopPropagation();
+        }
+      }}
+    >
       <SubtaskItemContent 
         subtask={subtask} 
         taskId={taskId} 
         isOverNesting={isOverNesting}
+        isEditing={isEditing}
+        onEditingChange={onEditingChange}
       />
     </div>
   );
@@ -81,13 +97,28 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
 }> = ({ 
   subtask, 
   taskId, 
-  isOverNesting = false
+  isOverNesting = false,
+  isEditing: controlledIsEditing,
+  onEditingChange
 }) => {
   const { toggleSubtask, updateSubtaskContent } = useTaskStore();
-  const [isEditing, setIsEditing] = useState(false);
+  const [internalEditing, setInternalEditing] = useState(false);
+  const isEditing = controlledIsEditing !== undefined ? controlledIsEditing : internalEditing;
+  const setIsEditing = (editing: boolean) => {
+    if (controlledIsEditing === undefined) {
+      setInternalEditing(editing);
+    }
+    onEditingChange?.(editing);
+  };
   const [editValue, setEditValue] = useState(subtask.content);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      setEditValue(subtask.content);
+    }
+  }, [isEditing, subtask.content]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -247,6 +278,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
   const [localSubtasks, setLocalSubtasks] = useState(subtasks);
   const [isInNestingMode, setIsInNestingMode] = useState(false);
   const [targetNestingLevel, setTargetNestingLevel] = useState<number | null>(null);
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
 
   // States for adding new subtask
   const [isAdding, setIsAdding] = useState(false);
@@ -269,6 +301,10 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
   );
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (editingSubtaskId) {
+      setActiveId(null);
+      return;
+    }
     setActiveId(event.active.id as string);
   };
 
@@ -346,6 +382,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
   };
 
   const handleAddKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     if (e.key === 'Enter' && newSubtaskContent.trim()) {
       await addSubtask(taskId, newSubtaskContent.trim(), 0);
       setNewSubtaskContent('');
@@ -386,6 +423,8 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
               subtask={subtask}
               taskId={taskId}
               isOverNesting={activeId === subtask.id && isInNestingMode}
+              isEditing={editingSubtaskId === subtask.id}
+              onEditingChange={(editing) => setEditingSubtaskId(editing ? subtask.id : null)}
             />
           ))}
         </div>
@@ -398,6 +437,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
               subtask={activeSubtask}
               taskId={taskId}
               isOverNesting={isInNestingMode}
+              isEditing={false}
             />
           </div>
         ) : null}
