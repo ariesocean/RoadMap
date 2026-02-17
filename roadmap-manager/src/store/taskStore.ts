@@ -57,6 +57,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     if (isProcessing) return;
 
     const { setProcessing, setCurrentPrompt, refreshTasks, setError } = get();
+    setProcessing(true);
     const { openModal, appendSegment, setStreaming } = useResultModalStore.getState();
     const { createOrUpdateSessionFromAPI, currentSession } = useSessionStore.getState();
     const { selectedModel } = useModelStore.getState();
