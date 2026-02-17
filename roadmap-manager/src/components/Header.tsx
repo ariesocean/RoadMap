@@ -9,12 +9,12 @@ export const Header: React.FC = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 header z-50 transition-colors duration-300">
-      <div className="h-full flex items-center justify-between px-6 max-w-[1200px] mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <ListTodo className="w-5 h-5 text-white" />
+      <div className="h-full flex items-center justify-between px-4 sm:px-6 max-w-[1200px] mx-auto">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center">
+            <ListTodo className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <h1 className="text-xl font-semibold text-primary-text dark:text-dark-primary-text transition-colors duration-300">Roadmap Manager</h1>
+          <h1 className="text-base sm:text-xl font-semibold text-primary-text dark:text-dark-primary-text transition-colors duration-300">Roadmap Manager</h1>
         </div>
         
         <div className="flex items-center gap-4">
@@ -37,7 +37,7 @@ export const Header: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks..."
-              className="w-48 pl-9 pr-4 py-2 text-sm search-input transition-all duration-300"
+              className="w-32 sm:w-48 pl-9 pr-4 py-2 text-sm search-input transition-all duration-300"
             />
           </div>
           

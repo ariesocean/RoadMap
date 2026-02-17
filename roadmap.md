@@ -7,10 +7,9 @@
 * [ ] 开发FutSpotTrade继承ArbitrageTrade, 用于期限套利
 * [ ] 开发ScalpTrade继承ArbitrageTrade, 用于极限套利
 
-**Last Updated:** 2026-02-11 03:53
+**Last Updated:** 2026-02-17 22:32
 
 ---
-
 # trade-gateway test (TGT) [created: 2026-02-11 04:06]
 > trade-gateway test (TGT)
 
@@ -23,10 +22,9 @@
   * [ ] 整理所有碰到过的失败订单信息
   * [x] login逻辑加loginstatus检查
 
-**Last Updated:** 2026-02-11 04:06
+**Last Updated:** 2026-02-17 22:32
 
 ---
-
 # AI Agent Development [created: 2026-02-15 13:58]
 > Get ready for AI Agent Build step by step
 
@@ -35,20 +33,16 @@
 * [ ] Build AI-Bridge CLI for OpenCode serve communication
   * [x] Test opencode-cli
 
-**Last Updated:** 2026-02-15 13:58
+**Last Updated:** 2026-02-17 22:32
 
 ---
-
 # Design Gold Trade System(GTS) [created: 2026-02-15 15:47]
 > Design Gold Trade System(GTS)
 
-## Subtasks
 
-
-**Last Updated:** 2026-02-15 15:47
+**Last Updated:** 2026-02-17 22:32
 
 ---
-
 # Roadmap Manager Refine [created: 2026-02-15 14:34]
 > Roadmap Manager Refine
 
@@ -64,31 +58,29 @@
   * [ ] 设计满足需求的API接口方案
   * [ ] 实现核心API接口
   * [ ] 测试验证API功能
-- [ ] apply add-tauri-sse-streaming
-  - [ ] 查看以下文件是否会被更改 /Users/SparkingAries/VibeProjects/RoadMap/openspec/changes/archive/2026-02-17-migrate-vite-to-tauri/tasks.md
+* [ ] apply add-tauri-sse-streaming
+  * [ ] 查看以下文件是否会被更改 /Users/SparkingAries/VibeProjects/RoadMap/openspec/changes/archive/2026-02-17-migrate-vite-to-tauri/tasks.md
 
-**Last Updated:** 2026-02-15 14:34
+**Last Updated:** 2026-02-17 22:32
 
 ---
-
 # 春节前后行程 [created: 2026-02-12 11:20]
 > 2月13日到2月21日的日程安排
 
 ## Subtasks
-- [x] 做大扫除（2月14日）
+* [x] 做大扫除（2月14日）
   * [x] 深度清洗扫地机器人
 * [x] 13 号 抵达第一天
   * [x] 13 号上午到武汉后先去搞一碗牛肉粉，去雪松路看看
   * [x] 13 号中午去永旺买碱面，纯芝麻酱，酸豆角
   * [x] 去看家家
 * [x] 购买返程的车票，挑选日期
-- [x] 除夕当天安排（2月16日）
+* [x] 除夕当天安排（2月16日）
   * [x] 贴对联
-  - [x] 年夜饭（烤羊排）看春晚
-* [x] 去江辰天街（2月17日）
+  * [x] 年夜饭（烤羊排）看春晚
+- [ ] 去江辰天街（2月17日）
   * [ ] 看看西昊的人工椅
   * [ ] 选中合适的椅子型号
-- [x] 今天去看望大舅舅和舅爹（2月17日）
 * [ ] 初六返程（2月21日）
 
-**Last Updated:** 2026-02-12 11:20
+**Last Updated:** 2026-02-17 22:40

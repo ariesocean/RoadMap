@@ -83,18 +83,18 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="card mb-3"
+      className="card mb-2 sm:mb-3 p-2 sm:p-4"
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-start gap-1 sm:gap-0 justify-between">
         <div
           ref={setNodeRef}
           style={style}
           {...attributes}
-          className="flex-1"
+          className="flex-1 min-w-0"
         >
           <h3
             {...listeners}
-            className="text-base font-semibold text-primary-text dark:text-dark-primary-text mb-1 transition-colors duration-300 cursor-grab active:cursor-grabbing"
+            className="text-sm sm:text-base lg:text-lg font-semibold text-primary-text dark:text-dark-primary-text mb-0.5 sm:mb-1 transition-colors duration-300 cursor-grab active:cursor-grabbing break-words"
           >
             {task.title}
           </h3>
@@ -110,11 +110,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                 onBlur={handleDescriptionBlur}
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
-                className="flex-1 text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-2 py-1 outline-none text-primary-text dark:text-dark-primary-text italic w-full"
+                className="flex-1 text-xs sm:text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-1.5 sm:px-2 py-0.5 sm:py-1 outline-none text-primary-text dark:text-dark-primary-text italic w-full"
               />
             ) : (
               <p
-                className="text-sm text-secondary-text dark:text-dark-secondary-text mb-2 italic transition-colors duration-300 cursor-text"
+                className="text-xs sm:text-sm text-secondary-text dark:text-dark-secondary-text mb-1 sm:mb-2 italic transition-colors duration-300 cursor-text line-clamp-2"
                 onDoubleClick={handleDescriptionDoubleClick}
               >
                 "{task.originalPrompt}"
@@ -122,37 +122,37 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
             )
           ) : null}
 
-          <div className="flex items-center gap-4 text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
+          <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
             {task.totalSubtasks > 0 && (
-              <div className="flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>{task.completedSubtasks}/{task.totalSubtasks} completed</span>
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <span>{task.completedSubtasks}/{task.totalSubtasks}</span>
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-secondary-text/80 dark:text-dark-secondary-text/80 transition-colors duration-300">
+        <div className="flex items-center gap-1 sm:gap-3 ml-1 sm:ml-0">
+          <span className="text-[10px] sm:text-xs text-secondary-text/80 dark:text-dark-secondary-text/80 transition-colors duration-300">
             {formatDate(task.createdAt)}
           </span>
 
           <button
             onClick={() => toggleTaskExpanded(task.id)}
-            className="p-1 hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
+            className="p-0.5 sm:p-1 hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
           >
             <motion.div
               animate={{ rotate: task.isExpanded ? 0 : -180 }}
               transition={{ duration: 0.2 }}
             >
-              <ChevronDown className="w-5 h-5 text-secondary-text dark:text-dark-secondary-text transition-colors duration-300" />
+              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-secondary-text dark:text-dark-secondary-text transition-colors duration-300" />
             </motion.div>
           </button>
         </div>
       </div>
 
       {task.totalSubtasks > 0 && (
-        <div className="mt-3 h-1 bg-secondary-bg dark:bg-dark-secondary-bg rounded-full overflow-hidden transition-colors duration-300">
+        <div className="mt-2 sm:mt-3 h-1 bg-secondary-bg dark:bg-dark-secondary-bg rounded-full overflow-hidden transition-colors duration-300">
           <div
             className="h-full bg-primary transition-all duration-300 rounded-full"
             style={{ width: `${progressPercentage}%` }}
@@ -166,7 +166,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="mt-4 pt-4 border-t border-card-border dark:border-dark-card-border transition-colors duration-300"
+          className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-card-border dark:border-dark-card-border transition-colors duration-300"
         >
           <SubtaskList subtasks={task.subtasks} taskId={task.id} />
         </motion.div>

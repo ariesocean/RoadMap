@@ -53,8 +53,8 @@ export const App: React.FC = () => {
       <div className="min-h-screen bg-background dark:bg-dark-background transition-colors duration-300">
         <Header />
 
-        <main className="pt-14 pb-24">
-          <div className="max-w-[800px] mx-auto py-6">
+        <main className="pt-14 pb-20 sm:pb-24">
+          <div className="max-w-[800px] mx-auto py-4 sm:py-6">
             <TaskList />
           </div>
         </main>
