@@ -37,7 +37,7 @@ When prompt contains relative dates, MUST convert to actual date using bash firs
 | this year | `date "+%Y"` |
 | last year | `date -v-1y "+%Y"` |
 
-Use actual date in task, NOT the words "today/yesterday/etc".
+**CRITICAL: Use actual date in task, NOT the words "today/yesterday/etc".**
 
 ## Available Tools
 
