@@ -422,11 +422,10 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
     ) : (
       <div
         onClick={handleAddClick}
-        className="mt-4 py-2 border-t border-dashed border-border-color hover:border-primary hover:bg-secondary-bg/50 dark:hover:bg-dark-secondary-bg/50 flex items-center justify-center cursor-pointer transition-all duration-200 ease-in-out group"
+        className="mt-3 pt-2 border-t border-card-border dark:border-dark-card-border hover:border-primary dark:hover:border-primary cursor-pointer group transition-colors duration-200"
       >
-        <span className="text-sm text-secondary-text dark:text-dark-secondary-text group-hover:text-primary flex items-center gap-1 transition-all duration-200 font-medium">
-          <Plus className="w-4 h-4" />
-          添加任务
+        <span className="text-xs text-primary font-bold opacity-0 group-hover:opacity-100 flex justify-center mt-1 transition-all duration-200 drop-shadow-sm">
+          ADD TASK
         </span>
       </div>
     )}
