@@ -3,6 +3,60 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
 import http from 'http'
+import { spawn } from 'child_process'
+
+const DEFAULT_PORTS = [51432, 51466, 51434]
+const PROJECT_DIR = '/Users/SparkingAries/VibeProjects/RoadMap'
+
+async function checkPort(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const req = http.get(`http://127.0.0.1:${port}/global/health`, (res) => {
+      resolve(res.statusCode === 200)
+    })
+    req.on('error', () => resolve(false))
+    req.setTimeout(2000, () => {
+      req.destroy()
+      resolve(false)
+    })
+  })
+}
+
+async function findAvailablePort(): Promise<number | null> {
+  for (const port of DEFAULT_PORTS) {
+    if (await checkPort(port)) {
+      return port
+    }
+  }
+  return null
+}
+
+async function startOpenCodeServer(port: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const env = { ...process.env, OPENCODE_SERVER_PASSWORD: '' }
+    const proc = spawn('opencode', ['serve', '--port', String(port)], {
+      cwd: PROJECT_DIR,
+      env,
+      detached: true,
+      stdio: 'ignore'
+    })
+    
+    proc.unref()
+    
+    let attempts = 0
+    const maxAttempts = 30
+    
+    const checkInterval = setInterval(async () => {
+      attempts++
+      if (await checkPort(port)) {
+        clearInterval(checkInterval)
+        resolve()
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkInterval)
+        reject(new Error('OpenCode Server 启动超时'))
+      }
+    }, 1000)
+  })
+}
 
 const OPENCODE_PORT = 51432
 const OPENCODE_HOST = '127.0.0.1'
