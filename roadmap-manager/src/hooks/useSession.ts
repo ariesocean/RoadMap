@@ -20,8 +20,6 @@ export function useSession() {
     startBackgroundRefresh,
     stopBackgroundRefresh,
     selectDefaultSession,
-    isLocalSession,
-    syncSessionToServer,
     serverSessions,
     isLoadingServerSessions,
   } = useSessionStore();
@@ -163,7 +161,5 @@ export function useSession() {
     loadServerSessions,
     refreshSessions,
     selectDefaultSession,
-    isLocalSession,
-    syncSessionToServer,
   };
 }
