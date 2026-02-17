@@ -58,12 +58,11 @@ async function startOpenCodeServer(port: number): Promise<void> {
   })
 }
 
-const OPENCODE_PORT = 51432
 const OPENCODE_HOST = '127.0.0.1'
 
 async function checkServerHealth(): Promise<boolean> {
   return new Promise((resolve) => {
-    const req = http.get(`http://${OPENCODE_HOST}:${OPENCODE_PORT}/global/health`, (res) => {
+    const req = http.get(`http://${OPENCODE_HOST}:${openCodePort}/global/health`, (res) => {
       resolve(res.statusCode === 200)
     });
     req.on('error', () => resolve(false));
@@ -146,7 +145,7 @@ const roadmapPlugin = {
         try {
           const sessionsRes = await httpRequest({
             hostname: OPENCODE_HOST,
-            port: OPENCODE_PORT,
+            port: openCodePort,
             path: '/session',
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
@@ -219,7 +218,7 @@ const roadmapPlugin = {
           if (!isValidServerSession) {
             const createSessionRes = await httpRequest({
               hostname: OPENCODE_HOST,
-              port: OPENCODE_PORT,
+              port: openCodePort,
               path: '/session',
               method: 'POST',
               headers: { 'Content-Type': 'application/json' }
@@ -252,7 +251,7 @@ const roadmapPlugin = {
 
           const sendMessageRes = await httpRequest({
             hostname: OPENCODE_HOST,
-            port: OPENCODE_PORT,
+            port: openCodePort,
             path: `/session/${sessionId}/prompt_async`,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
@@ -273,7 +272,7 @@ const roadmapPlugin = {
 
           const eventReq = http.get({
             hostname: OPENCODE_HOST,
-            port: OPENCODE_PORT,
+            port: openCodePort,
             path: `/event?session=${sessionId}`,
             headers: {
               'Accept': 'text/event-stream',
@@ -394,7 +393,7 @@ const roadmapPlugin = {
           if (!isValidServerSession) {
             const createSessionRes = await httpRequest({
               hostname: OPENCODE_HOST,
-              port: OPENCODE_PORT,
+              port: openCodePort,
               path: '/session',
               method: 'POST',
               headers: { 'Content-Type': 'application/json' }
@@ -426,7 +425,7 @@ const roadmapPlugin = {
 
           const sendMessageRes = await httpRequest({
             hostname: OPENCODE_HOST,
-            port: OPENCODE_PORT,
+            port: openCodePort,
             path: `/session/${sessionId}/prompt_async`,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
@@ -447,7 +446,7 @@ const roadmapPlugin = {
 
           const eventReq = http.get({
             hostname: OPENCODE_HOST,
-            port: OPENCODE_PORT,
+            port: openCodePort,
             path: `/event?session=${sessionId}`,
             headers: {
               'Accept': 'text/event-stream',
@@ -540,6 +539,31 @@ sendEvent({ type: 'done', message: '\nCompleted!' });
     });
   }
 };
+
+async function ensureOpenCodeServer() {
+  console.log('[Roadmap] 检测 OpenCode Server...');
+  
+  let port = await findAvailablePort();
+  
+  if (port) {
+    console.log(`[Roadmap] 找到运行中的 OpenCode Server: 端口 ${port}`);
+    return port;
+  }
+  
+  console.log('[Roadmap] 未找到 OpenCode Server，尝试启动...');
+  const targetPort = DEFAULT_PORTS[0];
+  
+  try {
+    await startOpenCodeServer(targetPort);
+    console.log(`[Roadmap] OpenCode Server 已启动: 端口 ${targetPort}`);
+    return targetPort;
+  } catch (error) {
+    console.error('[Roadmap] 启动 OpenCode Server 失败:', error);
+    process.exit(1);
+  }
+}
+
+const openCodePort = await ensureOpenCodeServer();
 
 export default defineConfig({
   plugins: [react(), roadmapPlugin as any],
