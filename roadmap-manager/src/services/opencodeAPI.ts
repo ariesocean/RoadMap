@@ -1,6 +1,8 @@
 import type { OpenCodeHealthResponse, OpenCodePromptResponse, Session } from '@/store/types';
 import { loadTasksFromFile, saveTasksToFile } from '@/services/fileService';
 import { useModelStore } from '@/store/modelStore';
+import { getOpenCodeClient, checkServerHealth as checkHealth, subscribeToEvents } from '@/services/opencodeClient';
+import type { Session as SDKSession } from '@opencode-ai/sdk';
 
 export interface ServerSessionResponse {
   sessions: ServerSession[];
@@ -32,42 +34,35 @@ export interface ServerSession {
   [key: string]: unknown;
 }
 
-function getAuthHeader(): string {
-  const password = (import.meta.env as any)?.VITE_OPENCODE_SERVER_PASSWORD || '';
-  const username = 'opencode';
-  const credentials = btoa(`${username}:${password}`);
-  return `Basic ${credentials}`;
+function convertSDKSessionToServerSession(sdkSession: SDKSession): ServerSession {
+  return {
+    id: sdkSession.id,
+    version: sdkSession.version,
+    projectID: sdkSession.projectID,
+    directory: sdkSession.directory,
+    title: sdkSession.title,
+    time: {
+      created: sdkSession.time?.created || Date.now(),
+      updated: sdkSession.time?.updated || Date.now(),
+    },
+    summary: sdkSession.summary,
+  };
 }
 
 export async function fetchSessionsFromServer(): Promise<ServerSession[]> {
   try {
-    const response = await fetch('/session', {
-      method: 'GET',
-      headers: {
-        'Authorization': getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        throw new Error('Authentication failed - check server credentials');
-      } else if (response.status >= 500) {
-        throw new Error('Server error - please try again later');
-      } else {
-        throw new Error(`Failed to fetch sessions: ${response.statusText}`);
-      }
-    }
-
-    const data = await response.json();
+    const client = getOpenCodeClient();
+    const response = await client.session.list();
+    const allSessions = response.data ?? [];
     
-    if (Array.isArray(data)) {
-      return data;
-    } else if (data && Array.isArray(data.sessions)) {
-      return data.sessions;
-    }
+    const roadmapSessions = allSessions.filter((s: SDKSession) =>
+      s.directory === '/Users/SparkingAries/VibeProjects/RoadMap' &&
+      !s.parentID &&
+      !/\(@.*subagent\)/i.test(s.title || '') &&
+      !(s.title || '').startsWith('modal-prompt:')
+    );
     
-    return [];
+    return roadmapSessions.map(convertSDKSessionToServerSession);
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Unable to connect to server - check your connection');
@@ -95,25 +90,11 @@ export function showToastNotification(message: string, type: 'info' | 'error' | 
 
 export async function syncLocalSessionToServer(session: Session): Promise<string | null> {
   try {
-    const response = await fetch('/session', {
-      method: 'POST',
-      headers: {
-        'Authorization': getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: session.title,
-        created_at: session.createdAt,
-        last_used_at: session.lastUsedAt,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to sync session to server');
-    }
-
-    const data = await response.json();
-    return data.id || null;
+    const client = getOpenCodeClient();
+    const response = await client.session.create({ body: { title: session.title } });
+    const newSession = response.data;
+    if (!newSession) return null;
+    return newSession.id;
   } catch (error) {
     console.error('Failed to sync session to server:', error);
     return null;
@@ -122,8 +103,8 @@ export async function syncLocalSessionToServer(session: Session): Promise<string
 
 export async function checkServerHealth(): Promise<OpenCodeHealthResponse> {
   try {
-    await loadTasksFromFile();
-    return { status: 'healthy' };
+    const health = await checkHealth();
+    return { status: health.healthy ? 'healthy' : 'unhealthy' };
   } catch {
     return { status: 'unhealthy' };
   }
@@ -132,29 +113,45 @@ export async function checkServerHealth(): Promise<OpenCodeHealthResponse> {
 export async function processPrompt(
   prompt: string,
   sessionId?: string
-): Promise<OpenCodePromptResponse> {
+): Promise<OpenCodePromptResponse & { sessionId?: string }> {
+  if (!prompt || !prompt.trim()) {
+    return { success: false, message: 'Prompt cannot be empty' };
+  }
+
   try {
     const { selectedModel } = useModelStore.getState();
     const modelInfo = selectedModel ? {
       providerID: selectedModel.providerID,
       modelID: selectedModel.modelID
     } : undefined;
-    
-    const body = sessionId 
-      ? { prompt, sessionId, model: modelInfo }
-      : { prompt, model: modelInfo };
-    const response = await fetch('/api/execute-navigate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || 'Failed to execute prompt');
+    const client = getOpenCodeClient();
+    
+    let targetSessionId = sessionId;
+    let isNewSession = false;
+    
+    if (!targetSessionId) {
+      const response = await client.session.create({ body: { title: `navigate: ${prompt}` } });
+      const newSession = response.data;
+      if (!newSession) throw new Error('Failed to create session');
+      targetSessionId = newSession.id;
+      isNewSession = true;
     }
 
-    return { success: true, message: 'Command executed' };
+    const payload = {
+      parts: [{ type: 'text' as const, text: `use navigate: ${prompt}` }],
+    };
+    if (modelInfo) {
+      (payload as any).model = modelInfo;
+    }
+    
+    await client.session.promptAsync({ path: { id: targetSessionId }, body: payload });
+    
+    return { 
+      success: true, 
+      message: 'Command executed',
+      sessionId: isNewSession ? targetSessionId : undefined
+    };
   } catch (error) {
     return { success: false, message: String(error) };
   }
@@ -204,99 +201,85 @@ export async function executeModalPrompt(
   onDone: () => void,
   onError: (error: string) => void,
   onReasoning?: (text: string) => void,
-  onSessionId?: (sessionId: string) => void
+  onSessionId?: (sessionId: string) => void,
+  onComplete?: () => void
 ): Promise<void> {
+  if (!prompt || !prompt.trim()) {
+    onError('Prompt cannot be empty');
+    return;
+  }
+
   try {
     const { selectedModel } = useModelStore.getState();
+    const modelInfo = selectedModel ? {
+      providerID: selectedModel.providerID,
+      modelID: selectedModel.modelID
+    } : undefined;
 
-    const body: any = sessionId
-      ? { prompt, sessionId }
-      : { prompt };
-
-    if (selectedModel) {
-      body.model = {
-        providerID: selectedModel.providerID,
-        modelID: selectedModel.modelID
-      };
+    const client = getOpenCodeClient();
+    
+    let targetSessionId = sessionId;
+    
+    if (!targetSessionId) {
+      const response = await client.session.create({ body: { title: `modal-prompt: ${prompt}` } });
+      const newSession = response.data;
+      if (!newSession) throw new Error('Failed to create session');
+      targetSessionId = newSession.id;
+      if (onSessionId) {
+        onSessionId(targetSessionId);
+      }
     }
 
-    const response = await fetch('/api/execute-modal-prompt', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || 'Failed to execute modal prompt');
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No response body');
-    }
-
-    const decoder = new TextDecoder();
-    let isFinished = false;
-    const processedEvents = new Set<string>();
-
-    const processEvent = (eventId: string, handler: () => void) => {
-      if (processedEvents.has(eventId)) return;
-      processedEvents.add(eventId);
-      handler();
+    const payload = {
+      parts: [{ type: 'text' as const, text: prompt }],
     };
+    if (modelInfo) {
+      (payload as any).model = modelInfo;
+    }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    const eventsPromise = subscribeToEvents(targetSessionId);
 
-      const text = decoder.decode(value);
-      const lines = text.split('\n');
+    await client.session.promptAsync({ path: { id: targetSessionId }, body: payload });
 
-      for (const line of lines) {
-        if (!line.trim() || !line.startsWith('data: ')) continue;
+    const events = await eventsPromise;
+    let isFinished = false;
 
-        try {
-          const data = JSON.parse(line.slice(6));
-          const eventId = data.id || `${data.type}-${data.sessionId}-${Date.now()}`;
+    for await (const event of events) {
+      if (isFinished) break;
+      if (!event || !event.type) continue;
 
-          if (data.type === 'session' && data.sessionId) {
-            if (onSessionId) {
-              onSessionId(data.sessionId);
-            }
-          } else if (data.type === 'text') {
-            processEvent(eventId, () => onText(data.content || ''));
-          } else if (data.type === 'reasoning') {
-            if (onReasoning && data.content && data.content.trim()) {
-              processEvent(eventId, () => onReasoning(data.content));
-            }
-          } else if (data.type === 'tool-call') {
-            processEvent(eventId, () => onToolCall(data.name || 'unknown'));
-          } else if (data.type === 'tool') {
-            processEvent(eventId, () => onToolCall(data.name || 'tool'));
-          } else if (data.type === 'tool-result') {
-            processEvent(eventId, () => onToolResult(data.name || 'tool'));
-          } else if (data.type === 'done' || data.type === 'success') {
-            if (!isFinished) {
-              isFinished = true;
-              onDone();
-              return;
-            }
-          } else if (data.type === 'error' || data.type === 'failed') {
-            throw new Error(data.message || 'Command failed');
-          }
-        } catch {
-          // Skip invalid JSON lines
+      if (event.type === 'text') {
+        onText(event.content || '');
+      } else if (event.type === 'reasoning') {
+        if (onReasoning && event.content && event.content.trim()) {
+          onReasoning(event.content);
         }
+      } else if (event.type === 'tool-call') {
+        onToolCall(event.name || 'unknown');
+      } else if (event.type === 'tool') {
+        onToolCall(event.name || 'tool');
+      } else if (event.type === 'tool-result') {
+        onToolResult(event.name || 'tool');
+      } else if (event.type === 'done' || event.type === 'success') {
+        if (!isFinished) {
+          isFinished = true;
+          onDone();
+          if (onComplete) onComplete();
+          return;
+        }
+      } else if (event.type === 'error' || event.type === 'failed') {
+        throw new Error(event.message || 'Command failed');
       }
     }
 
     if (!isFinished) {
       isFinished = true;
       onDone();
+      if (onComplete) onComplete();
     }
   } catch (error) {
     onError(error instanceof Error ? error.message : 'Failed to process prompt');
+    if (onComplete) onComplete();
     throw error;
   }
 }

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool' | 'tool-result' | 'done' | 'error' | 'timeout';
+export type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool' | 'tool-result' | 'done' | 'error' | 'timeout' | 'user-prompt';
 
 export interface ContentSegment {
   id: string;
@@ -37,9 +37,11 @@ interface ResultModalState {
   promptStreaming: boolean;
   promptError: string | null;
 
-  openModal: (title: string, sessionInfo?: SessionInfo, modelInfo?: ModelInfo, onClose?: () => void) => void;
+  openModal: (title: string, sessionInfo?: SessionInfo, modelInfo?: ModelInfo, onClose?: () => void, sessionId?: string) => void;
   closeModal: () => void;
   appendSegment: (segment: ContentSegment) => void;
+  updateLastSegment: (content: string) => void;
+  appendToLastSegmentOfType: (type: SegmentType, content: string) => void;
   clearSegments: () => void;
   setStreaming: (streaming: boolean) => void;
   setCurrentSessionId: (sessionId: string | null) => void;
@@ -65,7 +67,7 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
   promptStreaming: false,
   promptError: null,
 
-  openModal: (title: string, sessionInfo?: SessionInfo, modelInfo?: ModelInfo, onClose?: () => void) => {
+  openModal: (title: string, sessionInfo?: SessionInfo, modelInfo?: ModelInfo, onClose?: () => void, sessionId?: string) => {
     set({
       isOpen: true,
       title,
@@ -74,7 +76,7 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
       modelInfo: modelInfo || null,
       onCloseCallback: onClose || null,
       isStreaming: false,
-      currentSessionId: null,
+      currentSessionId: sessionId || null,
       isPromptMode: false,
       promptInput: '',
       promptStreaming: false,
@@ -108,6 +110,36 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
         newSegments.shift();
       }
       return { segments: newSegments };
+    });
+  },
+
+  updateLastSegment: (content: string) => {
+    set((state) => {
+      if (state.segments.length === 0) return state;
+      const newSegments = [...state.segments];
+      const lastSegment = newSegments[newSegments.length - 1];
+      newSegments[newSegments.length - 1] = {
+        ...lastSegment,
+        content: lastSegment.content + content,
+      };
+      return { segments: newSegments };
+    });
+  },
+
+  appendToLastSegmentOfType: (type: SegmentType, content: string) => {
+    set((state) => {
+      if (state.segments.length === 0) return state;
+      const newSegments = [...state.segments];
+      for (let i = newSegments.length - 1; i >= 0; i--) {
+        if (newSegments[i].type === type) {
+          newSegments[i] = {
+            ...newSegments[i],
+            content: newSegments[i].content + content,
+          };
+          return { segments: newSegments };
+        }
+      }
+      return state;
     });
   },
 

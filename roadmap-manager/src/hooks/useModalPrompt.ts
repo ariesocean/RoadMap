@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useResultModalStore, type ContentSegment } from '@/store/resultModalStore';
+import { useTaskStore } from '@/store/taskStore';
 import { executeModalPrompt } from '@/services/opencodeAPI';
 
 const createSegment = (type: ContentSegment['type'], content: string, metadata?: ContentSegment['metadata']): ContentSegment => ({
@@ -16,6 +17,7 @@ export function useModalPrompt() {
     setPromptStreaming,
     setPromptError,
     appendSegment,
+    updateLastSegment,
     promptInput,
     promptStreaming,
     promptError,
@@ -25,6 +27,10 @@ export function useModalPrompt() {
     setCurrentSessionId,
   } = useResultModalStore();
 
+  const { refreshTasks } = useTaskStore();
+
+  const lastSegmentTypeRef = useRef<string | null>(null);
+
   const submitPrompt = useCallback(async (sessionId?: string) => {
     if (!promptInput.trim() || promptStreaming) return;
 
@@ -32,40 +38,61 @@ export function useModalPrompt() {
     setPromptInput('');
     setPromptError(null);
     setPromptStreaming(true);
+    lastSegmentTypeRef.current = null;
+
+    appendSegment(createSegment('user-prompt', input));
+
+    const appendOrUpdateSegment = (type: ContentSegment['type'], content: string, metadata?: ContentSegment['metadata']) => {
+      if (lastSegmentTypeRef.current === type && (type === 'text' || type === 'reasoning')) {
+        updateLastSegment(content);
+      } else {
+        lastSegmentTypeRef.current = type;
+        appendSegment(createSegment(type, content, metadata));
+      }
+    };
 
     try {
       await executeModalPrompt(
         input,
         currentSessionId || sessionId,
         (text) => {
-          appendSegment(createSegment('text', text));
+          appendOrUpdateSegment('text', text);
         },
         (name) => {
+          lastSegmentTypeRef.current = 'tool-call';
           appendSegment(createSegment('tool-call', '', { tool: name }));
         },
         (name) => {
+          lastSegmentTypeRef.current = 'tool-result';
           appendSegment(createSegment('tool-result', '', { tool: name }));
         },
         () => {
+          lastSegmentTypeRef.current = 'done';
           appendSegment(createSegment('done', '完成!'));
           setPromptStreaming(false);
         },
         (error) => {
+          lastSegmentTypeRef.current = 'error';
           appendSegment(createSegment('error', `错误: ${error}`));
           setPromptError(error);
           setPromptStreaming(false);
         },
         (reasoning) => {
-          appendSegment(createSegment('reasoning', reasoning));
+          appendOrUpdateSegment('reasoning', reasoning);
         },
         (newSessionId) => {
           setCurrentSessionId(newSessionId);
+        },
+        async () => {
+          setTimeout(async () => {
+            await refreshTasks();
+          }, 500);
         }
       );
     } catch {
       setPromptStreaming(false);
     }
-  }, [promptInput, promptStreaming, setPromptInput, setPromptError, setPromptStreaming, appendSegment, currentSessionId, setCurrentSessionId]);
+  }, [promptInput, promptStreaming, setPromptInput, setPromptError, setPromptStreaming, appendSegment, currentSessionId, setCurrentSessionId, refreshTasks]);
 
   return {
     promptInput,

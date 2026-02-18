@@ -8,6 +8,7 @@ import { useResultModalStore, type ContentSegment } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
 import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
+import { getOpenCodeClient, subscribeToEvents } from '@/services/opencodeClient';
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
@@ -56,6 +57,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     const { isProcessing } = get();
     if (isProcessing) return;
 
+    if (!prompt || !prompt.trim()) {
+      get().setError('Prompt cannot be empty');
+      return;
+    }
+
     const { setProcessing, setCurrentPrompt, refreshTasks, setError } = get();
     setProcessing(true);
     const { openModal, appendSegment, setStreaming } = useResultModalStore.getState();
@@ -78,8 +84,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       };
     }
 
-    openModal('Processing', sessionInfo, modelInfo);
-
     const createSegment = (type: ContentSegment['type'], content: string, metadata?: ContentSegment['metadata']): ContentSegment => ({
       id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type,
@@ -89,105 +93,153 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     });
 
     try {
-      const body: any = currentSession
-        ? { prompt, sessionId: currentSession.id, model: modelInfo }
-        : { prompt, model: modelInfo };
-
-      const response = await fetch('/api/execute-navigate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to start command');
+      const client = getOpenCodeClient();
+      
+      let targetSessionId = currentSession?.id;
+      let sessionName = currentSession?.title;
+      let isNewSession = false;
+      
+      if (!targetSessionId) {
+        const response = await client.session.create({ body: { title: `navigate: ${prompt}` } });
+        const newSession = response.data;
+        if (!newSession) throw new Error('Failed to create session');
+        targetSessionId = newSession.id;
+        sessionName = newSession.title;
+        createOrUpdateSessionFromAPI(targetSessionId, sessionName);
+        isNewSession = true;
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
+      if (isNewSession) {
+        sessionInfo = {
+          title: sessionName || `navigate: ${prompt}`,
+          prompt: prompt,
+        };
       }
 
-      const decoder = new TextDecoder();
+      openModal('Processing', sessionInfo, modelInfo, undefined, targetSessionId);
+
+      if (!targetSessionId) {
+        throw new Error('No valid session ID available');
+      }
+
+      const payload = {
+        parts: [{ type: 'text' as const, text: `use navigate: ${prompt}` }],
+      };
+      if (modelInfo) {
+        (payload as any).model = modelInfo;
+      }
+
+      const eventsPromise = subscribeToEvents(targetSessionId);
+
+      await client.session.promptAsync({ path: { id: targetSessionId }, body: payload });
+
+      const events = await eventsPromise;
       setStreaming(true);
       let isFinished = false;
       let eventCounter = 0;
       const processedEvents = new Set<string>();
+      // Track the last segment IDs to know when to create new segments
+      let lastTextSegmentId: string | null = null;
+      let lastReasoningSegmentId: string | null = null;
 
-      const processEvent = (eventId: string, handler: () => void) => {
-        if (processedEvents.has(eventId)) return;
-        processedEvents.add(eventId);
-        handler();
-      };
+      for await (const event of events) {
+        if (isFinished) break;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        if (!event || !event.type) continue;
 
-        const text = decoder.decode(value);
-        const lines = text.split('\n');
+        const eventId = event.id || `${event.type}-${targetSessionId}-${eventCounter++}`;
+        const eventType = event.type;
 
-        for (const line of lines) {
-          if (!line.trim() || !line.startsWith('data: ')) continue;
+        if (event.sessionId && event.sessionId !== targetSessionId) {
+          createOrUpdateSessionFromAPI(event.sessionId, sessionName || 'Session');
+        }
 
-          try {
-            const data = JSON.parse(line.slice(6));
-            const eventId = data.id || `${data.type}-${data.sessionId}-${eventCounter++}`;
-            const eventType = data.type;
+        const processEvent = (id: string, handler: () => void) => {
+          if (processedEvents.has(id)) return;
+          processedEvents.add(id);
+          handler();
+        };
 
-            if (data.sessionId && data.sessionName) {
-              createOrUpdateSessionFromAPI(data.sessionId, data.sessionName);
+        if (eventType === 'session') {
+          const { setCurrentSessionId } = useResultModalStore.getState();
+          setCurrentSessionId(event.sessionId || targetSessionId);
+        } else if (eventType === 'start' || eventType === 'started') {
+          // SKIP - internal backend messages
+        } else if (eventType === 'text') {
+          const content = event.content || '';
+          const state = useResultModalStore.getState();
+          const lastTextSegment = [...state.segments].reverse().find(s => s.type === 'text');
+          // Only append to last text segment if it matches our tracked ID
+          // This ensures we create new segments after tool calls
+          if (lastTextSegment && lastTextSegment.id === lastTextSegmentId) {
+            useResultModalStore.getState().appendToLastSegmentOfType('text', content);
+          } else {
+            const segment = createSegment('text', content);
+            lastTextSegmentId = segment.id;
+            appendSegment(segment);
+          }
+        } else if (eventType === 'tool-call') {
+          // SKIP - don't display
+          // Reset text/reasoning tracking since tool breaks the flow
+          lastTextSegmentId = null;
+          lastReasoningSegmentId = null;
+        } else if (eventType === 'tool') {
+          processEvent(eventId, () => {
+            appendSegment(createSegment('tool', '', { tool: event.name || 'unknown' }));
+            // Reset text/reasoning tracking since tool breaks the flow
+            lastTextSegmentId = null;
+            lastReasoningSegmentId = null;
+          });
+        } else if (eventType === 'tool-result') {
+          processEvent(eventId, () => {
+            appendSegment(createSegment('tool-result', '', { tool: event.name || 'unknown' }));
+            // Reset text/reasoning tracking since tool breaks the flow
+            lastTextSegmentId = null;
+            lastReasoningSegmentId = null;
+          });
+        } else if (eventType === 'step-start') {
+          // SKIP - don't display
+        } else if (eventType === 'step-end') {
+          // SKIP - don't display
+        } else if (eventType === 'reasoning') {
+          if (event.content && event.content.trim()) {
+            const content = event.content || '';
+            const state = useResultModalStore.getState();
+            const lastReasoningSegment = [...state.segments].reverse().find(s => s.type === 'reasoning');
+            // Only append to last reasoning segment if it matches our tracked ID
+            // This ensures we create new segments after tool calls
+            if (lastReasoningSegment && lastReasoningSegment.id === lastReasoningSegmentId) {
+              useResultModalStore.getState().appendToLastSegmentOfType('reasoning', content);
+            } else {
+              const segment = createSegment('reasoning', content);
+              lastReasoningSegmentId = segment.id;
+              appendSegment(segment);
             }
-
-            if (eventType === 'session' && data.sessionId) {
-              const { setCurrentSessionId } = useResultModalStore.getState();
-              setCurrentSessionId(data.sessionId);
-            } else if (eventType === 'start' || eventType === 'started') {
-              // SKIP - internal backend messages, not actual AI output
-            } else if (eventType === 'text') {
-              processEvent(eventId, () => appendSegment(createSegment('text', data.content || '')));
-            } else if (eventType === 'tool-call') {
-              // SKIP - don't display
-            } else if (eventType === 'tool') {
-              processEvent(eventId, () => appendSegment(createSegment('tool', '', { tool: data.name || 'unknown' })));
-            } else if (eventType === 'tool-result') {
-              processEvent(eventId, () => appendSegment(createSegment('tool-result', '', { tool: data.name || 'unknown' })));
-            } else if (eventType === 'step-start') {
-              // SKIP - don't display
-            } else if (eventType === 'step-end') {
-              // SKIP - don't display
-            } else if (eventType === 'reasoning') {
-              if (data.content && data.content.trim()) {
-                processEvent(eventId, () => appendSegment(createSegment('reasoning', data.content || '')));
-              }
-            } else if (eventType === 'message-complete') {
-              // SKIP - don't display
-            } else if (eventType === 'done' || eventType === 'success') {
-              if (!isFinished) {
-                isFinished = true;
-                appendSegment(createSegment('done', data.message || ''));
-                setStreaming(false);
-                setTimeout(async () => {
-                  await refreshTasks();
-                  setCurrentPrompt('');
-                }, 500);
-              }
-            } else if (eventType === 'error' || eventType === 'failed') {
-              if (!isFinished) {
-                isFinished = true;
-                appendSegment(createSegment('error', data.message || 'Error'));
-                setError(data.message || 'Command failed');
-                setStreaming(false);
-              }
-            } else if (eventType === 'timeout') {
-              if (!isFinished) {
-                isFinished = true;
-                appendSegment(createSegment('timeout', data.message || ''));
-                setStreaming(false);
-              }
-            }
-          } catch {
-            // Skip invalid JSON lines
+          }
+        } else if (eventType === 'message-complete') {
+          // SKIP - don't display
+        } else if (eventType === 'done' || eventType === 'success') {
+          if (!isFinished) {
+            isFinished = true;
+            appendSegment(createSegment('done', event.message || ''));
+            setStreaming(false);
+            setTimeout(async () => {
+              await refreshTasks();
+              setCurrentPrompt('');
+            }, 500);
+          }
+        } else if (eventType === 'error' || eventType === 'failed') {
+          if (!isFinished) {
+            isFinished = true;
+            appendSegment(createSegment('error', event.message || 'Error'));
+            setError(event.message || 'Command failed');
+            setStreaming(false);
+          }
+        } else if (eventType === 'timeout') {
+          if (!isFinished) {
+            isFinished = true;
+            appendSegment(createSegment('timeout', event.message || ''));
+            setStreaming(false);
           }
         }
       }
