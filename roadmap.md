@@ -7,9 +7,10 @@
 * [ ] 开发FutSpotTrade继承ArbitrageTrade, 用于期限套利
 * [ ] 开发ScalpTrade继承ArbitrageTrade, 用于极限套利
 
-**Last Updated:** 2026-02-17 23:40
+**Last Updated:** 2026-02-11 03:53
 
 ---
+
 # AI Agent Development [created: 2026-02-15 13:58]
 > Get ready for AI Agent Build step by step
 
@@ -18,9 +19,10 @@
 * [ ] Build AI-Bridge CLI for OpenCode serve communication
   * [x] Test opencode-cli
 
-**Last Updated:** 2026-02-17 23:40
+**Last Updated:** 2026-02-15 13:58
 
 ---
+
 # trade-gateway test (TGT) [created: 2026-02-11 04:06]
 > trade-gateway test (TGT)
 
@@ -33,16 +35,20 @@
   * [ ] 整理所有碰到过的失败订单信息
   * [x] login逻辑加loginstatus检查
 
-**Last Updated:** 2026-02-17 23:40
+**Last Updated:** 2026-02-11 04:06
 
 ---
+
 # Design Gold Trade System(GTS) [created: 2026-02-15 15:47]
 > Design Gold Trade System(GTS)
 
+## Subtasks
 
-**Last Updated:** 2026-02-17 23:40
+
+**Last Updated:** 2026-02-15 15:47
 
 ---
+
 # Roadmap Manager Refine [created: 2026-02-15 14:34]
 > Roadmap Manager Refine
 
@@ -62,10 +68,10 @@
   * [ ] 验证subtask拖拽排序功能正常工作
   * [ ] 记录发现的问题(如有问题)
 
----
-**Last Updated:** 2026-02-17 23:44
+**Last Updated:** 2026-02-15 14:34
 
 ---
+
 # 春节前后行程 [created: 2026-02-12 11:20]
 > 2月13日到2月21日的日程安排
 
@@ -84,5 +90,15 @@
   * [ ] 看看西昊的人工椅
   * [ ] 选中合适的椅子型号
 * [ ] 初六返程（2月21日）
+* [ ] 去保康（2月19日）
 
-**Last Updated:** 2026-02-17 23:40
+**Last Updated:** 2026-02-18 22:24
+
+---
+
+# 五一去北京看丹丹 [created: 2026-02-19 01:51]
+> 五一去北京看丹丹
+
+## Subtasks
+
+**Last Updated:** 2026-02-19 01:51

@@ -108,6 +108,10 @@ export const ResultModal: React.FC = () => {
                       <div className="text-cyan-500 dark:text-cyan-300 opacity-80">
                         tool {segment.metadata?.tool || segment.content || 'unknown'}
                       </div>
+                    ) : segment.type === 'user-prompt' ? (
+                      <div className="text-cyan-600 dark:text-cyan-400 font-medium">
+                        {content}
+                      </div>
                     ) : segment.type === 'done' ? (
                       <div className="text-gray-600 dark:text-gray-400">
                         {content || 'Completed!'}

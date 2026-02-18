@@ -7,10 +7,10 @@ interface SessionDisplayProps {
 }
 
 export const SessionDisplay: React.FC<SessionDisplayProps> = ({ onNewSession }) => {
-  const { currentSession, createNewSession } = useSession();
+  const { currentSession, clearCurrentSession } = useSession();
 
   const handleNewSession = () => {
-    createNewSession();
+    clearCurrentSession();
     onNewSession?.();
   };
 

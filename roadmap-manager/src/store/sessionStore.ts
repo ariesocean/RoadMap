@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Session, Message } from './types';
 import { fetchSessionsFromServer, convertServerSessionToLocal, showToastNotification, type ServerSession } from '@/services/opencodeAPI';
+import { createSession } from '@/services/opencodeClient';
 import { generateUUID, generateMessageId } from '@/utils/idGenerator';
 import { getCurrentISOString } from '@/utils/timestamp';
 import { saveToLocalStorage, loadFromLocalStorage, removeFromLocalStorage } from '@/utils/storage';
@@ -63,8 +64,9 @@ export interface SessionStore {
   lastServerFetchTime: number | null;
 
   initializeSession: (firstMessage?: string) => Session;
-  createNewSession: (firstMessage?: string) => Session;
+  createNewSession: (firstMessage?: string) => Promise<void>;
   switchToSession: (sessionId: string) => void;
+  clearCurrentSession: () => void;
   deleteSession: (sessionId: string) => void;
   addMessage: (sessionId: string, role: 'user' | 'assistant', content: string) => void;
   updateSessionTitle: (sessionId: string, title: string) => void;
@@ -128,16 +130,26 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       return session;
     },
 
-    createNewSession: (firstMessage?: string) => {
-      const session = createNewSession(firstMessage);
-      sessions = { ...sessions, [session.id]: session };
-
-      activeSessionId = session.id;
-      currentSession = session;
-      setActiveSessionId(session.id);
-
-      set({ sessions, activeSessionId, currentSession });
-      return session;
+    createNewSession: async (firstMessage?: string) => {
+      try {
+        const serverTitle = firstMessage
+          ? `navigate: ${firstMessage}`
+          : 'navigate:';
+        
+        await createSession(serverTitle);
+        
+        await get().fetchServerSessions();
+        
+        const allSessions = Object.values(sessions);
+        if (allSessions.length > 0) {
+          const latestSession = allSessions.sort((a, b) => 
+            new Date(b.lastUsedAt).getTime() - new Date(a.lastUsedAt).getTime()
+          )[0];
+          get().switchToSession(latestSession.id);
+        }
+      } catch (error) {
+        console.error('Failed to create new session:', error);
+      }
     },
 
     switchToSession: (sessionId: string) => {
@@ -151,6 +163,14 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       setActiveSessionId(sessionId);
 
       set({ sessions, activeSessionId, currentSession });
+    },
+
+    clearCurrentSession: () => {
+      activeSessionId = null;
+      currentSession = null;
+      clearActiveSessionId();
+
+      set({ activeSessionId, currentSession });
     },
 
     deleteSession: (sessionId: string) => {
@@ -288,6 +308,7 @@ export const useSessionStore = create<SessionStore>((set, get) => {
         lastServerFetchTime = Date.now();
         
         const localFromServer: Record<string, Session> = {};
+        
         for (const serverSession of fetchedSessions) {
           const converted = convertServerSessionToLocal(serverSession);
           localFromServer[serverSession.id] = {

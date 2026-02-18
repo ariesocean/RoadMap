@@ -11,7 +11,7 @@ export const InputArea: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { submitPrompt, isProcessing, error } = useTaskStore();
-  const { createNewSession } = useSession();
+  const { clearCurrentSession } = useSession();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -50,7 +50,7 @@ export const InputArea: React.FC = () => {
   };
 
   const handleNewSession = () => {
-    createNewSession();
+    clearCurrentSession();
   };
 
   return (

@@ -27,7 +27,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
     sessions, 
     currentSession, 
     switchToSession, 
-    createNewSession, 
+    clearCurrentSession,
     refreshSessions,
     isLoadingServerSessions,
   } = useSession();
@@ -79,7 +79,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
   };
 
   const handleCreateNewSession = () => {
-    createNewSession();
+    clearCurrentSession();
     setIsOpen(false);
     onSelect?.();
   };

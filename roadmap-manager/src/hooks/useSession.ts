@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useSessionStore } from '@/store/sessionStore';
 import { useModelStore } from '@/store/modelStore';
+import { getOpenCodeClient, subscribeToEvents } from '@/services/opencodeClient';
 
 export function useSession() {
   const {
@@ -10,6 +11,7 @@ export function useSession() {
     initializeSession,
     createNewSession,
     switchToSession,
+    clearCurrentSession,
     deleteSession,
     addMessage,
     updateSessionTitle,
@@ -73,66 +75,56 @@ export function useSession() {
         return;
       }
 
+      if (!prompt || !prompt.trim()) {
+        console.error('Prompt cannot be empty');
+        return;
+      }
+
       addMessage(activeSessionId, 'user', prompt);
 
       try {
+        const client = getOpenCodeClient();
         const { selectedModel } = useModelStore.getState();
         const modelInfo = selectedModel ? {
           providerID: selectedModel.providerID,
           modelID: selectedModel.modelID
         } : undefined;
-        
-        const response = await fetch('/api/execute-navigate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, sessionId: activeSessionId, model: modelInfo }),
-        });
 
-        if (!response.ok) {
-          throw new Error('Failed to start command');
-        }
+      const payload = {
+        parts: [{ type: 'text' as const, text: prompt }],
+      };
+      if (modelInfo) {
+        (payload as any).model = modelInfo;
+      }
 
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error('No response body');
-        }
+      const eventsPromise = subscribeToEvents(activeSessionId);
+      
+      await client.session.promptAsync({ path: { id: activeSessionId }, body: payload });
 
-        const decoder = new TextDecoder();
+      const events = await eventsPromise;
         let resultContent = '';
         let isFinished = false;
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        for await (const event of events) {
+          if (isFinished) break;
 
-          const text = decoder.decode(value);
-          const lines = text.split('\n');
+          if (!event || !event.type) continue;
 
-          for (const line of lines) {
-            if (!line.trim() || !line.startsWith('data: ')) continue;
-
-            try {
-              const data = JSON.parse(line.slice(6));
-
-              if (data.type === 'text') {
-                resultContent += data.content || '';
-              } else if (data.type === 'done' || data.type === 'success') {
-                if (!isFinished) {
-                  isFinished = true;
-                  if (resultContent) {
-                    addMessage(activeSessionId, 'assistant', resultContent);
-                  }
-                  if (currentSession.title === 'New Conversation' && resultContent) {
-                    const title = resultContent.length > 50
-                      ? resultContent.substring(0, 50) + '...'
-                      : resultContent;
-                    updateSessionTitle(activeSessionId, title);
-                  }
-                  onComplete?.();
-                }
+          if (event.type === 'text') {
+            resultContent += event.content || '';
+          } else if (event.type === 'done' || event.type === 'success') {
+            if (!isFinished) {
+              isFinished = true;
+              if (resultContent) {
+                addMessage(activeSessionId, 'assistant', resultContent);
               }
-            } catch {
-              // Skip invalid JSON lines
+              if (currentSession.title === 'New Conversation' && resultContent) {
+                const title = resultContent.length > 50
+                  ? resultContent.substring(0, 50) + '...'
+                  : resultContent;
+                updateSessionTitle(activeSessionId, title);
+              }
+              onComplete?.();
             }
           }
         }
@@ -158,6 +150,7 @@ export function useSession() {
     initializeSession,
     createNewSession: handleCreateNewSession,
     switchToSession: handleSwitchToSession,
+    clearCurrentSession,
     deleteSession: handleDeleteSession,
     addMessage: handleAddMessage,
     updateSessionTitle: handleUpdateSessionTitle,

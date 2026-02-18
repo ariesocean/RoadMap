@@ -475,13 +475,26 @@ const roadmapPlugin = {
                     processedEvents.add(eventId);
                   }
 
-                  if (eventType === 'session.status') {
-                    const status = props.status?.type;
-                    if (status === 'idle' && !isCompleted) {
-                      isCompleted = true;
-sendEvent({ type: 'done', message: '\nCompleted!' });
-                      res.end();
-                    }
+                    if (eventType === 'session.status') {
+                      const status = props.status?.type;
+                      if (status === 'idle' && !isCompleted) {
+                        isCompleted = true;
+                        sendEvent({ type: 'done', message: '\n执行完成!' });
+                        res.end();
+                      }
+                    } else if (eventType === 'message.part.delta') {
+                      // Handle delta events for streaming
+                      const field = props.field;
+                      const delta = props.delta;
+                      const partType = part.type;
+                      
+                      if (field === 'text' && delta) {
+                        if (partType === 'reasoning') {
+                          sendEvent({ type: 'reasoning', content: delta });
+                        } else {
+                          sendEvent({ type: 'text', content: delta });
+                        }
+                      }
                     } else if (eventType === 'message.part.updated') {
                       const partType = part.type;
 
@@ -489,8 +502,6 @@ sendEvent({ type: 'done', message: '\nCompleted!' });
                         sendEvent({ type: 'text', content: part.text });
                       } else if (partType === 'tool' && part.state?.status === 'completed') {
                         sendEvent({ type: 'tool', name: part.tool || part.name || 'tool' });
-                      } else if (partType === 'tool-result') {
-                        sendEvent({ type: 'tool-result', name: part.name || 'tool' });
                       } else if (partType === 'step-start') {
                         sendEvent({ type: 'step-start', snapshot: part.snapshot || '' });
                       } else if (partType === 'step-end') {
@@ -577,5 +588,8 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    rollupOptions: {
+      external: ['node:child_process', 'node:fs', 'node:path', 'node:url', 'node:os', 'node:stream', 'node:http', 'node:https'],
+    },
   },
 })
