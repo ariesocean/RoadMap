@@ -7,7 +7,18 @@
 * [ ] 开发FutSpotTrade继承ArbitrageTrade, 用于期限套利
 * [ ] 开发ScalpTrade继承ArbitrageTrade, 用于极限套利
 
-**Last Updated:** 2026-02-17 22:32
+**Last Updated:** 2026-02-17 23:40
+
+---
+# AI Agent Development [created: 2026-02-15 13:58]
+> Get ready for AI Agent Build step by step
+
+## Subtasks
+* [x] Research and select web browser tool for AI agent
+* [ ] Build AI-Bridge CLI for OpenCode serve communication
+  * [x] Test opencode-cli
+
+**Last Updated:** 2026-02-17 23:40
 
 ---
 # trade-gateway test (TGT) [created: 2026-02-11 04:06]
@@ -22,25 +33,14 @@
   * [ ] 整理所有碰到过的失败订单信息
   * [x] login逻辑加loginstatus检查
 
-**Last Updated:** 2026-02-17 22:32
-
----
-# AI Agent Development [created: 2026-02-15 13:58]
-> Get ready for AI Agent Build step by step
-
-## Subtasks
-* [x] Research and select web browser tool for AI agent
-* [ ] Build AI-Bridge CLI for OpenCode serve communication
-  * [x] Test opencode-cli
-
-**Last Updated:** 2026-02-17 22:32
+**Last Updated:** 2026-02-17 23:40
 
 ---
 # Design Gold Trade System(GTS) [created: 2026-02-15 15:47]
 > Design Gold Trade System(GTS)
 
 
-**Last Updated:** 2026-02-17 22:32
+**Last Updated:** 2026-02-17 23:40
 
 ---
 # Roadmap Manager Refine [created: 2026-02-15 14:34]
@@ -54,14 +54,16 @@
   * [x] 点击输入框清空则删除整行任务
 * [x] 切换方案: 通过OpenCode Serve API实现集成, 替代CLI方案
 * [ ] 调研 opencode serve 现有API接口
-  * [ ] 分析 Roadmap Manager 实际需求
-  * [ ] 设计满足需求的API接口方案
-  * [ ] 实现核心API接口
-  * [ ] 测试验证API功能
 * [ ] apply add-tauri-sse-streaming
   * [ ] 查看以下文件是否会被更改 /Users/SparkingAries/VibeProjects/RoadMap/openspec/changes/archive/2026-02-17-migrate-vite-to-tauri/tasks.md
+* [ ] 测试subtask拖拽排序功能
+  * [ ] 在Tauri应用中打开Roadmap Manager
+  * [ ] 创建包含多个subtask的测试任务
+  * [ ] 验证subtask拖拽排序功能正常工作
+  * [ ] 记录发现的问题(如有问题)
 
-**Last Updated:** 2026-02-17 22:32
+---
+**Last Updated:** 2026-02-17 23:44
 
 ---
 # 春节前后行程 [created: 2026-02-12 11:20]
@@ -78,9 +80,9 @@
 * [x] 除夕当天安排（2月16日）
   * [x] 贴对联
   * [x] 年夜饭（烤羊排）看春晚
-- [ ] 去江辰天街（2月17日）
+* [ ] 去江辰天街（2月17日）
   * [ ] 看看西昊的人工椅
   * [ ] 选中合适的椅子型号
 * [ ] 初六返程（2月21日）
 
-**Last Updated:** 2026-02-17 22:40
+**Last Updated:** 2026-02-17 23:40
