@@ -94,6 +94,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
         >
           <h3
             {...listeners}
+            onMouseDown={(e) => e.stopPropagation()}
             className="text-sm sm:text-base lg:text-lg font-semibold text-primary-text dark:text-dark-primary-text mb-0.5 sm:mb-1 transition-colors duration-300 cursor-grab active:cursor-grabbing break-words"
           >
             {task.title}
