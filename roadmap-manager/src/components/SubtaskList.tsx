@@ -76,6 +76,7 @@ const SortableSubtaskItem: React.FC<SortableSubtaskItemProps & {
       {...(isEditing ? {} : listeners)}
       data-subtask-editing={isEditing}
       onPointerDown={(e) => {
+        e.stopPropagation();
         if (isEditing) {
           e.stopPropagation();
         }
