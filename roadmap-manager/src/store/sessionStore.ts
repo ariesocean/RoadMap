@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Session, Message } from './types';
 import { fetchSessionsFromServer, convertServerSessionToLocal, showToastNotification, type ServerSession } from '@/services/opencodeAPI';
-import { createSession } from '@/services/opencodeClient';
+import { createSession, deleteSession as deleteSessionFromSDK } from '@/services/opencodeClient';
 import { generateUUID, generateMessageId } from '@/utils/idGenerator';
 import { getCurrentISOString } from '@/utils/timestamp';
 import { saveToLocalStorage, loadFromLocalStorage, removeFromLocalStorage } from '@/utils/storage';
@@ -173,7 +173,13 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       set({ activeSessionId, currentSession });
     },
 
-    deleteSession: (sessionId: string) => {
+    deleteSession: async (sessionId: string) => {
+      try {
+        await deleteSessionFromSDK(sessionId);
+      } catch (error) {
+        console.warn('Failed to delete session from server:', error);
+      }
+
       const newSessions = { ...sessions };
       delete newSessions[sessionId];
 

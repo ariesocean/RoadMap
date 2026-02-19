@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Plus, RefreshCw, MessageSquare } from 'lucide-react';
+import { ChevronDown, Plus, RefreshCw, MessageSquare, X } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
 
 interface SessionListProps {
@@ -30,8 +30,10 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
     clearCurrentSession,
     refreshSessions,
     isLoadingServerSessions,
+    deleteSession,
   } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const allSessions = Object.values(sessions).sort((a, b) => {
@@ -72,14 +74,28 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
     await refreshSessions();
   };
 
-  const handleSelectSession = (sessionId: string) => {
-    switchToSession(sessionId);
+  const handleCreateNewSession = () => {
+    clearCurrentSession();
     setIsOpen(false);
     onSelect?.();
   };
 
-  const handleCreateNewSession = () => {
-    clearCurrentSession();
+  const handleDeleteClick = (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    if (confirmDeleteSessionId === sessionId) {
+      deleteSession(sessionId);
+      setConfirmDeleteSessionId(null);
+    } else {
+      setConfirmDeleteSessionId(sessionId);
+    }
+  };
+
+  const handleSessionClick = (sessionId: string) => {
+    if (confirmDeleteSessionId) {
+      setConfirmDeleteSessionId(null);
+      return;
+    }
+    switchToSession(sessionId);
     setIsOpen(false);
     onSelect?.();
   };
@@ -140,16 +156,32 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
               return (
                 <div
                   key={session.id}
-                  onClick={() => handleSelectSession(session.id)}
+                  onClick={() => handleSessionClick(session.id)}
                   className={`flex flex-col px-3 py-2 cursor-pointer hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors ${
                     currentSession?.id === session.id
                       ? 'bg-secondary-bg dark:bg-dark-secondary-bg'
                       : ''
                   }`}
                 >
-                  <span className={`text-xs truncate flex-1 ${isNavigate ? 'text-primary-text dark:text-dark-primary-text' : 'text-secondary-text'}`}>
-                    {session.title}
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs truncate flex-1 ${isNavigate ? 'text-primary-text dark:text-dark-primary-text' : 'text-secondary-text'}`}>
+                      {session.title}
+                    </span>
+                    {isNavigate && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteClick(e, session.id)}
+                        className={`ml-2 p-1 rounded transition-colors ${
+                          confirmDeleteSessionId === session.id
+                            ? 'bg-red-500 text-white'
+                            : 'bg-red-100 hover:bg-red-500 text-red-300 hover:text-white dark:bg-red-900/30 dark:text-red-700 dark:hover:bg-red-500 dark:hover:text-white'
+                        }`}
+                        title={confirmDeleteSessionId === session.id ? 'Click again to confirm' : 'Delete session'}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

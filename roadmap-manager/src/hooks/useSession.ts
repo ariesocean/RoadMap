@@ -98,8 +98,9 @@ export function useSession() {
       }
 
       const eventsPromise = subscribeToEvents(activeSessionId);
-      
-      await client.session.promptAsync({ path: { id: activeSessionId }, body: payload });
+      const promptPromise = client.session.promptAsync({ path: { id: activeSessionId }, body: payload });
+
+      await Promise.all([eventsPromise, promptPromise]);
 
       const events = await eventsPromise;
         let resultContent = '';

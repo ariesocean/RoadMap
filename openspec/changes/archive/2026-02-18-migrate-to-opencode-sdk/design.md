@@ -61,6 +61,16 @@ React App → opencode-sdk (OpenCodeClient) → OpenCode Server (port 51432)
 
 **Note**: SDK browser compatibility is NOT a risk - the SDK uses global `fetch` which is available in modern browsers.
 
+## Implementation Summary
+
+### Implementation Details (from commit 2026-02-19)
+- Updated @opencode-ai/sdk to version 1.2.6 in package.json and package-lock.json.
+- Refactored session handling in InputArea, SessionDisplay, and SessionList components to use clearCurrentSession instead of createNewSession.
+- Enhanced session creation logic in useSession hook to handle new session creation and server communication.
+- Implemented new opencodeClient service for managing OpenCode interactions, including session creation and event subscription.
+- Improved event handling in the Vite server for session status and message updates.
+- Updated roadmap documentation with recent changes and new tasks.
+
 ## Migration Plan
 
 ### Phase 1: SDK Adapter (Week 1)
