@@ -37,6 +37,7 @@ interface SortableSubtaskItemProps {
   isOverNesting?: boolean;
   isEditing?: boolean;
   onEditingChange?: (editing: boolean) => void;
+  listeners?: Record<string, unknown>;
 }
 
 const dropAnimation: DropAnimation = {
@@ -73,10 +74,8 @@ const SortableSubtaskItem: React.FC<SortableSubtaskItemProps & {
       ref={setNodeRef} 
       style={style} 
       {...attributes} 
-      {...(isEditing ? {} : listeners)}
       data-subtask-editing={isEditing}
       onPointerDown={(e) => {
-        e.stopPropagation();
         if (isEditing) {
           e.stopPropagation();
         }
@@ -88,6 +87,7 @@ const SortableSubtaskItem: React.FC<SortableSubtaskItemProps & {
         isOverNesting={isOverNesting}
         isEditing={isEditing}
         onEditingChange={onEditingChange}
+        listeners={isEditing ? undefined : listeners}
       />
     </div>
   );
@@ -100,7 +100,8 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
   taskId, 
   isOverNesting = false,
   isEditing: controlledIsEditing,
-  onEditingChange
+  onEditingChange,
+  listeners
 }) => {
   const { toggleSubtask, updateSubtaskContent } = useTaskStore();
   const [internalEditing, setInternalEditing] = useState(false);
@@ -191,6 +192,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      {...listeners}
       className={`flex items-center gap-1.5 sm:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-md transition-colors ${
         isOverNesting 
           ? 'bg-primary/10 dark:bg-primary/20 border-2 border-primary border-dashed' 
