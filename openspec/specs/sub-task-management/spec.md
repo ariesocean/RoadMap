@@ -1,5 +1,9 @@
-## ADDED Requirements
+# sub-task-management Specification
 
+## Purpose
+Manages subtasks within tasks, including drag-and-drop reordering, hierarchy nesting via horizontal dragging, and persistence to roadmap.md.
+
+## Requirements
 ### Requirement: Subtask Drag-and-Drop Reordering
 The system SHALL allow users to drag and reorder subtasks within a single task to change their vertical position in the list.
 
@@ -60,8 +64,6 @@ The system SHALL persist reordered subtasks to the roadmap.md file maintaining t
 - **WHEN** a user performs multiple drag-and-drop operations in quick succession
 - **THEN** each reordering SHALL complete before the next begins
 - **AND** the final state in roadmap.md SHALL reflect all operations
-
-## MODIFIED Requirements
 
 ### Requirement: Subtask Display
 Subtasks SHALL be displayed in a vertical list in the order defined by the current application state. Users MAY reorder subtasks within a task using drag-and-drop operations, and the visual order SHALL reflect the persisted order in roadmap.md.

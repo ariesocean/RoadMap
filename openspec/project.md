@@ -19,16 +19,21 @@ macOS native desktop application for managing `roadmap.md` with Microsoft To Do-
 
 ```
 RoadMap/
-├── src/                       # React application
-│   ├── components/            # React components
-│   ├── hooks/                 # Custom React hooks
-│   ├── services/              # API and file services
-│   ├── store/                 # Zustand stores
-│   ├── utils/                # Utility functions
-│   └── constants/            # App constants
-├── openspec/                  # OpenSpec documentation
-├── roadmap.md                 # Main task roadmap
-└── achievements.md            # Completed tasks archive
+├── roadmap-manager/
+│   └── src/                      # React application
+│       ├── components/           # React components (PascalCase)
+│       ├── hooks/                # Custom React hooks (use*.ts)
+│       ├── services/             # API and file services
+│       ├── store/                # Zustand stores (*Store.ts)
+│       ├── utils/                # Utility functions
+│       ├── constants/            # App constants
+│       ├── config/               # App configuration
+│       ├── styles/               # Global styles
+│       ├── types/                # TypeScript type definitions
+│       └── test/                 # Test utilities
+├── openspec/                     # OpenSpec documentation
+├── roadmap.md                    # Main task roadmap
+└── achievements.md               # Completed tasks archive
 ```
 
 ## Capabilities

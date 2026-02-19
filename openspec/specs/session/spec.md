@@ -235,21 +235,10 @@ The system SHALL maintain synchronization between local session state and server
 - **THEN** the system SHALL add it to the local session store
 - **AND** the session SHALL be available for selection in the dropdown
 
-### Requirement: Session Refresh and Synchronization
-The system SHALL periodically refresh and synchronize session state with the OpenCode server.
+### Requirement: Session Synchronization
+The system SHALL synchronize session state with the OpenCode server when needed.
 
 **Refactoring Note**: Event processing now uses centralized `eventProcessor.ts` utility.
-
-#### Scenario: Refresh sessions on dropdown open
-- **WHEN** the session dropdown is opened
-- **THEN** the system SHALL re-fetch sessions from the server
-- **AND** local session state SHALL be updated with the latest server data
-- **AND** newly created sessions on the server SHALL appear in the dropdown
-
-#### Scenario: Background refresh
-- **WHEN** the application is active
-- **THEN** the system SHALL re-fetch server sessions every 30 seconds
-- **AND** if new sessions are detected, the dropdown SHALL be updated without requiring close/reopen
 
 #### Scenario: Session modification conflict
 - **WHEN** a server session has been modified by another client
@@ -292,4 +281,39 @@ The system SHALL create new sessions locally by default, with optional server sy
 - **THEN** the system SHALL call `POST /session` with the local session data
 - **AND** the server SHALL return a server session ID
 - **AND** the local session SHALL be updated with the server ID
+
+### Requirement: Session Deletion from UI
+The system SHALL provide a delete button in the session list UI that allows users to delete sessions starting with "navigate:" prefix.
+
+#### Scenario: Delete button visibility
+- **WHEN** the session dropdown is displayed
+- **THEN** a delete button SHALL appear on the far right of each session row
+- **AND** the delete button SHALL only be visible for sessions with title starting with "navigate:"
+
+#### Scenario: Delete button default state
+- **WHEN** the delete button is rendered
+- **THEN** it SHALL have a very light red color (nearly invisible)
+- **AND** the button SHALL be subtle to avoid accidental clicks
+
+#### Scenario: Delete button hover state
+- **WHEN** the user hovers over the delete button
+- **THEN** the button SHALL become bright red
+- **AND** this provides clear visual feedback that the button is actionable
+
+#### Scenario: Delete confirmation flow
+- **WHEN** the user clicks the delete button
+- **THEN** the button SHALL enter confirmation mode (visual change)
+- **AND** clicking the button again SHALL delete the session
+- **AND** clicking elsewhere SHALL cancel the confirmation
+
+#### Scenario: Session deletion via SDK
+- **WHEN** the user confirms deletion
+- **THEN** the system SHALL call the SDK's `client.session.delete()` method
+- **AND** the session SHALL be removed from both server and local state
+- **AND** the session list SHALL refresh to reflect the deletion
+
+#### Scenario: Non-navigate sessions not deletable
+- **WHEN** a session title does not start with "navigate:"
+- **THEN** the delete button SHALL NOT be rendered for that session
+- **AND** users cannot delete non-server-created sessions from the UI
 
