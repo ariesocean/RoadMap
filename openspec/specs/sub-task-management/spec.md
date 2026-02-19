@@ -2,7 +2,6 @@
 
 ## Purpose
 Manages subtasks within tasks, including drag-and-drop reordering, hierarchy nesting via horizontal dragging, and persistence to roadmap.md.
-
 ## Requirements
 ### Requirement: Subtask Drag-and-Drop Reordering
 The system SHALL allow users to drag and reorder subtasks within a single task to change their vertical position in the list.
@@ -78,3 +77,52 @@ Subtasks SHALL be displayed in a vertical list in the order defined by the curre
 - **WHEN** a user adds a new subtask to a task
 - **THEN** the new subtask SHALL appear at the end of the existing subtask list
 - **AND** users MAY subsequently reorder the new subtask using drag-and-drop
+
+### Requirement: Add Subtask from UI
+The system SHALL allow users to add new subtasks directly from the UI by hovering over the bottom area of an expanded task card.
+
+#### Scenario: Hover reveals add button
+- **WHEN** a user hovers over the bottom area of an expanded task card
+- **THEN** a "+ 添加任务" button SHALL appear
+- **AND** the hover area SHALL expand in height
+
+#### Scenario: Click reveals input
+- **WHEN** a user clicks the "+ 添加任务" button
+- **THEN** an input field SHALL appear with placeholder "输入任务内容..."
+- **AND** the input SHALL be focused automatically
+
+#### Scenario: Enter adds subtask
+- **WHEN** a user types a subtask and presses Enter
+- **THEN** a new subtask SHALL be added to the bottom of the subtask list
+- **AND** the new subtask SHALL have nestedLevel of 0
+- **AND** the roadmap.md file SHALL be updated with the new subtask
+
+#### Scenario: Escape cancels adding
+- **WHEN** a user is in add mode and presses Escape
+- **THEN** the input SHALL disappear
+- **AND** no subtask SHALL be added
+
+### Requirement: Subtask Delete from UI
+The system SHALL allow users to delete subtasks directly from the UI by clearing the input and confirming deletion.
+
+#### Scenario: Delete button appears on empty input
+- **WHEN** a user edits a subtask, clears the input, and presses Enter
+- **THEN** a delete button (Trash icon) SHALL appear
+- **AND** the input SHALL remain in edit mode
+
+#### Scenario: Click delete removes subtask
+- **WHEN** a user clicks the delete button
+- **THEN** the subtask SHALL be removed from the UI
+- **AND** the roadmap.md file SHALL be updated
+- **AND** the edit mode SHALL close
+
+#### Scenario: Parent collapses when last subtask deleted
+- **WHEN** a user deletes the last subtask of a task
+- **THEN** the parent task SHALL automatically collapse
+- **AND** no subtasks SHALL be displayed
+
+#### Scenario: Enter on empty input doesn't exit edit mode
+- **WHEN** a user presses Enter on empty input without clicking delete
+- **THEN** the input SHALL remain in edit mode
+- **AND** the delete button SHALL stay visible
+

@@ -41,6 +41,9 @@ RoadMap/
 ### input-interaction
 Form submission control - ensures input area only submits when user explicitly intends to send a prompt.
 
+### main-task-management
+Top-level task management - drag sort and description edit for main tasks.
+
 ### modal-prompt
 Modal dialog interface for displaying results and confirmations.
 
@@ -49,6 +52,9 @@ Model selection dropdown for choosing AI models.
 
 ### session
 Session management - persistent conversation context across app restarts.
+
+### sub-task-management
+Subtask management within tasks - drag-drop reorder, hierarchy nesting, add, and delete.
 
 ## Dependencies
 
