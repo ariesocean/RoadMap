@@ -50,7 +50,7 @@ const SortableTaskCard = React.forwardRef<HTMLDivElement, { task: Task; index: n
     };
 
     return (
-      <div ref={combinedRef} style={style} {...attributes}>
+      <div ref={combinedRef} style={style} {...attributes} {...listeners}>
         <TaskCard task={task} index={index} />
       </div>
     );

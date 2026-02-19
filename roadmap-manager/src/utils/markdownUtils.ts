@@ -26,6 +26,22 @@ export function extractCreatedDate(title: string): { title: string; createdAt: s
   return { title, createdAt: null };
 }
 
+export function extractUpdatedDate(line: string): string | null {
+  const match = line.match(/^\*\*Last Updated:\*\* (.+)$/);
+  if (match) {
+    return match[1];
+  }
+  return null;
+}
+
+export function extractArchivedDate(line: string): string | null {
+  const match = line.match(/^\*\*Archived:\*\* (.+)$/);
+  if (match) {
+    return match[1];
+  }
+  return null;
+}
+
 export function appendCreatedDate(title: string, createdAt: string): string {
   const date = new Date(createdAt);
   const formattedDate = date.toLocaleString('zh-CN', {
@@ -60,6 +76,8 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
   let currentTask: Task | null = null;
   let currentAchievement: Achievement | null = null;
   let inAchievements = false;
+  let lastUpdatedDate: string | null = null;
+  let archivedDate: string | null = null;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -67,8 +85,12 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
     if (line.startsWith('## Achievements')) {
       inAchievements = true;
       if (currentTask) {
+        if (lastUpdatedDate) {
+          currentTask.updatedAt = new Date(lastUpdatedDate).toISOString();
+        }
         tasks.push(currentTask);
         currentTask = null;
+        lastUpdatedDate = null;
       }
       continue;
     }
@@ -76,10 +98,20 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
     const taskMatch = line.match(/^# (.+)$/);
     if (taskMatch) {
       if (currentTask && !inAchievements) {
+        if (lastUpdatedDate) {
+          currentTask.updatedAt = new Date(lastUpdatedDate).toISOString();
+        }
         tasks.push(currentTask);
+        currentTask = null;
+        lastUpdatedDate = null;
       }
       if (currentAchievement && inAchievements) {
+        if (archivedDate) {
+          currentAchievement.completedAt = new Date(archivedDate).toISOString();
+        }
         achievements.push(currentAchievement);
+        currentAchievement = null;
+        archivedDate = null;
       }
 
       const rawTitle = taskMatch[1].trim();
@@ -123,7 +155,7 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
       }
       continue;
     }
-    
+
     const subtaskMatch = line.match(/^(\s*)[-*] \[([ x])\] (.+)$/);
     if (subtaskMatch) {
       const indent = subtaskMatch[1].length;
@@ -148,13 +180,32 @@ export function parseMarkdownTasks(markdown: string): { tasks: Task[]; achieveme
       } else if (currentAchievement) {
         currentAchievement.subtasks.push(subtask);
       }
+      continue;
+    }
+
+    const updatedMatch = extractUpdatedDate(line);
+    if (updatedMatch) {
+      lastUpdatedDate = updatedMatch;
+      continue;
+    }
+
+    const archivedMatch = extractArchivedDate(line);
+    if (archivedMatch) {
+      archivedDate = archivedMatch;
+      continue;
     }
   }
   
   if (currentTask && !inAchievements) {
+    if (lastUpdatedDate) {
+      currentTask.updatedAt = new Date(lastUpdatedDate).toISOString();
+    }
     tasks.push(currentTask);
   }
   if (currentAchievement && inAchievements) {
+    if (archivedDate) {
+      currentAchievement.completedAt = new Date(archivedDate).toISOString();
+    }
     achievements.push(currentAchievement);
   }
   
@@ -172,16 +223,17 @@ export function generateMarkdownFromTasks(tasks: Task[], achievements: Achieveme
     }
     markdown += '\n';
 
+    markdown += '## Subtasks\n';
     if (task.subtasks.length > 0) {
-      markdown += '## Subtasks\n';
       task.subtasks.forEach(subtask => {
         const indent = '  '.repeat(subtask.nestedLevel);
         const checkbox = subtask.completed ? '[x]' : '[ ]';
         markdown += `${indent}* ${checkbox} ${subtask.content}\n`;
       });
+      markdown += '\n';
     }
 
-    markdown += `\n**Last Updated:** ${formatDate(task.updatedAt)}\n`;
+    markdown += `**Last Updated:** ${formatDate(task.updatedAt)}\n`;
 
     if (index < tasks.length - 1) {
       markdown += '\n---\n';
@@ -271,22 +323,14 @@ export function updateSubtasksOrderInMarkdown(
   const lines = markdown.split('\n');
   let inTargetTask = false;
   let inAchievements = false;
-  let taskStartIndex = -1;
-  let taskEndIndex = -1;
-  let originalTitleLine = '';
-  let originalPrompt = '';
-  let hasSubtasksHeader = false;
-  let lastUpdatedLine = '';
+  let subtaskStartIndex = -1;
+  let subtaskEndIndex = -1;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
     if (line.startsWith('## Achievements')) {
       inAchievements = true;
-      if (inTargetTask) {
-        taskEndIndex = i;
-        break;
-      }
       continue;
     }
 
@@ -297,84 +341,37 @@ export function updateSubtasksOrderInMarkdown(
 
       if (cleanTitle === taskTitle) {
         inTargetTask = true;
-        taskStartIndex = i;
-        originalTitleLine = line;
       } else if (inTargetTask && !inAchievements) {
-        taskEndIndex = i;
-        break;
+        inTargetTask = false;
       }
       continue;
     }
 
     if (inTargetTask && !inAchievements) {
-      const promptMatch = line.match(/^> (.+)$/);
-      if (promptMatch) {
-        originalPrompt = line;
-        continue;
-      }
-
-      if (line.match(/^##\s+Subtasks?$/i)) {
-        hasSubtasksHeader = true;
-        continue;
-      }
-
       const subtaskMatch = line.match(/^(\s*)[-*] (\[[ x]\])(.+)$/);
       if (subtaskMatch) {
-        const nextLine = lines[i + 1];
-        if (!nextLine || (!nextLine.match(/^(\s*)[-*] (\[[ x]\])(.+)$/) && !nextLine.startsWith('#'))) {
-          taskEndIndex = i + 1;
+        if (subtaskStartIndex === -1) {
+          subtaskStartIndex = i;
         }
-        continue;
-      }
-
-      if (line.startsWith('**Last Updated:**')) {
-        lastUpdatedLine = line;
-        continue;
-      }
-
-      if (line.startsWith('# ') && !line.startsWith('##')) {
-        taskEndIndex = i;
-        break;
+        subtaskEndIndex = i;
       }
     }
   }
 
-  if (taskStartIndex === -1 || !originalTitleLine) {
+  if (subtaskStartIndex === -1) {
     return markdown;
-  }
-
-  if (taskEndIndex === -1) {
-    taskEndIndex = lines.length;
   }
 
   const subtasksMd = reorderedSubtasks.map(subtask => {
     const indent = '  '.repeat(Math.min(subtask.nestedLevel, 6));
     const checkbox = subtask.completed ? '[x]' : '[ ]';
     return `${indent}* ${checkbox} ${subtask.content}`;
-  }).join('\n');
+  });
 
-  const newTaskSectionParts: string[] = [];
-  newTaskSectionParts.push(originalTitleLine);
-  if (originalPrompt) {
-    newTaskSectionParts.push('');
-    newTaskSectionParts.push(originalPrompt);
-  }
-  newTaskSectionParts.push('');
-  if (hasSubtasksHeader) {
-    newTaskSectionParts.push('## Subtasks');
-  }
-  newTaskSectionParts.push(subtasksMd);
-  if (lastUpdatedLine) {
-    newTaskSectionParts.push('');
-    newTaskSectionParts.push(lastUpdatedLine);
-  }
+  const beforeSubtasks = lines.slice(0, subtaskStartIndex);
+  const afterSubtasks = lines.slice(subtaskEndIndex + 1);
 
-  const newTaskSection = newTaskSectionParts.join('\n');
-
-  const beforeTask = lines.slice(0, taskStartIndex);
-  const afterTask = lines.slice(taskEndIndex);
-
-  return [...beforeTask, newTaskSection, ...afterTask].join('\n');
+  return [...beforeSubtasks, ...subtasksMd, ...afterSubtasks].join('\n');
 }
 
 export function reorderTasksInMarkdown(
