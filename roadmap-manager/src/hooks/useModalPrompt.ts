@@ -87,6 +87,11 @@ export function useModalPrompt() {
           setTimeout(async () => {
             await refreshTasks();
           }, 500);
+        },
+        (diffFiles) => {  // Added callback for diff content
+          console.log('[useModalPrompt] onDiffContent called with:', diffFiles);
+          lastSegmentTypeRef.current = 'diff';
+          appendSegment(createSegment('diff', 'File changes detected', { diffFiles }));
         }
       );
     } catch {

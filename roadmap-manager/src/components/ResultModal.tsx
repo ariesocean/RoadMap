@@ -3,6 +3,81 @@ import { Loader2, Send, Sparkles, X } from 'lucide-react';
 import { useResultModalStore } from '@/store/resultModalStore';
 import { useModalPrompt } from '@/hooks/useModalPrompt';
 
+// Simple diff utility to compare two arrays of lines
+function computeDiff(before: string[], after: string[]): { type: 'unchanged' | 'added' | 'removed'; content: string }[] {
+  const result: { type: 'unchanged' | 'added' | 'removed'; content: string }[] = [];
+
+  // Simple line-by-line comparison
+  let beforeIdx = 0;
+  let afterIdx = 0;
+
+  while (beforeIdx < before.length || afterIdx < after.length) {
+    const beforeLine = before[beforeIdx];
+    const afterLine = after[afterIdx];
+
+    if (beforeLine === afterLine) {
+      // Lines match - unchanged
+      if (beforeLine !== undefined) {
+        result.push({ type: 'unchanged', content: beforeLine });
+      }
+      beforeIdx++;
+      afterIdx++;
+    } else {
+      // Check if line was removed
+      let foundMatchAfter = false;
+      for (let i = afterIdx + 1; i < Math.min(afterIdx + 3, after.length); i++) {
+        if (after[i] === beforeLine) {
+          foundMatchAfter = true;
+          break;
+        }
+      }
+
+      if (foundMatchAfter && beforeLine !== undefined) {
+        // Line was removed
+        result.push({ type: 'removed', content: beforeLine });
+        beforeIdx++;
+      } else if (afterLine !== undefined) {
+        // Line was added
+        result.push({ type: 'added', content: afterLine });
+        afterIdx++;
+      } else if (beforeLine !== undefined) {
+        // End of after, remaining before lines are removed
+        result.push({ type: 'removed', content: beforeLine });
+        beforeIdx++;
+      }
+    }
+  }
+
+  return result;
+}
+
+// DiffView component to display unified diff format
+const DiffView: React.FC<{ before: string[]; after: string[] }> = ({ before, after }) => {
+  const diff = computeDiff(before, after);
+
+  return (
+    <div className="space-y-0.5">
+      {diff.map((line, idx) => (
+        <div
+          key={idx}
+          className={`px-2 ${
+            line.type === 'added'
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+              : line.type === 'removed'
+              ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+              : 'text-gray-600 dark:text-gray-400'
+          }`}
+        >
+          <span className="select-none opacity-50 mr-2">
+            {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : ' '}
+          </span>
+          {line.content || ' '}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const HIDDEN_TYPES = ['step-start', 'step-end', 'message-complete'] as const;
 type HiddenType = typeof HIDDEN_TYPES[number];
 
@@ -93,6 +168,11 @@ export const ResultModal: React.FC = () => {
                 const segmentKey = segment.id ?? `segment-${index}`;
                 const isReasoning = segment.type === 'reasoning';
 
+                // Debug logging for diff segments
+                if (segment.type === 'diff') {
+                  console.log('[ResultModal] Rendering diff segment:', segment);
+                }
+
                 return (
                   <React.Fragment key={segmentKey}>
                     {isReasoning ? (
@@ -119,6 +199,45 @@ export const ResultModal: React.FC = () => {
                     ) : segment.type === 'error' ? (
                       <div className="text-red-600 dark:text-red-400">
                         {content}
+                      </div>
+                    ) : segment.type === 'diff' ? (
+                      <div className="mt-2 space-y-3">
+                        <div className="font-medium text-green-600 dark:text-green-400 mb-2">File Changes:</div>
+                        {segment.metadata?.diffFiles && Array.isArray(segment.metadata.diffFiles) &&
+                          segment.metadata.diffFiles.map((file: any, idx: number) => {
+                            // Generate unified diff from before/after content
+                            const beforeLines = (file.before || '').split('\n');
+                            const afterLines = (file.after || '').split('\n');
+
+                            return (
+                              <div key={`${segment.id}-diff-${idx}`} className="border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
+                                {/* File header */}
+                                <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-mono text-gray-700 dark:text-gray-300">{file.filePath}</span>
+                                    {file.status && (
+                                      <span className="text-xs px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                                        {file.status}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <span className="text-green-600 dark:text-green-400">+{file.additions}</span>
+                                    <span className="text-red-600 dark:text-red-400">-{file.deletions}</span>
+                                  </div>
+                                </div>
+                                {/* Diff content */}
+                                <div className="max-h-60 overflow-auto bg-white dark:bg-gray-900 p-2 font-mono text-xs">
+                                  {file.before !== undefined || file.after !== undefined ? (
+                                    <DiffView before={beforeLines} after={afterLines} />
+                                  ) : (
+                                    <div className="text-gray-500 dark:text-gray-400">No diff available</div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        }
                       </div>
                     ) : segment.type === 'timeout' ? (
                       <div className="text-yellow-600 dark:text-yellow-400">

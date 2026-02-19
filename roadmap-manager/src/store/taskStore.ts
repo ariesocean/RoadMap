@@ -241,6 +241,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             appendSegment(createSegment('timeout', event.message || ''));
             setStreaming(false);
           }
+        } else if (eventType === 'diff') {
+          // Handle diff events - display file changes
+          if (event.properties?.diffFiles && Array.isArray(event.properties.diffFiles)) {
+            appendSegment(createSegment('diff', 'File changes detected', { diffFiles: event.properties.diffFiles }));
+          }
         }
       }
 

@@ -135,8 +135,52 @@ function mapServerEvent(event: any, filterSessionId?: string, partTypes?: Map<st
   const sessionId = props.sessionID || wrapper.sessionID || event.sessionID;
   const eventType = wrapper.type;
 
+  // Debug: log all event types
+  console.log('[opencodeClient] Event received:', { type: eventType, sessionId, hasPayload: !!event.payload });
+
   if (filterSessionId && sessionId && sessionId !== filterSessionId) {
     return null;
+  }
+
+  // Handle session.diff events
+  if (eventType === 'session.diff' && sessionId) {
+    console.log('[opencodeClient] session.diff event detected:', wrapper);
+    // Extract file changes from the diff data
+    const diffData = props.diff || wrapper.diff;
+    console.log('[opencodeClient] diffData:', diffData);
+
+    let diffFiles;
+    if (Array.isArray(diffData)) {
+      // diffData is directly an array of file changes
+      diffFiles = diffData.map((file: any) => ({
+        filePath: file.file || file.filePath || file.path || file.filename || '',
+        additions: file.additions || file.additionCount || 0,
+        deletions: file.deletions || file.deletionCount || 0,
+        before: file.before, // Original content
+        after: file.after,   // Modified content
+        status: file.status, // "added", "modified", "deleted"
+      }));
+    } else if (diffData && Array.isArray(diffData.files)) {
+      // diffData is an object with files property
+      diffFiles = diffData.files.map((file: any) => ({
+        filePath: file.filePath || file.path || file.filename || file.file || '',
+        additions: file.additions || file.additionCount || 0,
+        deletions: file.deletions || file.deletionCount || 0,
+        before: file.before,
+        after: file.after,
+        status: file.status,
+      }));
+    }
+
+    if (diffFiles && diffFiles.length > 0) {
+      console.log('[opencodeClient] diffFiles mapped:', diffFiles);
+
+      return {
+        type: 'diff',
+        sessionId,
+        properties: { diffFiles }
+      };
+    }
   }
 
   if (eventType === 'session' && sessionId) {

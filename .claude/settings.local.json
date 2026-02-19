@@ -1,8 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "*"
+      "*",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npm run build)",
+      "Bash(npm run preview)",
+      "Bash(kill %1:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "WebFetch(domain:github.com)",
+      "mcp__gh_grep__searchGitHub",
+      "WebSearch",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages",
+      "Bash(git add:*)"
     ]
   },
-  "outputStyle": "default"
+  "outputStyle": "Explanatory"
 }

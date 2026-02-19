@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 
-export type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool' | 'tool-result' | 'done' | 'error' | 'timeout' | 'user-prompt';
+export type SegmentType = 'reasoning' | 'text' | 'tool-call' | 'tool' | 'tool-result' | 'done' | 'error' | 'timeout' | 'user-prompt' | 'diff';
+
+export interface FileDiff {
+  filePath: string;
+  additions: number;
+  deletions: number;
+  before?: string; // Original file content
+  after?: string; // Modified file content
+  status?: string; // File status: "added", "modified", "deleted"
+}
 
 export interface ContentSegment {
   id: string;
@@ -9,6 +18,7 @@ export interface ContentSegment {
   timestamp: number;
   metadata?: {
     tool?: string;
+    diffFiles?: FileDiff[]; // Added for diff segments
   };
 }
 

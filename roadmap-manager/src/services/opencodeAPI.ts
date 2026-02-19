@@ -202,7 +202,8 @@ export async function executeModalPrompt(
   onError: (error: string) => void,
   onReasoning?: (text: string) => void,
   onSessionId?: (sessionId: string) => void,
-  onComplete?: () => void
+  onComplete?: () => void,
+  onDiffContent?: (diffFiles: any[]) => void  // Added callback for diff content
 ): Promise<void> {
   if (!prompt || !prompt.trim()) {
     onError('Prompt cannot be empty');
@@ -260,6 +261,18 @@ export async function executeModalPrompt(
         onToolCall(event.name || 'tool');
       } else if (event.type === 'tool-result') {
         onToolResult(event.name || 'tool');
+      } else if (event.type === 'diff') {
+        // Handle diff events by passing the diff files to the callback
+        console.log('[opencodeAPI] diff event received:', event);
+        if (event.properties?.diffFiles && typeof onDiffContent === 'function') {
+          console.log('[opencodeAPI] calling onDiffContent with:', event.properties.diffFiles);
+          onDiffContent(Array.isArray(event.properties.diffFiles) ? event.properties.diffFiles : []);
+        } else {
+          console.log('[opencodeAPI] diff event missing properties or callback:', {
+            hasProperties: !!event.properties?.diffFiles,
+            hasCallback: typeof onDiffContent === 'function'
+          });
+        }
       } else if (event.type === 'done' || event.type === 'success') {
         if (!isFinished) {
           isFinished = true;
