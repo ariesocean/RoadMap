@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Plus, RefreshCw, MessageSquare, X } from 'lucide-react';
+import { ChevronDown, Plus, RefreshCw, MessageSquare, Trash2 } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
 
 interface SessionListProps {
@@ -171,14 +171,14 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                       <button
                         type="button"
                         onClick={(e) => handleDeleteClick(e, session.id)}
-                        className={`ml-2 p-1 rounded transition-colors ${
+                        className={`ml-2 p-0.5 rounded transition-all bg-transparent ${
                           confirmDeleteSessionId === session.id
-                            ? 'bg-red-500 text-white'
-                            : 'bg-red-100 hover:bg-red-500 text-red-300 hover:text-white dark:bg-red-900/30 dark:text-red-700 dark:hover:bg-red-500 dark:hover:text-white'
+                            ? 'text-red-600 scale-110'
+                            : 'text-red-400/15 hover:text-red-500 dark:text-red-500/15 dark:hover:text-red-400'
                         }`}
                         title={confirmDeleteSessionId === session.id ? 'Click again to confirm' : 'Delete session'}
                       >
-                        <X className="w-3 h-3" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
