@@ -141,6 +141,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Track the last segment IDs to know when to create new segments
       let lastTextSegmentId: string | null = null;
       let lastReasoningSegmentId: string | null = null;
+      // Track the last diff state to compute incremental diff
+      let lastDiffFiles: Map<string, { additions: number; deletions: number }> | null = null;
 
       for await (const event of events) {
         if (isFinished) break;
@@ -242,9 +244,46 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             setStreaming(false);
           }
         } else if (eventType === 'diff') {
-          // Handle diff events - display file changes
+          // Handle diff events - display only incremental file changes
           if (event.properties?.diffFiles && Array.isArray(event.properties.diffFiles)) {
-            appendSegment(createSegment('diff', 'File changes detected', { diffFiles: event.properties.diffFiles }));
+            const currentDiffFiles = event.properties.diffFiles;
+
+            // If we have a previous diff state, compute the incremental diff
+            if (lastDiffFiles) {
+              const incrementalDiffs = currentDiffFiles.filter((file: any) => {
+                const prev = lastDiffFiles!.get(file.filePath);
+                if (!prev) return true; // New file, include it
+
+                // Check if additions/deletions changed
+                return file.additions !== prev.additions || file.deletions !== prev.deletions;
+              });
+
+              if (incrementalDiffs.length > 0) {
+                // Replace existing diff segment with incremental one
+                const state = useResultModalStore.getState();
+                const existingDiffIndex = state.segments.findIndex(s => s.type === 'diff');
+
+                if (existingDiffIndex !== -1) {
+                  const newSegments = [...state.segments];
+                  newSegments[existingDiffIndex] = createSegment('diff', 'File changes detected', { diffFiles: incrementalDiffs });
+                  useResultModalStore.setState({ segments: newSegments });
+                } else {
+                  appendSegment(createSegment('diff', 'File changes detected', { diffFiles: incrementalDiffs }));
+                }
+              }
+            } else {
+              // First diff, show all
+              appendSegment(createSegment('diff', 'File changes detected', { diffFiles: currentDiffFiles }));
+            }
+
+            // Update last diff state
+            lastDiffFiles = new Map();
+            currentDiffFiles.forEach((file: any) => {
+              lastDiffFiles!.set(file.filePath, {
+                additions: file.additions,
+                deletions: file.deletions,
+              });
+            });
           }
         }
       }

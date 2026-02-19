@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { useResultModalStore, type ContentSegment } from '@/store/resultModalStore';
+import { useResultModalStore, type ContentSegment, type FileDiff } from '@/store/resultModalStore';
 import { useTaskStore } from '@/store/taskStore';
 import { executeModalPrompt } from '@/services/opencodeAPI';
 
@@ -30,6 +30,8 @@ export function useModalPrompt() {
   const { refreshTasks } = useTaskStore();
 
   const lastSegmentTypeRef = useRef<string | null>(null);
+  // Track last diff state to filter out duplicate diff events
+  const lastDiffStateRef = useRef<Map<string, { additions: number; deletions: number; before?: string; after?: string }>>(new Map());
 
   const submitPrompt = useCallback(async (sessionId?: string) => {
     if (!promptInput.trim() || promptStreaming) return;
@@ -88,10 +90,45 @@ export function useModalPrompt() {
             await refreshTasks();
           }, 500);
         },
-        (diffFiles) => {  // Added callback for diff content
-          console.log('[useModalPrompt] onDiffContent called with:', diffFiles);
-          lastSegmentTypeRef.current = 'diff';
-          appendSegment(createSegment('diff', 'File changes detected', { diffFiles }));
+        (diffFiles) => {  // Callback for diff content - filter out already-seen changes
+          // Filter to only new/changed files
+          const incrementalFiles = diffFiles.filter((file: FileDiff) => {
+            const filePath = file.filePath;
+            const prevDiff = lastDiffStateRef.current.get(filePath);
+
+            // If we haven't seen this file before, include it
+            if (!prevDiff) return true;
+
+            // If additions/deletions changed, this is a new change
+            if (prevDiff.additions !== file.additions || prevDiff.deletions !== file.deletions) {
+              return true;
+            }
+
+            // If content changed but counts are the same, still include it
+            // (edge case: same line count but different content)
+            if (file.before !== prevDiff.before || file.after !== prevDiff.after) {
+              return true;
+            }
+
+            // No change detected, skip this file
+            return false;
+          });
+
+          // Update diff state with all files
+          diffFiles.forEach((file: FileDiff) => {
+            lastDiffStateRef.current.set(file.filePath, {
+              additions: file.additions,
+              deletions: file.deletions,
+              before: file.before,
+              after: file.after,
+            });
+          });
+
+          // Only append segment if there are incremental changes
+          if (incrementalFiles.length > 0) {
+            lastSegmentTypeRef.current = 'diff';
+            appendSegment(createSegment('diff', 'File changes detected', { diffFiles: incrementalFiles }));
+          }
         }
       );
     } catch {

@@ -135,19 +135,21 @@ function mapServerEvent(event: any, filterSessionId?: string, partTypes?: Map<st
   const sessionId = props.sessionID || wrapper.sessionID || event.sessionID;
   const eventType = wrapper.type;
 
-  // Debug: log all event types
-  console.log('[opencodeClient] Event received:', { type: eventType, sessionId, hasPayload: !!event.payload });
-
   if (filterSessionId && sessionId && sessionId !== filterSessionId) {
     return null;
   }
 
   // Handle session.diff events
   if (eventType === 'session.diff' && sessionId) {
-    console.log('[opencodeClient] session.diff event detected:', wrapper);
     // Extract file changes from the diff data
     const diffData = props.diff || wrapper.diff;
-    console.log('[opencodeClient] diffData:', diffData);
+    const messageID = props.messageID || wrapper.messageID; // Get the messageID if available
+
+    console.log('[opencodeClient] session.diff event:', {
+      sessionId,
+      messageID,
+      fileCount: Array.isArray(diffData) ? diffData.length : 0
+    });
 
     let diffFiles;
     if (Array.isArray(diffData)) {

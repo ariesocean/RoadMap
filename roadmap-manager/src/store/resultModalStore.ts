@@ -47,6 +47,9 @@ interface ResultModalState {
   promptStreaming: boolean;
   promptError: string | null;
 
+  // Track last diff state for incremental diff display
+  lastDiffState: Map<string, { additions: number; deletions: number; before?: string; after?: string }>;
+
   openModal: (title: string, sessionInfo?: SessionInfo, modelInfo?: ModelInfo, onClose?: () => void, sessionId?: string) => void;
   closeModal: () => void;
   appendSegment: (segment: ContentSegment) => void;
@@ -60,6 +63,8 @@ interface ResultModalState {
   setPromptStreaming: (streaming: boolean) => void;
   setPromptError: (error: string | null) => void;
   clearPrompt: () => void;
+  setLastDiffState: (diffState: Map<string, { additions: number; deletions: number; before?: string; after?: string }>) => void;
+  getLastDiffState: () => Map<string, { additions: number; deletions: number; before?: string; after?: string }>;
 }
 
 export const useResultModalStore = create<ResultModalState>((set, get) => ({
@@ -77,6 +82,8 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
   promptStreaming: false,
   promptError: null,
 
+  lastDiffState: new Map(),
+
   openModal: (title: string, sessionInfo?: SessionInfo, modelInfo?: ModelInfo, onClose?: () => void, sessionId?: string) => {
     set({
       isOpen: true,
@@ -91,6 +98,7 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
       promptInput: '',
       promptStreaming: false,
       promptError: null,
+      lastDiffState: new Map(),
     });
   },
 
@@ -109,6 +117,7 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
       promptInput: '',
       promptStreaming: false,
       promptError: null,
+      lastDiffState: new Map(),
     });
     if (callback) callback();
   },
@@ -183,5 +192,13 @@ export const useResultModalStore = create<ResultModalState>((set, get) => ({
 
   clearPrompt: () => {
     set({ promptInput: '', promptStreaming: false, promptError: null });
+  },
+
+  setLastDiffState: (diffState: Map<string, { additions: number; deletions: number; before?: string; after?: string }>) => {
+    set({ lastDiffState: diffState });
+  },
+
+  getLastDiffState: () => {
+    return get().lastDiffState;
   },
 }));

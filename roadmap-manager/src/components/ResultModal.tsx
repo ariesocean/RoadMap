@@ -4,51 +4,137 @@ import { useResultModalStore } from '@/store/resultModalStore';
 import { useModalPrompt } from '@/hooks/useModalPrompt';
 
 // Simple diff utility to compare two arrays of lines
-function computeDiff(before: string[], after: string[]): { type: 'unchanged' | 'added' | 'removed'; content: string }[] {
-  const result: { type: 'unchanged' | 'added' | 'removed'; content: string }[] = [];
+// Shows only changed lines with context (like git diff)
+function computeDiff(before: string[], after: string[]): { type: 'unchanged' | 'added' | 'removed'; content: string; lineNum?: number }[] {
+  const result: { type: 'unchanged' | 'added' | 'removed'; content: string; lineNum?: number }[] = [];
 
-  // Simple line-by-line comparison
+  // Use a simple LCS-based diff algorithm
+  // Find the longest common subsequence
+  const lcs = computeLCS(before, after);
+
   let beforeIdx = 0;
   let afterIdx = 0;
+  let lcsIdx = 0;
+
+  // Keep track of line numbers for context
+  let beforeLineNum = 1;
+  let afterLineNum = 1;
 
   while (beforeIdx < before.length || afterIdx < after.length) {
-    const beforeLine = before[beforeIdx];
-    const afterLine = after[afterIdx];
-
-    if (beforeLine === afterLine) {
-      // Lines match - unchanged
-      if (beforeLine !== undefined) {
-        result.push({ type: 'unchanged', content: beforeLine });
-      }
+    if (lcsIdx < lcs.length && beforeIdx < before.length && before[beforeIdx] === lcs[lcsIdx] && afterIdx < after.length && after[afterIdx] === lcs[lcsIdx]) {
+      // Line is the same in both - unchanged
+      result.push({ type: 'unchanged', content: before[beforeIdx], lineNum: beforeLineNum });
       beforeIdx++;
       afterIdx++;
-    } else {
-      // Check if line was removed
-      let foundMatchAfter = false;
-      for (let i = afterIdx + 1; i < Math.min(afterIdx + 3, after.length); i++) {
-        if (after[i] === beforeLine) {
-          foundMatchAfter = true;
-          break;
-        }
-      }
+      lcsIdx++;
+      beforeLineNum++;
+      afterLineNum++;
+    } else if (beforeIdx < before.length && (lcsIdx >= lcs.length || before[beforeIdx] !== lcs[lcsIdx])) {
+      // Line was removed
+      result.push({ type: 'removed', content: before[beforeIdx], lineNum: beforeLineNum });
+      beforeIdx++;
+      beforeLineNum++;
+    } else if (afterIdx < after.length && (lcsIdx >= lcs.length || after[afterIdx] !== lcs[lcsIdx])) {
+      // Line was added
+      result.push({ type: 'added', content: after[afterIdx], lineNum: afterLineNum });
+      afterIdx++;
+      afterLineNum++;
+    }
+  }
 
-      if (foundMatchAfter && beforeLine !== undefined) {
-        // Line was removed
-        result.push({ type: 'removed', content: beforeLine });
-        beforeIdx++;
-      } else if (afterLine !== undefined) {
-        // Line was added
-        result.push({ type: 'added', content: afterLine });
-        afterIdx++;
-      } else if (beforeLine !== undefined) {
-        // End of after, remaining before lines are removed
-        result.push({ type: 'removed', content: beforeLine });
-        beforeIdx++;
+  // If result is too long, trim to show only changed parts with context
+  // Find first and last changed line indices
+  let firstChangeIdx = -1;
+  let lastChangeIdx = -1;
+
+  for (let i = 0; i < result.length; i++) {
+    if (result[i].type !== 'unchanged') {
+      if (firstChangeIdx === -1) firstChangeIdx = i;
+      lastChangeIdx = i;
+    }
+  }
+
+  if (firstChangeIdx !== -1 && lastChangeIdx !== -1) {
+    // Show context: 3 lines before and after the changed section
+    const contextLines = 3;
+    const startIdx = Math.max(0, firstChangeIdx - contextLines);
+    const endIdx = Math.min(result.length - 1, lastChangeIdx + contextLines);
+
+    const trimmedResult = result.slice(startIdx, endIdx + 1);
+
+    // Add markers if we trimmed
+    if (startIdx > 0) {
+      trimmedResult.unshift({ type: 'unchanged', content: '...', lineNum: -1 });
+    }
+    if (endIdx < result.length - 1) {
+      trimmedResult.push({ type: 'unchanged', content: '...', lineNum: -1 });
+    }
+
+    return trimmedResult;
+  }
+
+  return result;
+}
+
+// Compute Longest Common Subsequence
+function computeLCS(before: string[], after: string[]): string[] {
+  let m = before.length;
+  let n = after.length;
+
+  // If files are too large, use a simpler approach
+  if (m > 1000 || n > 1000) {
+    // Just find common lines at the start and end
+    const common: string[] = [];
+    let i = 0;
+    let j = 0;
+
+    // Find common prefix
+    while (i < m && j < n && before[i] === after[j]) {
+      common.push(before[i]);
+      i++;
+      j++;
+    }
+
+    // Find common suffix
+    const commonSuffix: string[] = [];
+    while (i < m && j < n && before[m - 1] === after[n - 1]) {
+      commonSuffix.unshift(before[m - 1]);
+      m--;
+      n--;
+    }
+
+    return [...common, ...commonSuffix];
+  }
+
+  // Standard LCS DP algorithm
+  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (before[i - 1] === after[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
       }
     }
   }
 
-  return result;
+  // Backtrack to find LCS
+  const lcs: string[] = [];
+  let i = m, j = n;
+  while (i > 0 && j > 0) {
+    if (before[i - 1] === after[j - 1]) {
+      lcs.unshift(before[i - 1]);
+      i--;
+      j--;
+    } else if (dp[i - 1][j] > dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+
+  return lcs;
 }
 
 // DiffView component to display unified diff format
@@ -56,22 +142,24 @@ const DiffView: React.FC<{ before: string[]; after: string[] }> = ({ before, aft
   const diff = computeDiff(before, after);
 
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-0.5 font-mono text-xs">
       {diff.map((line, idx) => (
         <div
           key={idx}
-          className={`px-2 ${
+          className={`px-2 py-0.5 flex ${
             line.type === 'added'
               ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
               : line.type === 'removed'
               ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+              : line.content === '...'
+              ? 'text-gray-400 dark:text-gray-500 italic bg-gray-50 dark:bg-gray-800'
               : 'text-gray-600 dark:text-gray-400'
           }`}
         >
-          <span className="select-none opacity-50 mr-2">
+          <span className="select-none opacity-50 w-5 mr-2 text-right">
             {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : ' '}
           </span>
-          {line.content || ' '}
+          <span className="flex-1 whitespace-pre-wrap break-all">{line.content}</span>
         </div>
       ))}
     </div>
@@ -167,11 +255,6 @@ export const ResultModal: React.FC = () => {
                 const content = segment.content ?? '';
                 const segmentKey = segment.id ?? `segment-${index}`;
                 const isReasoning = segment.type === 'reasoning';
-
-                // Debug logging for diff segments
-                if (segment.type === 'diff') {
-                  console.log('[ResultModal] Rendering diff segment:', segment);
-                }
 
                 return (
                   <React.Fragment key={segmentKey}>
