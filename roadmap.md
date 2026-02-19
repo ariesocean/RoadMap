@@ -10,19 +10,6 @@
 **Last Updated:** 2026-02-11 03:53
 
 ---
-
-# AI Agent Development [created: 2026-02-15 13:58]
-> Get ready for AI Agent Build step by step
-
-## Subtasks
-* [x] Research and select web browser tool for AI agent
-* [ ] Build AI-Bridge CLI for OpenCode serve communication
-  * [x] Test opencode-cli
-
-**Last Updated:** 2026-02-15 13:58
-
----
-
 # trade-gateway test (TGT) [created: 2026-02-11 04:06]
 > trade-gateway test (TGT)
 
@@ -38,17 +25,24 @@
 **Last Updated:** 2026-02-11 04:06
 
 ---
-
 # Design Gold Trade System(GTS) [created: 2026-02-15 15:47]
 > Design Gold Trade System(GTS)
 
 ## Subtasks
-
-
 **Last Updated:** 2026-02-15 15:47
 
 ---
+# AI Agent Development [created: 2026-02-15 13:58]
+> Get ready for AI Agent Build step by step
 
+## Subtasks
+- [x] Research and select web browser tool for AI agent - Answer PLAYWRIGHT
+- [x] Build AI-Bridge CLI for OpenCode serve communication
+  * [x] Test opencode-cli
+
+**Last Updated:** 2026-02-15 13:58
+
+---
 # Roadmap Manager Refine [created: 2026-02-15 14:34]
 > Roadmap Manager Refine
 
@@ -71,7 +65,6 @@
 **Last Updated:** 2026-02-15 14:34
 
 ---
-
 # 春节前后行程 [created: 2026-02-12 11:20]
 > 2月13日到2月21日的日程安排
 
