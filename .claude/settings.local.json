@@ -1,3 +1,9 @@
 {
+  "permissions": {
+    "allow": [
+      "*",
+      "Bash(git add .claude/settings.local.json)"
+    ]
+  },
   "outputStyle": "default"
 }
