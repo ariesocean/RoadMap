@@ -36,8 +36,8 @@
 > Get ready for AI Agent Build step by step
 
 ## Subtasks
-- [x] Research and select web browser tool for AI agent - Answer PLAYWRIGHT
-- [x] Build AI-Bridge CLI for OpenCode serve communication
+* [x] Research and select web browser tool for AI agent - Answer PLAYWRIGHT
+* [x] Build AI-Bridge CLI for OpenCode serve communication
   * [x] Test opencode-cli
 
 **Last Updated:** 2026-02-15 13:58
@@ -53,7 +53,7 @@
 * [x] 支持手动删除子任务
   * [x] 点击输入框清空则删除整行任务
 * [x] 切换方案: 通过OpenCode Serve API实现集成, 替代CLI方案
-- [x] 调研 opencode serve 现有API接口
+* [x] 调研 opencode serve 现有API接口
 
 **Last Updated:** 2026-02-20 10:10
 
@@ -72,9 +72,9 @@
   * [x] 贴对联
   * [x] 年夜饭（烤羊排）看春晚
 * [x] 去江辰天街（2月19日）
-  - [x] 看看西昊的人工椅
-  - [x] 选中合适的椅子型号（C300 LITE）
+  * [x] 看看西昊的人工椅
+  * [x] 选中合适的椅子型号（C300 LITE）
 * [x] 初六返程（2月21日）
-- [ ] 今晚收拾行李（2月20日）
+* [ ] 今晚收拾行李（2月20日）
 
 **Last Updated:** 2026-02-19 21:50
