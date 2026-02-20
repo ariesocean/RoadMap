@@ -54,7 +54,7 @@ export const InputArea: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 transition-colors duration-300 z-40">
+    <div className="fixed bottom-0 left-0 right-0 transition-colors duration-300 z-50">
       <div className="max-w-[800px] mx-auto px-2 sm:px-6 pb-3 sm:pb-4">
         {error && (
           <motion.div
