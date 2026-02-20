@@ -61,6 +61,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
     currentMap,
     isSidebarCollapsed,
     toggleSidebar,
+    error,
   } = useMapsStore();
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -189,6 +190,13 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
             <span>New Map</span>
           </button>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mx-[clamp(10px,1.2vw,14px)] mb-2 px-[clamp(8px,1vw,12px)] py-[clamp(6px,0.8vw,10px)] bg-red-900/50 border border-red-700 rounded text-red-200 text-xs">
+            {error}
+          </div>
+        )}
 
         {/* Create Input */}
         {showCreateInput && (

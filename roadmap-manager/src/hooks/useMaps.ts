@@ -18,11 +18,13 @@ export const useMaps = () => {
     currentMap,
     isSidebarCollapsed,
     isLoading,
+    isSwitching,
     error,
     setAvailableMaps,
     setCurrentMap,
     toggleSidebar,
     setLoading,
+    setSwitching,
     setError,
     addMap,
     removeMap,
@@ -50,9 +52,10 @@ export const useMaps = () => {
 
   // Handle map selection with auto-archive
   const handleMapSelect = useCallback(async (map: MapInfo) => {
-    // Don't do anything if selecting the same map
-    if (currentMap?.id === map.id) return;
+    // Don't do anything if already switching or selecting the same map
+    if (isSwitching || currentMap?.id === map.id) return;
 
+    setSwitching(true);
     setLoading(true);
     setError(null);
 
@@ -78,9 +81,10 @@ export const useMaps = () => {
       setError(err instanceof Error ? err.message : 'Failed to switch map');
       console.error('[Maps] Error switching map:', err);
     } finally {
+      setSwitching(false);
       setLoading(false);
     }
-  }, [currentMap, setLoading, setError, setCurrentMap, refreshTasks]);
+  }, [currentMap, isSwitching, setSwitching, setLoading, setError, setCurrentMap, refreshTasks]);
 
   // Handle creating a new map
   const handleCreateMap = useCallback(async (name: string) => {
@@ -92,13 +96,16 @@ export const useMaps = () => {
       if (newMap) {
         addMap(newMap);
         console.log(`[Maps] Created new map: ${newMap.filename}`);
+
+        // Auto-select the newly created map
+        await handleMapSelect(newMap);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create map');
     } finally {
       setLoading(false);
     }
-  }, [setLoading, setError, addMap]);
+  }, [setLoading, setError, addMap, handleMapSelect]);
 
   // Handle deleting a map
   const handleDeleteMap = useCallback(async (map: MapInfo) => {

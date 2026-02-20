@@ -167,7 +167,16 @@ const roadmapPlugin = {
             chunks.push(chunk);
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
-          const mapName = body.name.toLowerCase().replace(/\s+/g, '-');
+
+          // Validate map name: letters (including Chinese), numbers, and hyphens
+          const rawName = body.name?.trim();
+          const validNameRegex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9-]*$/;
+          if (!rawName || !validNameRegex.test(rawName)) {
+            res.status(400).end(JSON.stringify({ error: 'Invalid map name. Use letters (including Chinese), numbers, and hyphens. Must start with a letter, number, or Chinese character.' }));
+            return;
+          }
+
+          const mapName = rawName.replace(/\s+/g, '-');
           const filename = `map-${mapName}.md`;
           const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
 
@@ -230,7 +239,16 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const oldFilename = body.oldFilename || `map-${body.oldName}.md`;
-          const newName = body.newName.toLowerCase().replace(/\s+/g, '-');
+
+          // Validate new name: letters (including Chinese), numbers, and hyphens
+          const rawNewName = body.newName?.trim();
+          const validNameRegex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9-]*$/;
+          if (!rawNewName || !validNameRegex.test(rawNewName)) {
+            res.status(400).end(JSON.stringify({ error: 'Invalid map name. Use letters (including Chinese), numbers, and hyphens. Must start with a letter, number, or Chinese character.' }));
+            return;
+          }
+
+          const newName = rawNewName.replace(/\s+/g, '-');
           const newFilename = `map-${newName}.md`;
           const oldPath = `/Users/SparkingAries/VibeProjects/RoadMap/${oldFilename}`;
           const newPath = `/Users/SparkingAries/VibeProjects/RoadMap/${newFilename}`;

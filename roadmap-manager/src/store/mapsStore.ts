@@ -8,6 +8,7 @@ interface MapsState {
   currentMap: MapInfo | null;
   isSidebarCollapsed: boolean;
   isLoading: boolean;
+  isSwitching: boolean;
   error: string | null;
 
   // Actions
@@ -16,6 +17,7 @@ interface MapsState {
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setLoading: (loading: boolean) => void;
+  setSwitching: (switching: boolean) => void;
   setError: (error: string | null) => void;
   addMap: (map: MapInfo) => void;
   removeMap: (mapId: string) => void;
@@ -32,6 +34,7 @@ export const useMapsStore = create<MapsState>()(
       currentMap: null,
       isSidebarCollapsed: false,
       isLoading: false,
+      isSwitching: false,
       error: null,
 
       // Actions
@@ -44,6 +47,8 @@ export const useMapsStore = create<MapsState>()(
       setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
 
       setLoading: (loading) => set({ isLoading: loading }),
+
+      setSwitching: (switching) => set({ isSwitching: switching }),
 
       setError: (error) => set({ error }),
 
@@ -71,6 +76,7 @@ export const useMapsStore = create<MapsState>()(
       name: 'maps-storage',
       partialize: (state) => ({
         isSidebarCollapsed: state.isSidebarCollapsed,
+        currentMap: state.currentMap,
       }),
     }
   )
