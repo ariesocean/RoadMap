@@ -1,11 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-export interface MapInfo {
-  id: string;
-  name: string;
-  filename: string;
-}
+import type { MapInfo } from '@/services/fileService';
 
 interface MapsState {
   // State
@@ -26,6 +21,8 @@ interface MapsState {
   removeMap: (mapId: string) => void;
   updateMapName: (mapId: string, newName: string, newFilename: string) => void;
 }
+
+export type { MapInfo };
 
 export const useMapsStore = create<MapsState>()(
   persist(

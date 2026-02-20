@@ -54,3 +54,134 @@ export async function readAchievementsFile(): Promise<Achievement[]> {
     return [];
   }
 }
+
+// ========== Map File Operations ==========
+
+export interface MapInfo {
+  id: string;
+  name: string;
+  filename: string;
+}
+
+export async function listMaps(): Promise<MapInfo[]> {
+  try {
+    const response = await fetch('/api/list-maps');
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error('Failed to list maps');
+  } catch (error) {
+    console.error('Error listing maps:', error);
+    return [];
+  }
+}
+
+export async function createMap(name: string): Promise<MapInfo | null> {
+  try {
+    const response = await fetch('/api/create-map', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create map');
+  } catch (error) {
+    console.error('Error creating map:', error);
+    return null;
+  }
+}
+
+export async function deleteMap(map: MapInfo): Promise<boolean> {
+  try {
+    const response = await fetch('/api/delete-map', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: map.name, filename: map.filename }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Error deleting map:', error);
+    return false;
+  }
+}
+
+export async function renameMap(oldMap: MapInfo, newName: string): Promise<MapInfo | null> {
+  try {
+    const response = await fetch('/api/rename-map', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        oldName: oldMap.name,
+        oldFilename: oldMap.filename,
+        newName,
+      }),
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to rename map');
+  } catch (error) {
+    console.error('Error renaming map:', error);
+    return null;
+  }
+}
+
+export async function readMapFile(map: MapInfo): Promise<string> {
+  try {
+    const response = await fetch('/api/read-map', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: map.name, filename: map.filename }),
+    });
+    if (response.ok) {
+      return await response.text();
+    }
+    throw new Error('Failed to read map file');
+  } catch (error) {
+    console.error('Error reading map file:', error);
+    return '';
+  }
+}
+
+export async function writeMapFile(map: MapInfo, content: string): Promise<boolean> {
+  try {
+    const response = await fetch('/api/write-map', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: map.name, filename: map.filename, content }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Error writing map file:', error);
+    return false;
+  }
+}
+
+// Switch to a different map: archive current roadmap.md to the previous map file, then load new map
+export async function switchToMap(
+  newMap: MapInfo,
+  currentContent: string,
+  currentMap: MapInfo | null
+): Promise<{ content: string; previousMap: MapInfo | null } | null> {
+  try {
+    // First, archive current content to the previous map file (if exists)
+    if (currentMap) {
+      await writeMapFile(currentMap, currentContent);
+    }
+
+    // Then load the new map content
+    const newContent = await readMapFile(newMap);
+
+    return {
+      content: newContent,
+      previousMap: currentMap,
+    };
+  } catch (error) {
+    console.error('Error switching map:', error);
+    return null;
+  }
+}

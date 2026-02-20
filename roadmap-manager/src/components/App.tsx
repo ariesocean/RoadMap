@@ -4,7 +4,7 @@ import { TaskList } from './TaskList';
 import { InputArea } from './InputArea';
 import { ResultModal } from './ResultModal';
 import { MapsSidebar } from './MapsSidebar';
-import { useMapsMock } from '@/hooks/useMapsMock';
+import { useMaps } from '@/hooks/useMaps';
 import { useMapsStore } from '@/store/mapsStore';
 import { useTaskStore } from '@/store/taskStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -22,7 +22,7 @@ export const App: React.FC = () => {
     handleCreateMap,
     handleDeleteMap,
     handleRenameMap,
-  } = useMapsMock();
+  } = useMaps();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {

@@ -132,6 +132,185 @@ const roadmapPlugin = {
       }
     });
 
+    // List all map-*.md files in the roadmap directory
+    server.middlewares.use('/api/list-maps', async (req: any, res: any, next: any) => {
+      if (req.method === 'GET') {
+        try {
+          const mapsDir = '/Users/SparkingAries/VibeProjects/RoadMap';
+          const files = fs.readdirSync(mapsDir);
+          const mapFiles = files
+            .filter(f => f.startsWith('map-') && f.endsWith('.md'))
+            .map(f => {
+              const name = f.slice(4, -3); // Remove 'map-' prefix and '.md' suffix
+              return {
+                id: name,
+                name: name,
+                filename: f
+              };
+            });
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(mapFiles));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // Create a new map file
+    server.middlewares.use('/api/create-map', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const mapName = body.name.toLowerCase().replace(/\s+/g, '-');
+          const filename = `map-${mapName}.md`;
+          const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
+
+          if (fs.existsSync(filepath)) {
+            res.status(400).end(JSON.stringify({ error: 'Map already exists' }));
+            return;
+          }
+
+          // Create empty map file with a header
+          fs.writeFileSync(filepath, `# ${mapName}\n\n`);
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            id: mapName,
+            name: mapName,
+            filename: filename
+          }));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // Delete a map file
+    server.middlewares.use('/api/delete-map', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const filename = body.filename || `map-${body.name}.md`;
+          const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
+
+          if (!fs.existsSync(filepath)) {
+            res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
+            return;
+          }
+
+          fs.unlinkSync(filepath);
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // Rename a map file
+    server.middlewares.use('/api/rename-map', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const oldFilename = body.oldFilename || `map-${body.oldName}.md`;
+          const newName = body.newName.toLowerCase().replace(/\s+/g, '-');
+          const newFilename = `map-${newName}.md`;
+          const oldPath = `/Users/SparkingAries/VibeProjects/RoadMap/${oldFilename}`;
+          const newPath = `/Users/SparkingAries/VibeProjects/RoadMap/${newFilename}`;
+
+          if (!fs.existsSync(oldPath)) {
+            res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
+            return;
+          }
+
+          if (fs.existsSync(newPath)) {
+            res.status(400).end(JSON.stringify({ error: 'A map with that name already exists' }));
+            return;
+          }
+
+          fs.renameSync(oldPath, newPath);
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            id: newName,
+            name: newName,
+            filename: newFilename
+          }));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // Read a specific map file
+    server.middlewares.use('/api/read-map', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const filename = body.filename || `map-${body.name}.md`;
+          const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
+
+          if (!fs.existsSync(filepath)) {
+            res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
+            return;
+          }
+
+          const content = fs.readFileSync(filepath, 'utf-8');
+          res.setHeader('Content-Type', 'text/plain');
+          res.end(content);
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // Write to a specific map file (for archiving)
+    server.middlewares.use('/api/write-map', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const filename = body.filename || `map-${body.name}.md`;
+          const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
+
+          fs.writeFileSync(filepath, body.content);
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
     server.middlewares.use('/session', async (req: any, res: any, next: any) => {
       const isHealthy = await checkServerHealth();
       
