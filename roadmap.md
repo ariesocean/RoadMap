@@ -53,16 +53,9 @@
 * [x] 支持手动删除子任务
   * [x] 点击输入框清空则删除整行任务
 * [x] 切换方案: 通过OpenCode Serve API实现集成, 替代CLI方案
-* [ ] 调研 opencode serve 现有API接口
-* [ ] apply add-tauri-sse-streaming
-  * [ ] 查看以下文件是否会被更改 /Users/SparkingAries/VibeProjects/RoadMap/openspec/changes/archive/2026-02-17-migrate-vite-to-tauri/tasks.md
-* [ ] 测试subtask拖拽排序功能
-  * [ ] 在Tauri应用中打开Roadmap Manager
-  * [ ] 创建包含多个subtask的测试任务
-  * [ ] 验证subtask拖拽排序功能正常工作
-  * [ ] 记录发现的问题(如有问题)
+- [x] 调研 opencode serve 现有API接口
 
-**Last Updated:** 2026-02-15 14:34
+**Last Updated:** 2026-02-20 10:10
 
 ---
 # 春节前后行程 [created: 2026-02-12 11:20]
