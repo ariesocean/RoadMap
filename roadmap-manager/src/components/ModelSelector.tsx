@@ -61,13 +61,13 @@ export const ModelSelector: React.FC = () => {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
+          flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium
           transition-all duration-200 hover:bg-secondary-bg/50 dark:hover:bg-dark-secondary-bg/50
           ${colors.text}
         `}
       >
         <span className="font-semibold">{currentModel.displayName}</span>
-        <span className="opacity-60">{formatProviderName(currentModel.providerID)}</span>
+        <span className="opacity-60 hidden sm:inline">{formatProviderName(currentModel.providerID)}</span>
         <ChevronDown className="w-3 h-3 opacity-40" />
       </button>
 

@@ -116,14 +116,14 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
           transition-all duration-200 hover:shadow-sm"
       >
         <MessageSquare className="w-3.5 h-3.5 opacity-60" />
-        <span className="truncate max-w-[160px]">
+        <span className="truncate max-w-[60px] sm:max-w-[160px]">
           {currentSession?.title || 'New Conversation'}
         </span>
         <ChevronDown className="w-3 h-3 opacity-60" />
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-lg shadow-xl overflow-hidden z-[200]">
+        <div className="absolute bottom-full right-0 mb-2 w-72 bg-white dark:bg-dark-card-bg border border-border-color dark:border-dark-border-color rounded-lg shadow-xl overflow-hidden z-[200]">
           <div className="flex items-center justify-between p-2 border-b border-border-color dark:border-dark-border-color">
               <button
                 type="button"

@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
           <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center">
             <ListTodo className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <h1 className="text-base sm:text-xl font-semibold text-primary-text dark:text-dark-primary-text transition-colors duration-300">Roadmap Manager</h1>
+          <h1 className="text-base sm:text-xl font-semibold text-primary-text dark:text-dark-primary-text transition-colors duration-300"><span className="inline sm:hidden">Roadmap</span><span className="hidden sm:inline">Roadmap Manager</span></h1>
         </div>
         
         <div className="flex items-center gap-4">

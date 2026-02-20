@@ -77,7 +77,8 @@ export const App: React.FC = () => {
               <ListTodo className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <h1 className="text-base sm:text-xl font-semibold text-white">
-              Roadmap Manager
+              <span className="inline sm:hidden">Roadmap</span>
+              <span className="hidden sm:inline">Roadmap Manager</span>
             </h1>
           </div>
           
@@ -95,14 +96,14 @@ export const App: React.FC = () => {
               )}
             </button>
 
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks..."
-                className="w-32 sm:w-48 pl-9 pr-4 py-2 text-sm bg-[#3c3c3c] text-white placeholder-gray-500 rounded-md border-none focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-[88px] sm:w-48 pl-9 pr-4 py-2 text-sm bg-[#3c3c3c] text-white placeholder-gray-500 rounded-md border-none focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             

@@ -102,7 +102,7 @@ export const InputArea: React.FC = () => {
                   <SessionList />
                   <button
                     onClick={handleNewSession}
-                    className="p-1.5 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
+                    className="hidden sm:block p-1.5 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
                     title="New conversation"
                     type="button"
                   >
