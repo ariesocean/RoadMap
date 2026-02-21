@@ -161,7 +161,7 @@ export const TaskList: React.FC = () => {
         items={filteredTasks.map(t => t.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="max-w-[800px] mx-auto space-y-2 sm:space-y-3">
+        <div className="max-w-[800px] mx-auto space-y-2 sm:space-y-2.5 md:space-y-3 lg:space-y-3.5">
           <AnimatePresence mode="popLayout">
             {filteredTasks.map((task, index) => (
               <SortableTaskCard key={task.id} task={task} index={index} />

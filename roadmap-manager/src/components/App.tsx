@@ -62,7 +62,7 @@ export const App: React.FC = () => {
     <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
       <div className="min-h-screen bg-background dark:bg-dark-background transition-colors duration-300">
         {/* Unified Header */}
-        <header className="fixed top-0 left-0 right-0 h-14 bg-[#1e1e1e] z-40 flex items-center px-4 transition-colors duration-300">
+        <header className="fixed top-0 left-0 right-0 h-14 bg-[#1e1e1e] z-40 flex items-center px-3 sm:px-4 md:px-5 lg:px-6 transition-colors duration-300">
           {/* Sidebar Toggle */}
           <MapsSidebar
             onMapSelect={handleMapSelect}
@@ -72,11 +72,11 @@ export const App: React.FC = () => {
           />
 
           {/* Logo and Title */}
-          <div className="flex items-center gap-2 ml-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center">
-              <ListTodo className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 ml-2">
+            <div className="w-7 h-7 sm:w-8 md:w-8 lg:w-8 bg-primary rounded-lg flex items-center justify-center">
+              <ListTodo className="w-4 h-4 sm:w-5 md:w-5 lg:w-5 text-white" />
             </div>
-            <h1 className="text-base sm:text-xl font-semibold text-white">
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white">
               <span className="inline sm:hidden">Roadmap</span>
               <span className="hidden sm:inline">Roadmap Manager</span>
             </h1>
@@ -103,7 +103,7 @@ export const App: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks..."
-                className="w-[88px] sm:w-48 pl-9 pr-4 py-2 text-sm bg-[#3c3c3c] text-white placeholder-gray-500 rounded-md border-none focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-[88px] sm:w-40 md:w-44 lg:w-48 pl-9 pr-4 py-2 text-sm bg-[#3c3c3c] text-white placeholder-gray-500 rounded-md border-none focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             
@@ -121,10 +121,10 @@ export const App: React.FC = () => {
         </header>
 
         <main
-          className="pt-14 pb-20 sm:pb-24 transition-all duration-300"
+          className="pt-14 pb-20 sm:pb-20 md:pb-22 lg:pb-24 transition-all duration-300"
           style={{ marginLeft: isSidebarCollapsed ? 0 : 'clamp(140px, 18vw, 200px)' }}
         >
-          <div className="max-w-[800px] mx-auto py-4 sm:py-6 px-4 sm:px-6">
+          <div className="max-w-[800px] mx-auto py-4 sm:py-5 md:py-5 lg:py-6 px-3 sm:px-4 md:px-5 lg:px-6">
             <TaskList />
           </div>
         </main>

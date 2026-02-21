@@ -42,11 +42,11 @@ export const ResultModal: React.FC = () => {
   const isProcessing = isStreaming || promptStreaming;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-3 md:p-4 lg:p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full overflow-hidden">
-        <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500" />
+        <div className="px-3 sm:px-4 md:px-4 py-2 sm:py-2.5 md:py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <h3 className="text-sm sm:text-base md:text-base font-medium text-gray-900 dark:text-white flex items-center gap-1.5 sm:gap-2 md:gap-2">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 md:w-4 lg:w-4 text-purple-500" />
             <span className="truncate max-w-[150px] sm:max-w-none">{title || 'AI Assistant'}</span>
             {isProcessing && (
               <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
@@ -59,13 +59,13 @@ export const ResultModal: React.FC = () => {
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="px-3 sm:px-4 py-2 sm:py-4">
+        <div className="px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-3.5 lg:py-4">
           <div
             ref={preRef}
-            className="text-[11px] sm:text-[13px] whitespace-pre-wrap break-all font-mono bg-gray-50 dark:bg-gray-900 p-2 sm:p-4 rounded max-h-[40vh] sm:max-h-[50vh] overflow-auto scrollbar-thin"
+            className="text-[11px] sm:text-[12px] md:text-[13px] whitespace-pre-wrap break-all font-mono bg-gray-50 dark:bg-gray-900 p-2 sm:p-3 md:p-4 rounded max-h-[40vh] sm:max-h-[45vh] md:max-h-[50vh] overflow-auto scrollbar-thin"
           >
             {sessionInfo && (
-              <div className="mb-2 sm:mb-4 text-xs sm:text-sm">
+              <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm md:text-base">
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">Session: </span>
                   <span className="text-gray-700 dark:text-gray-300">{sessionInfo.title}</span>
@@ -137,7 +137,7 @@ export const ResultModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+        <div className="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
           <div className="relative flex items-center">
             <input
               type="text"
@@ -146,17 +146,17 @@ export const ResultModal: React.FC = () => {
               onKeyDown={handleKeyDown}
               placeholder="Continue..."
               disabled={promptStreaming}
-              className="w-full pl-2.5 sm:pl-3 pr-8 sm:pr-10 py-2 sm:py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-xs sm:text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-60"
+              className="w-full pl-2.5 sm:pl-3 md:pl-3 pr-8 sm:pr-9 md:pr-10 py-2 sm:py-2.5 md:py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-xs sm:text-sm md:text-base text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-60"
             />
             <button
               onClick={() => submitPrompt(undefined)}
               disabled={!promptInput.trim() || promptStreaming}
-              className="absolute right-1 sm:right-1.5 p-1 sm:p-1.5 bg-purple-600 text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed hover:bg-purple-700 transition-all"
+              className="absolute right-1 sm:right-1.5 md:right-1.5 p-1 sm:p-1.5 md:p-1.5 bg-purple-600 text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed hover:bg-purple-700 transition-all"
             >
               {promptStreaming ? (
-                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                <Loader2 className="w-3 h-3 sm:w-3.5 md:w-4 lg:w-4 animate-spin" />
               ) : (
-                <Send className="w-3 h-3 sm:w-4 sm:h-4" />
+                <Send className="w-3 h-3 sm:w-3.5 md:w-4 lg:w-4" />
               )}
             </button>
           </div>

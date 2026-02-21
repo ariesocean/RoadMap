@@ -193,7 +193,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       {...listeners}
-      className={`flex items-center gap-1.5 sm:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-md transition-colors ${
+      className={`flex items-center gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 py-1.5 sm:py-1.75 md:py-2 lg:py-2 px-1.5 sm:px-2 rounded-md transition-colors ${
         isOverNesting 
           ? 'bg-primary/10 dark:bg-primary/20 border-2 border-primary border-dashed' 
           : 'hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg'
@@ -201,7 +201,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
       style={{ marginLeft: `${subtask.nestedLevel * 20}px` }}
     >
       <motion.div
-        className={`w-4 h-4 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center transition-all ${
+        className={`w-4 h-4 sm:w-5 md:w-5 lg:w-5 rounded border-2 flex items-center justify-center transition-all ${
           subtask.completed
             ? 'bg-primary border-primary'
             : 'border-border-color dark:border-dark-border-color bg-white dark:bg-dark-card-bg'
@@ -215,7 +215,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           >
-            <Check className="w-2 h-2 sm:w-3 sm:h-3 text-white" strokeWidth={3} />
+            <Check className="w-2.5 h-2.5 sm:w-3 md:w-3 lg:w-3 text-white" strokeWidth={3} />
           </motion.div>
         )}
       </motion.div>
@@ -230,16 +230,16 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
             onMouseDown={(e) => e.stopPropagation()}
-            className="w-full text-xs sm:text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-1.5 sm:px-2 py-0.5 sm:py-1 outline-none text-primary-text dark:text-dark-primary-text pr-6 sm:pr-8"
+            className="w-full text-xs sm:text-sm md:text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-1.5 sm:px-2 py-0.5 sm:py-1 outline-none text-primary-text dark:text-dark-primary-text pr-6 sm:pr-7 md:pr-8"
           />
-          <div className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2">
+          <div className="absolute right-1.5 sm:right-2 md:right-2 lg:right-2 top-1/2 -translate-y-1/2">
             {showDeleteButton ? (
               <button
                 onClick={handleDelete}
-                className="p-0.5 sm:p-1 text-red-500 hover:text-red-600 transition-colors"
+                className="p-0.5 sm:p-0.75 md:p-1 text-red-500 hover:text-red-600 transition-colors"
                 title="Delete subtask"
               >
-                <Trash className="w-3 h-3 sm:w-4 sm:h-4" />
+                <Trash className="w-3 h-3 sm:w-3.5 md:w-4 lg:w-4" />
               </button>
             ) : (
               <div className="w-3 sm:w-4" />
@@ -248,7 +248,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
         </div>
       ) : (
         <span
-          className={`flex-1 text-xs sm:text-sm transition-all group-hover:text-primary-text dark:group-hover:text-dark-primary-text ${
+          className={`flex-1 text-xs sm:text-sm md:text-sm transition-all group-hover:text-primary-text dark:group-hover:text-dark-primary-text ${
             subtask.completed
               ? 'text-secondary-text dark:text-dark-secondary-text line-through'
               : 'text-primary-text dark:text-dark-primary-text'
@@ -264,7 +264,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
 
       {!isEditing && (
         <Pencil
-          className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary-text dark:text-dark-secondary-text opacity-0 group-hover:opacity-100 transition-opacity"
+          className="w-2.5 h-2.5 sm:w-3 md:w-3 lg:w-3 text-secondary-text dark:text-dark-secondary-text opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
             handleTextClick();
@@ -449,8 +449,8 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
 
     {/* Add new subtask area at bottom */}
     {isAdding ? (
-      <div className="mt-1.5 sm:mt-2 flex items-center gap-1.5 sm:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2">
-        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded border-2 border-border-color dark:border-dark-border-color" />
+      <div className="mt-1.5 sm:mt-2 md:mt-2 lg:mt-2.5 flex items-center gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 py-1.5 sm:py-2 md:py-2 lg:py-2.5 px-1.5 sm:px-2">
+        <div className="w-4 h-4 sm:w-5 md:w-5 lg:w-5 rounded border-2 border-border-color dark:border-dark-border-color" />
         <input
           ref={addInputRef}
           type="text"
@@ -459,15 +459,15 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
           onKeyDown={handleAddKeyDown}
           onBlur={handleAddBlur}
           placeholder="输入任务内容..."
-          className="flex-1 text-xs sm:text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-1.5 sm:px-2 py-0.5 sm:py-1 outline-none text-primary-text dark:text-dark-primary-text"
+          className="flex-1 text-xs sm:text-sm md:text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-1.5 sm:px-2 py-0.5 sm:py-1 outline-none text-primary-text dark:text-dark-primary-text"
         />
       </div>
     ) : (
       <div
         onClick={handleAddClick}
-        className="mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-card-border dark:border-dark-card-border hover:border-primary dark:hover:border-primary cursor-pointer group transition-colors duration-200"
+        className="mt-2 sm:mt-2.5 md:mt-3 lg:mt-3 pt-1.5 sm:pt-2 md:pt-2 lg:pt-2.5 border-t border-card-border dark:border-dark-card-border hover:border-primary dark:hover:border-primary cursor-pointer group transition-colors duration-200"
       >
-        <span className="text-[10px] sm:text-xs text-primary font-bold opacity-0 group-hover:opacity-100 flex justify-center mt-0.5 sm:mt-1 transition-all duration-200 drop-shadow-sm">
+        <span className="text-[10px] sm:text-xs md:text-xs lg:text-sm text-primary font-bold opacity-0 group-hover:opacity-100 flex justify-center mt-0.5 sm:mt-1 transition-all duration-200 drop-shadow-sm">
           ADD TASK
         </span>
       </div>

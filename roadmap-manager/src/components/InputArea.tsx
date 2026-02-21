@@ -55,12 +55,12 @@ export const InputArea: React.FC = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 transition-colors duration-300 z-50">
-      <div className="max-w-[800px] mx-auto px-4 sm:px-6 pb-3 sm:pb-4">
+      <div className="max-w-[800px] mx-auto px-3 sm:px-4 md:px-5 lg:px-6 pb-3 sm:pb-3.5 md:pb-4 lg:pb-4">
         {error && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-3 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-sm text-red-600 dark:text-red-400"
+            className="mb-3 px-3 sm:px-4 md:px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-xs sm:text-sm text-red-600 dark:text-red-400"
           >
             {error}
           </motion.div>
@@ -69,7 +69,7 @@ export const InputArea: React.FC = () => {
         {/* Main content card */}
           <form onSubmit={handleSubmit} className="relative bg-white dark:bg-dark-card-bg rounded-2xl shadow-lg border border-border-color dark:border-dark-border-color">
             {/* Textarea Area */}
-            <div className="px-4 pt-3 pb-2">
+            <div className="px-3 sm:px-4 pt-3 pb-2">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
@@ -91,18 +91,18 @@ export const InputArea: React.FC = () => {
               </div>
               
               {/* Toolbar content */}
-              <div className="px-3 py-2 flex items-center justify-between bg-secondary-bg/30 dark:bg-dark-secondary-bg/30 rounded-b-2xl relative z-10">
+              <div className="px-2.5 sm:px-3 py-2 flex items-center justify-between bg-secondary-bg/30 dark:bg-dark-secondary-bg/30 rounded-b-2xl relative z-10">
                 {/* Left: Model Selector */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <ModelSelector />
                 </div>
 
                 {/* Right: Session Controls */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 sm:gap-1">
                   <SessionList />
                   <button
                     onClick={handleNewSession}
-                    className="hidden sm:block p-1.5 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
+                    className="hidden sm:block p-1.5 sm:p-1.75 md:p-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
                     title="New conversation"
                     type="button"
                   >
