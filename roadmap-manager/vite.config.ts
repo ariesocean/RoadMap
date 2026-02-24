@@ -185,8 +185,8 @@ const roadmapPlugin = {
             return;
           }
 
-          // Create empty map file with a header
-          fs.writeFileSync(filepath, `# ${mapName}\n\n`);
+          // Create empty map file
+          fs.writeFileSync(filepath, '');
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({
             id: mapName,
