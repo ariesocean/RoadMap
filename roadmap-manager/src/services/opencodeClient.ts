@@ -1,7 +1,6 @@
 import { createOpencodeClient, type Session } from '@opencode-ai/sdk';
 
-const OPENCODE_PORT = 51432;
-const BASE_URL = `http://localhost:${OPENCODE_PORT}`;
+const BASE_URL = '/opencode';
 
 let clientInstance: ReturnType<typeof createOpencodeClient> | null = null;
 

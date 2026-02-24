@@ -782,6 +782,13 @@ export default defineConfig({
   },
   server: {
     port: 1430,
+    proxy: {
+      '/opencode': {
+        target: 'http://localhost:51432',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/opencode/, ''),
+      },
+    },
   },
   build: {
     target: 'esnext',
