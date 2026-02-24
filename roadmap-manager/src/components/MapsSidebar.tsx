@@ -153,7 +153,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
         <button
           type="button"
           onClick={toggleSidebar}
-          className="sidebar-toggle flex items-center justify-center rounded-md text-[#cccccc] hover:text-white hover:bg-white/10 transition-colors"
+          className="sidebar-toggle flex items-center justify-center rounded-md text-secondary-text dark:text-dark-secondary-text hover:text-primary-text dark:hover:text-dark-primary-text hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
           title="Expand sidebar"
         >
           <Menu className="w-[clamp(16px,1.8vw,20px)] h-[clamp(16px,1.8vw,20px)]" />
@@ -169,7 +169,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
       <button
         type="button"
         onClick={toggleSidebar}
-        className="sidebar-toggle flex items-center justify-center rounded-md text-[#cccccc] hover:text-white hover:bg-white/10 transition-colors"
+        className="sidebar-toggle flex items-center justify-center rounded-md text-secondary-text dark:text-dark-secondary-text hover:text-primary-text dark:hover:text-dark-primary-text hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
         title="Collapse sidebar"
       >
         <Menu className="w-[clamp(16px,1.8vw,20px)] h-[clamp(16px,1.8vw,20px)]" />
@@ -177,14 +177,14 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
 
       {/* Sidebar Panel */}
       <div
-        className="sidebar-container fixed top-14 left-0 h-[calc(100vh-3.5rem)] bg-[#252526] z-30 flex flex-col"
+        className="sidebar-container fixed top-14 left-0 h-[calc(100vh-3.5rem)] bg-secondary-bg dark:bg-dark-secondary-bg z-30 flex flex-col border-r border-border-color dark:border-dark-border-color"
       >
         {/* New Map Button */}
         <div className="px-[clamp(10px,1.2vw,14px)] py-[clamp(12px,1.4vw,16px)]">
           <button
             type="button"
             onClick={() => setShowCreateInput(!showCreateInput)}
-            className="sidebar-btn w-full flex items-center justify-center gap-[clamp(6px,0.8vw,8px)] rounded text-[#cccccc] hover:text-white hover:bg-[#3c3c3c] transition-colors"
+            className="sidebar-btn w-full flex items-center justify-center gap-[clamp(6px,0.8vw,8px)] rounded text-secondary-text dark:text-dark-secondary-text hover:text-primary-text dark:hover:text-dark-primary-text hover:bg-card-bg dark:hover:bg-dark-card-bg transition-colors"
           >
             <Plus className="w-[clamp(16px,1.8vw,20px)] h-[clamp(16px,1.8vw,20px)]" />
             <span>New Map</span>
@@ -213,7 +213,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                 }
               }}
               placeholder="Map name..."
-              className="w-full px-[clamp(8px,1vw,12px)] py-[clamp(6px,0.8vw,10px)] rounded bg-[#3c3c3c] text-white placeholder-[#6e6e6e] border border-[#3c3c3c] focus:border-[#0078D4] focus:outline-none"
+              className="w-full px-[clamp(8px,1vw,12px)] py-[clamp(6px,0.8vw,10px)] rounded bg-card-bg dark:bg-dark-card-bg text-primary-text dark:text-dark-primary-text placeholder-placeholder-text dark:placeholder-dark-placeholder-text border border-border-color dark:border-dark-border-color focus:border-primary focus:outline-none"
               style={{ fontSize: 'clamp(12px, 1.3vw, 14px)' }}
             />
           </div>
@@ -223,8 +223,8 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
         <div className="flex-1 overflow-y-auto maps-sidebar-scroll px-[clamp(6px,0.8vw,10px)]">
           {availableMaps.length === 0 ? (
             <div className="px-[clamp(10px,1.2vw,14px)] py-8 text-center">
-              <FolderOpen className="sidebar-icon mx-auto mb-2 text-[#6e6e6e]" />
-              <p className="text-[#6e6e6e]" style={{ fontSize: 'clamp(10px, 1vw, 12px)' }}>No maps found</p>
+              <FolderOpen className="sidebar-icon mx-auto mb-2 text-placeholder-text dark:text-dark-placeholder-text" />
+              <p className="text-placeholder-text dark:text-dark-placeholder-text" style={{ fontSize: 'clamp(10px, 1vw, 12px)' }}>No maps found</p>
             </div>
           ) : (
             <div className="space-y-[clamp(4px,0.5vw,6px)]">
@@ -239,8 +239,8 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                     onClick={() => handleMapClick(map)}
                     className={`group relative flex items-center rounded-md cursor-pointer sidebar-item
                       ${isCurrent
-                        ? 'bg-[#0078D4] text-white'
-                        : 'text-[#cccccc] hover:bg-[#3c3c3c] hover:text-white'
+                        ? 'bg-primary text-white'
+                        : 'text-secondary-text dark:text-dark-secondary-text hover:bg-card-bg dark:hover:bg-dark-card-bg hover:text-primary-text dark:hover:text-dark-primary-text'
                       }`}
                   >
                     {isEditing ? (
@@ -252,7 +252,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                           onChange={(e) => setEditName(e.target.value)}
                           onKeyDown={handleRenameKeyDown(map)}
                           onBlur={() => handleRenameSubmit(map)}
-                          className="w-full px-[clamp(4px,0.5vw,6px)] py-[clamp(2px,0.3vw,4px)] rounded bg-[#252526] text-white border border-[#0078D4] focus:outline-none"
+                          className="w-full px-[clamp(4px,0.5vw,6px)] py-[clamp(2px,0.3vw,4px)] rounded bg-secondary-bg dark:bg-dark-secondary-bg text-primary-text dark:text-dark-primary-text border border-primary focus:outline-none"
                           style={{ fontSize: 'clamp(10px, 1.1vw, 13px)' }}
                         />
                       </div>
@@ -270,7 +270,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                               <button
                                 type="button"
                                 onClick={(e) => handleRenameClick(e, map)}
-                                className="p-[clamp(2px,0.3vw,4px)] rounded hover:bg-white/20 transition-colors"
+                                className="p-[clamp(2px,0.3vw,4px)] rounded hover:bg-primary/20 transition-colors"
                                 title="Rename"
                               >
                                 <Edit2 className="w-[clamp(10px,1.2vw,14px)] h-[clamp(10px,1.2vw,14px)]" />
@@ -278,7 +278,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                               <button
                                 type="button"
                                 onClick={(e) => handleDeleteClick(e, map)}
-                                className="p-[clamp(2px,0.3vw,4px)] rounded hover:bg-white/20 transition-colors"
+                                className="p-[clamp(2px,0.3vw,4px)] rounded hover:bg-primary/20 transition-colors"
                                 title="Delete"
                               >
                                 <Trash2 className="w-[clamp(10px,1.2vw,14px)] h-[clamp(10px,1.2vw,14px)]" />

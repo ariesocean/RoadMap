@@ -62,7 +62,7 @@ export const App: React.FC = () => {
     <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
       <div className="min-h-screen bg-background dark:bg-dark-background transition-colors duration-300">
         {/* Unified Header */}
-        <header className="fixed top-1 left-0 right-0 h-14 bg-[#1e1e1e] z-40 flex items-center px-3 sm:px-4 md:px-5 lg:px-6 transition-colors duration-300 rounded-t-md">
+        <header className="fixed top-0 left-0 right-0 h-14 header z-40 flex items-center px-3 sm:px-4 md:px-5 lg:px-6 transition-colors duration-300 border-b border-border-color">
           {/* Sidebar Toggle */}
           <MapsSidebar
             onMapSelect={handleMapSelect}
@@ -76,7 +76,7 @@ export const App: React.FC = () => {
             <div className="w-7 h-7 sm:w-8 md:w-8 lg:w-8 bg-primary rounded-lg flex items-center justify-center">
               <ListTodo className="w-4 h-4 sm:w-5 md:w-5 lg:w-5 text-white" />
             </div>
-            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white">
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-primary-text dark:text-dark-primary-text">
               <span className="inline sm:hidden">Roadmap</span>
               <span className="hidden sm:inline">Roadmap Manager</span>
             </h1>
@@ -86,24 +86,24 @@ export const App: React.FC = () => {
           <div className="flex-1 flex items-center justify-end gap-4">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-md hover:bg-white/10 transition-colors"
+              className="p-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
               title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
             >
               {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-gray-400" />
+                <Moon className="w-5 h-5 text-secondary-text dark:text-dark-secondary-text" />
               ) : (
-                <Sun className="w-5 h-5 text-gray-400" />
+                <Sun className="w-5 h-5 text-secondary-text dark:text-dark-secondary-text" />
               )}
             </button>
 
             <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-placeholder-text dark:text-dark-placeholder-text" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks..."
-                className="w-[88px] sm:w-40 md:w-44 lg:w-48 pl-9 pr-4 py-2 text-sm bg-[#3c3c3c] text-white placeholder-gray-500 rounded-md border-none focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-[88px] sm:w-40 md:w-44 lg:w-48 pl-9 pr-4 py-2 text-sm search-input"
               />
             </div>
             
@@ -131,7 +131,7 @@ export const App: React.FC = () => {
                   isConnected ? 'bg-green-500' : 'bg-red-500'
                 }`}
               />
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-secondary-text dark:text-dark-secondary-text">
                 {isConnected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
