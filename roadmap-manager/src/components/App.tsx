@@ -62,7 +62,7 @@ export const App: React.FC = () => {
     <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
       <div className="min-h-screen bg-background dark:bg-dark-background transition-colors duration-300">
         {/* Unified Header */}
-        <header className="fixed top-0 left-0 right-0 h-14 bg-[#1e1e1e] z-40 flex items-center px-3 sm:px-4 md:px-5 lg:px-6 transition-colors duration-300">
+        <header className="fixed top-1 left-0 right-0 h-14 bg-[#1e1e1e] z-40 flex items-center px-3 sm:px-4 md:px-5 lg:px-6 transition-colors duration-300 rounded-t-md">
           {/* Sidebar Toggle */}
           <MapsSidebar
             onMapSelect={handleMapSelect}
