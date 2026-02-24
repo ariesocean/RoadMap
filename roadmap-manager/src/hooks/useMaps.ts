@@ -32,9 +32,12 @@ export const useMaps = () => {
   } = useMapsStore();
 
   const { refreshTasks } = useTaskStore();
+  const { loadingEnabled } = useMapsStore();
 
-  // Initialize: discover available maps on mount
+  // Initialize: discover available maps on mount only when loadingEnabled is true
   useEffect(() => {
+    if (!loadingEnabled) return;
+    
     const discoverMaps = async () => {
       setLoading(true);
       try {
@@ -48,7 +51,7 @@ export const useMaps = () => {
     };
 
     discoverMaps();
-  }, []);
+  }, [loadingEnabled]);
 
   // Handle map selection with auto-archive
   const handleMapSelect = useCallback(async (map: MapInfo) => {

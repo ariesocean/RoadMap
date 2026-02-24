@@ -84,6 +84,7 @@ export interface TaskStore extends UIState {
   setCurrentPrompt: (prompt: string) => void;
   setError: (error: string | null) => void;
   setConnected: (connected: boolean) => void;
+  toggleConnected: () => void;
   
   refreshTasks: () => Promise<void>;
   submitPrompt: (prompt: string) => Promise<void>;

@@ -13,10 +13,10 @@ import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 import { initializeModelStore } from '@/store/modelStore';
 
 export const App: React.FC = () => {
-  const { refreshTasks, searchQuery, setSearchQuery, isConnected } = useTaskStore();
+  const { refreshTasks, searchQuery, setSearchQuery, isConnected, toggleConnected } = useTaskStore();
   const { theme, toggleTheme } = useThemeStore();
   const { initializeSession, cleanupAllSessions } = useSession();
-  const { isSidebarCollapsed } = useMapsStore();
+  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap } = useMapsStore();
   const {
     handleMapSelect,
     handleCreateMap,
@@ -107,14 +107,32 @@ export const App: React.FC = () => {
               />
             </div>
             
-            <div className="flex items-center gap-2">
+            <div 
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80"
+              onClick={async () => {
+                const newState = !isConnected;
+                toggleConnected();
+                setLoadingEnabled(newState);
+                if (newState) {
+                  // When connecting: clear current map and show blank roadmap
+                  setCurrentMap(null);
+                  // Clear roadmap to show blank page
+                  await fetch('/api/write-roadmap', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: '# Roadmap\n\n' }),
+                  });
+                  refreshTasks();
+                }
+              }}
+            >
               <div
                 className={`w-2 h-2 rounded-full ${
                   isConnected ? 'bg-green-500' : 'bg-red-500'
                 }`}
               />
               <span className="text-xs text-gray-400">
-                {isConnected ? 'Connected' : 'Offline'}
+                {isConnected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
           </div>

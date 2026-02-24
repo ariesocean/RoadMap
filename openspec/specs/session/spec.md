@@ -220,20 +220,16 @@ The system SHALL automatically select the first session (most recently used) whe
 - **AND** the conversation context SHALL be initialized with that session
 
 ### Requirement: Session Synchronization
-The system SHALL maintain synchronization between local session state and server session data.
+The system SHALL synchronize session state with the OpenCode server when needed.
 
-**Refactoring Note**: Timestamp handling now uses centralized `timestamp.ts` utility.
+**Refactoring Note**: Event processing now uses centralized `eventProcessor.ts` utility.
 
-#### Scenario: Update local session on server fetch
-- **WHEN** server sessions are fetched
-- **AND** a matching local session exists for a server session
-- **THEN** the local session metadata SHALL be updated with server data
-- **AND** local messages SHALL be preserved if not overwritten by server
-
-#### Scenario: New server session detection
-- **WHEN** a server session does not exist locally
-- **THEN** the system SHALL add it to the local session store
-- **AND** the session SHALL be available for selection in the dropdown
+#### Scenario: Session modification conflict
+- **WHEN** a server session has been modified by another client
+- **AND** the local client has unsaved changes to that session
+- **THEN** the system SHALL prioritize local changes
+- **AND** the system SHALL log a conflict warning
+- **AND** the server session metadata (title, timestamps) SHALL be updated locally
 
 ### Requirement: Session Synchronization
 The system SHALL synchronize session state with the OpenCode server when needed.
@@ -316,4 +312,37 @@ The system SHALL provide a delete button in the session list UI that allows user
 - **WHEN** a session title does not start with "navigate:"
 - **THEN** the delete button SHALL NOT be rendered for that session
 - **AND** users cannot delete non-server-created sessions from the UI
+
+### Requirement: Device Connection State
+The system SHALL provide a manual connection state toggle that allows users to control when maps are loaded, preventing multi-device conflicts.
+
+#### Scenario: Initial connection state
+- **WHEN** the application initializes for the first time
+- **THEN** the connection state SHALL default to disconnected
+- **AND** no maps SHALL be loaded automatically
+- **AND** the UI SHALL display "disconnected" status
+
+#### Scenario: Manual connection toggle
+- **WHEN** the user clicks the connection status indicator
+- **THEN** the state SHALL toggle between connected and disconnected
+- **AND** if toggling to connected, maps SHALL be loaded
+- **AND** if toggling to disconnected, maps SHALL be unloaded
+
+#### Scenario: Map loading on connection
+- **WHEN** the connection state changes to connected
+- **THEN** the system SHALL discover all `map-*.md` files (shown in sidebar)
+- **AND** NO map SHALL be selected by default
+- **AND** the roadmap SHALL show a blank page
+- **AND** user SHALL manually select a map from the sidebar to load content
+
+#### Scenario: Manual map selection after connection
+- **WHEN** user clicks a map in the sidebar after connecting
+- **THEN** the selected map's content SHALL be loaded into roadmap.md
+- **AND** the task store SHALL refresh to display the loaded tasks
+
+#### Scenario: Multi-device connection handling
+- **WHEN** a new device connects and user toggles to connected
+- **THEN** the previous device's connection state SHALL become disconnected
+- **AND** the new device SHALL load the latest maps and roadmap.md
+- **AND** no data conflicts SHALL occur between devices
 

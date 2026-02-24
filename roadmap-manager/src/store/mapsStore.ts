@@ -10,6 +10,7 @@ interface MapsState {
   isLoading: boolean;
   isSwitching: boolean;
   error: string | null;
+  loadingEnabled: boolean;
 
   // Actions
   setAvailableMaps: (maps: MapInfo[]) => void;
@@ -22,6 +23,7 @@ interface MapsState {
   addMap: (map: MapInfo) => void;
   removeMap: (mapId: string) => void;
   updateMapName: (mapId: string, newName: string, newFilename: string) => void;
+  setLoadingEnabled: (enabled: boolean) => void;
 }
 
 export type { MapInfo };
@@ -36,6 +38,7 @@ export const useMapsStore = create<MapsState>()(
       isLoading: false,
       isSwitching: false,
       error: null,
+      loadingEnabled: false,
 
       // Actions
       setAvailableMaps: (maps) => set({ availableMaps: maps }),
@@ -71,6 +74,8 @@ export const useMapsStore = create<MapsState>()(
           ? { ...state.currentMap, name: newName, filename: newFilename }
           : state.currentMap
       })),
+
+      setLoadingEnabled: (enabled) => set({ loadingEnabled: enabled }),
     }),
     {
       name: 'maps-storage',
