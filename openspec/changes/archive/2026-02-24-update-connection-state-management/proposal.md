@@ -19,7 +19,14 @@ Currently, the app does not have proper multi-device synchronization for map loa
    - **No map is selected by default** - shows blank roadmap page
    - User can manually select a map from the sidebar
 
-4. **Multi-Device Conflict Prevention**
+4. **Disconnected Action (Save & Clear)**
+   - When user clicks "connected" → becomes "disconnected"
+   - If current map exists, save `roadmap.md` content to corresponding `map-xx.md` file
+   - Clear `roadmap.md` to blank content
+   - Unlink from any map (set currentMap to null)
+   - Hide maps sidebar
+
+5. **Multi-Device Conflict Prevention**
    - When another device connects and user clicks to become "connected"
    - Previous device's state becomes "disconnected"
    - New device loads the latest maps and roadmap.md
@@ -27,8 +34,8 @@ Currently, the app does not have proper multi-device synchronization for map loa
 ## Impact
 - Affected capabilities: session, maps-management
 - Affected code:
-  - `src/components/App.tsx` - Connection toggle UI
+  - `src/components/App.tsx` - Connection toggle UI with save/clear logic
   - `src/components/Header.tsx` - Connection status display
   - `src/store/taskStore.ts` - isConnected state management
-  - `src/store/mapsStore.ts` - Map loading state
+  - `src/store/mapsStore.ts` - Map loading state and sidebar control
   - `src/hooks/useMaps.ts` - Conditional map loading logic

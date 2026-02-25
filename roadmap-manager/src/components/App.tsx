@@ -11,12 +11,13 @@ import { useThemeStore } from '@/store/themeStore';
 import { useSession } from '@/hooks/useSession';
 import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 import { initializeModelStore } from '@/store/modelStore';
+import { readRoadmapFile, writeRoadmapFile, writeMapFile } from '@/services/fileService';
 
 export const App: React.FC = () => {
   const { refreshTasks, searchQuery, setSearchQuery, isConnected, toggleConnected } = useTaskStore();
   const { theme, toggleTheme } = useThemeStore();
   const { initializeSession, cleanupAllSessions } = useSession();
-  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap } = useMapsStore();
+  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap, currentMap, setSidebarCollapsed } = useMapsStore();
   const {
     handleMapSelect,
     handleCreateMap,
@@ -113,15 +114,21 @@ export const App: React.FC = () => {
                 const newState = !isConnected;
                 toggleConnected();
                 setLoadingEnabled(newState);
+                
                 if (newState) {
-                  // When connecting: clear current map and show blank roadmap
+                  // When connecting: show maps and load map list
+                  // No map selected by default, shows blank roadmap
+                } else {
+                  // When disconnecting: save current roadmap to current map file
+                  if (currentMap) {
+                    const currentContent = await readRoadmapFile();
+                    await writeMapFile(currentMap, currentContent);
+                    console.log(`[Maps] Saved content to: ${currentMap.filename}`);
+                  }
+                  // Clear roadmap, unlink from any map, and hide sidebar
                   setCurrentMap(null);
-                  // Clear roadmap to show blank page
-                  await fetch('/api/write-roadmap', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content: '# Roadmap\n\n' }),
-                  });
+                  setSidebarCollapsed(true);
+                  await writeRoadmapFile('# Roadmap\n\n');
                   refreshTasks();
                 }
               }}
