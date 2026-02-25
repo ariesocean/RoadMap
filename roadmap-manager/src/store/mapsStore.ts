@@ -11,6 +11,7 @@ interface MapsState {
   isSwitching: boolean;
   error: string | null;
   loadingEnabled: boolean;
+  immediateSaveEnabled: boolean;
 
   // Actions
   setAvailableMaps: (maps: MapInfo[]) => void;
@@ -24,6 +25,8 @@ interface MapsState {
   removeMap: (mapId: string) => void;
   updateMapName: (mapId: string, newName: string, newFilename: string) => void;
   setLoadingEnabled: (enabled: boolean) => void;
+  toggleImmediateSave: () => void;
+  setImmediateSaveEnabled: (enabled: boolean) => void;
 }
 
 export type { MapInfo };
@@ -39,6 +42,7 @@ export const useMapsStore = create<MapsState>()(
       isSwitching: false,
       error: null,
       loadingEnabled: false,
+      immediateSaveEnabled: true,
 
       // Actions
       setAvailableMaps: (maps) => set({ availableMaps: maps }),
@@ -76,12 +80,17 @@ export const useMapsStore = create<MapsState>()(
       })),
 
       setLoadingEnabled: (enabled) => set({ loadingEnabled: enabled }),
+
+      toggleImmediateSave: () => set((state) => ({ immediateSaveEnabled: !state.immediateSaveEnabled })),
+
+      setImmediateSaveEnabled: (enabled) => set({ immediateSaveEnabled: enabled }),
     }),
     {
       name: 'maps-storage',
       partialize: (state) => ({
         isSidebarCollapsed: state.isSidebarCollapsed,
         currentMap: state.currentMap,
+        immediateSaveEnabled: state.immediateSaveEnabled,
       }),
     }
   )

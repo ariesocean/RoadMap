@@ -7,8 +7,14 @@ import { getCurrentISOString } from '@/utils/timestamp';
 import { useResultModalStore, type ContentSegment } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
 import { useModelStore } from './modelStore';
+import { useMapsStore } from './mapsStore';
 import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
 import { getOpenCodeClient, subscribeToEvents } from '@/services/opencodeClient';
+
+async function writeRoadmapWithAutoSave(content: string): Promise<void> {
+  const { currentMap, immediateSaveEnabled } = useMapsStore.getState();
+  await writeRoadmapFile(content, immediateSaveEnabled ? currentMap : null);
+}
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
@@ -298,7 +304,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       const content = await readRoadmapFile();
       const updatedMarkdown = updateCheckboxInMarkdown(content, targetSubtask.content, newCompletedState);
-      await writeRoadmapFile(updatedMarkdown);
+      await writeRoadmapWithAutoSave(updatedMarkdown);
       
       // Call the API function
       await toggleSubtaskCompletion(subtaskId);
@@ -354,7 +360,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       const content = await readRoadmapFile();
       const updatedMarkdown = updateSubtaskContentInMarkdown(content, targetSubtask.content, newContent);
-      await writeRoadmapFile(updatedMarkdown);
+      await writeRoadmapWithAutoSave(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update subtask');
     }
@@ -398,7 +404,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       const content = await readRoadmapFile();
       const updatedMarkdown = updateSubtasksOrderInMarkdown(content, targetTask.title, reorderedSubtasks);
-      await writeRoadmapFile(updatedMarkdown);
+      await writeRoadmapWithAutoSave(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder subtasks');
     }
@@ -439,7 +445,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       if (targetTask) {
         const content = await readRoadmapFile();
         const updatedMarkdown = updateSubtasksOrderInMarkdown(content, targetTask.title, updatedTasks.find(t => t.id === taskId)!.subtasks);
-        await writeRoadmapFile(updatedMarkdown);
+        await writeRoadmapWithAutoSave(updatedMarkdown);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to change subtask nested level');
@@ -467,7 +473,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       const content = await readRoadmapFile();
       const updatedMarkdown = updateTaskDescriptionInMarkdown(content, targetTask.title, description);
-      await writeRoadmapFile(updatedMarkdown);
+      await writeRoadmapWithAutoSave(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task description');
     }
@@ -482,7 +488,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       const content = await readRoadmapFile();
       const updatedMarkdown = reorderTasksInMarkdown(content, newOrder);
-      await writeRoadmapFile(updatedMarkdown);
+      await writeRoadmapWithAutoSave(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reorder tasks');
     }
@@ -519,7 +525,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       const content = await readRoadmapFile();
       const updatedMarkdown = deleteSubtaskFromMarkdown(content, targetSubtask.content);
-      await writeRoadmapFile(updatedMarkdown);
+      await writeRoadmapWithAutoSave(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete subtask');
     }
@@ -565,7 +571,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           targetTask.title,
           newSubtask
         );
-        await writeRoadmapFile(updatedMarkdown);
+        await writeRoadmapWithAutoSave(updatedMarkdown);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add subtask');

@@ -25,13 +25,6 @@
 **Last Updated:** 2026-02-11 04:06
 
 ---
-# Design Gold Trade System(GTS) [created: 2026-02-15 15:47]
-> Design Gold Trade System(GTS)
-
-## Subtasks
-**Last Updated:** 2026-02-15 15:47
-
----
 # AI Agent Development [created: 2026-02-15 13:58]
 > Get ready for AI Agent Build step by step
 
@@ -58,3 +51,13 @@
 **Last Updated:** 2026-02-20 10:10
 
 ---
+# 预约看办公室 [created: 2026-02-25 20:54]
+> 预约看办公室
+
+## Subtasks
+* [ ] 世贸大厦（2026-02-27 周五）
+* [ ] Alice推荐的办公场所
+* [ ] 老程提供的办公室 170 平米 @金桥数研基地
+* [ ] 老沈推荐的共享办公场所
+
+**Last Updated:** 2026-02-25 20:54

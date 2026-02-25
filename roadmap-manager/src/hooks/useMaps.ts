@@ -72,7 +72,7 @@ export const useMaps = () => {
 
       // 2. Load new map content into roadmap.md
       const newContent = await readMapFile(map);
-      await writeRoadmapFile(newContent);
+      await writeRoadmapFile(newContent, null); // Don't auto-save when loading a new map
       console.log(`[Maps] Loaded new map: ${map.filename}`);
 
       // 3. Update current map in store

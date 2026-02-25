@@ -1,5 +1,6 @@
 import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
 import type { Task, Achievement } from '@/store/types';
+import { showToastNotification } from './opencodeAPI';
 
 export async function readRoadmapFile(): Promise<string> {
   try {
@@ -14,13 +15,23 @@ export async function readRoadmapFile(): Promise<string> {
   return '# Roadmap\n\n';
 }
 
-export async function writeRoadmapFile(content: string): Promise<void> {
+export async function writeRoadmapFile(content: string, currentMap?: MapInfo | null): Promise<void> {
   try {
     await fetch('/api/write-roadmap', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content }),
     });
+
+    if (currentMap) {
+      const mapWriteSuccess = await writeMapFile(currentMap, content);
+      if (!mapWriteSuccess) {
+        console.warn(`[ImmediateSave] Failed to save to map file: ${currentMap.filename}`);
+        showToastNotification(`自动保存到 ${currentMap.name} 失败`, 'warning');
+      } else {
+        console.log(`[ImmediateSave] Saved roadmap to currentMap: ${currentMap.filename}`);
+      }
+    }
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'Failed to write roadmap file');
   }
