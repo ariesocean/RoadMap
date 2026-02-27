@@ -11,7 +11,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useSession } from '@/hooks/useSession';
 import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 import { initializeModelStore } from '@/store/modelStore';
-import { readRoadmapFile, writeRoadmapFile, writeMapFile } from '@/services/fileService';
+import { readRoadmapFile, writeMapFile } from '@/services/fileService';
 
 export const App: React.FC = () => {
   const { refreshTasks, searchQuery, setSearchQuery, isConnected, toggleConnected } = useTaskStore();
@@ -125,11 +125,10 @@ export const App: React.FC = () => {
                     await writeMapFile(currentMap, currentContent);
                     console.log(`[Maps] Saved content to: ${currentMap.filename}`);
                   }
-                  // Clear roadmap, unlink from any map, and hide sidebar
+                  // Clear current map (don't write to file to avoid affecting other devices)
                   setCurrentMap(null);
                   setSidebarCollapsed(true);
-                  await writeRoadmapFile('# Roadmap\n\n');
-                  refreshTasks();
+                  refreshTasks(); // Clear tasks since we're disconnected
                 }
               }}
             >

@@ -45,7 +45,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   toggleConnected: () => set((state) => ({ isConnected: !state.isConnected })),
 
   refreshTasks: async () => {
-    const { setLoading, setTasks, setAchievements, setError } = get();
+    const { isConnected, setLoading, setTasks, setAchievements, setError } = get();
+    
+    if (!isConnected) {
+      setTasks([]);
+      setAchievements([]);
+      return;
+    }
     
     try {
       setLoading(true);
