@@ -121,3 +121,69 @@ The system SHALL extract display names from map filenames by removing the `map-`
 - **THEN** the display name SHALL be "my-project-2026"
 - **AND** hyphens and numbers SHALL be preserved in the display name
 
+### Requirement: Auto-select Last Edited Map on Connect
+When the app connects, it SHALL automatically select and load the last edited map without requiring manual selection from the sidebar.
+
+#### Scenario: Auto-select last edited map on connect
+- **WHEN** the user clicks to connect (isConnected changes to true)
+- **AND** a last edited map is stored in persistent storage
+- **AND** the stored map exists in the available maps list
+- **THEN** the system SHALL automatically select that map
+- **AND** the map content SHALL be loaded into roadmap.md
+- **AND** tasks SHALL be loaded from the file
+- **AND** the sidebar SHALL remain expanded
+
+#### Scenario: No last edited map stored
+- **WHEN** the user clicks to connect
+- **AND** no last edited map is stored in persistent storage
+- **THEN** the system SHALL NOT auto-select any map
+- **AND** the sidebar SHALL expand showing available maps
+- **AND** the user SHALL manually select a map from the sidebar
+
+#### Scenario: Last edited map no longer exists
+- **WHEN** the user clicks to connect
+- **AND** a last edited map is stored in persistent storage
+- **AND** the stored map does NOT exist in the available maps list
+- **THEN** the system SHALL NOT auto-select any map
+- **AND** the sidebar SHALL expand showing available maps
+- **AND** the user SHALL manually select a map from the sidebar
+
+#### Scenario: Update last edited map on selection
+- **WHEN** the user selects a map from the sidebar
+- **THEN** the system SHALL store that map's filename as the last edited map
+- **AND** the stored map SHALL be used for auto-select on next connect
+
+### Requirement: Immediate Save Mode
+The system SHALL automatically save roadmap.md changes to the currentMap's map file immediately after each write operation, preventing data loss when session is lost.
+
+#### Scenario: Auto-save to currentMap on roadmap change
+- **WHEN** roadmap.md is written/modified
+- **AND** a currentMap is selected
+- **THEN** the roadmap.md content SHALL be immediately saved to the currentMap file
+- **AND** the map file SHALL be updated in real-time
+
+#### Scenario: No save when no currentMap
+- **WHEN** roadmap.md is written/modified
+- **AND** no currentMap is selected
+- **THEN** only roadmap.md SHALL be updated
+- **AND** no map file save operation SHALL occur
+
+#### Scenario: Handle map file write failure
+- **WHEN** immediate save to map file fails
+- **THEN** the error SHALL be logged
+- **AND** the roadmap.md save SHALL still succeed
+- **AND** a warning SHALL be shown to the user
+- **AND** retry mechanism SHALL be attempted
+
+#### Scenario: Immediate save mode toggle
+- **WHEN** user toggles immediate save mode off
+- **AND** roadmap.md is modified
+- **THEN** changes SHALL only be saved to roadmap.md
+- **AND** map file SHALL NOT be updated until manual switch
+
+#### Scenario: Session lost recovery
+- **WHEN** application restarts after session loss
+- **AND** immediate save mode was enabled
+- **THEN** the latest roadmap.md content SHALL already be saved in the currentMap file
+- **AND** no data loss SHALL occur
+
