@@ -6,7 +6,7 @@ import { ChevronDown } from 'lucide-react';
 // Provider color mapping for visual distinction
 const PROVIDER_COLORS: Record<string, { dot: string, text: string }> = {
   'minimax-cn-coding-plan': { dot: 'bg-orange-500', text: 'text-orange-600 dark:text-orange-300' },
-  'alibaba-cn': { dot: 'bg-purple-500', text: 'text-purple-600 dark:text-purple-300' },
+  'bailian-coding-plan': { dot: 'bg-purple-500', text: 'text-purple-600 dark:text-purple-300' },
   'opencode': { dot: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-300' },
   'zhipuai': { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-300' },
   'kimi-for-coding': { dot: 'bg-pink-500', text: 'text-pink-600 dark:text-pink-300' },

@@ -433,7 +433,7 @@ const roadmapPlugin = {
           sendEvent({ type: 'session', sessionId });
 
           // Prepare the payload for OpenCode Server
-          const navigatePrompt = `use navigate: ${prompt}`;
+          const navigatePrompt = `use navigate: ${prompt}\n\nDo not ask clarifying questions. Make reasonable assumptions and proceed with implementation.\nIf clarification is truly necessary, ask it as a single plain-text question — do not use any interactive tools or selection widgets.`;
           const payload: any = {
             parts: [{ type: 'text', text: navigatePrompt }]
           };
@@ -609,7 +609,7 @@ const roadmapPlugin = {
 
           // Prepare the payload for OpenCode Server
           const payload: any = {
-            parts: [{ type: 'text', text: prompt }]
+            parts: [{ type: 'text', text: `${prompt}\n\nDo not ask clarifying questions. Make reasonable assumptions and proceed with implementation.\nIf clarification is truly necessary, ask it as a single plain-text question — do not use any interactive tools or selection widgets.` }]
           };
 
           // Include model if provided
