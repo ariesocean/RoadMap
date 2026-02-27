@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ListTodo, Search, Sun, Moon } from 'lucide-react';
 import { TaskList } from './TaskList';
 import { InputArea } from './InputArea';
@@ -17,7 +17,7 @@ export const App: React.FC = () => {
   const { refreshTasks, searchQuery, setSearchQuery, isConnected, toggleConnected } = useTaskStore();
   const { theme, toggleTheme } = useThemeStore();
   const { initializeSession, cleanupAllSessions } = useSession();
-  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap, currentMap, setSidebarCollapsed } = useMapsStore();
+  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap, currentMap, setSidebarCollapsed, availableMaps, lastEditedMapId, loadingEnabled } = useMapsStore();
   const {
     handleMapSelect,
     handleCreateMap,
@@ -25,6 +25,27 @@ export const App: React.FC = () => {
     handleRenameMap,
   } = useMaps();
   const [isInitialized, setIsInitialized] = useState(false);
+  const hasAutoSelectedMap = useRef(false);
+
+  // Auto-select last edited map when connecting and maps are loaded
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    if (loadingEnabled && availableMaps.length > 0 && lastEditedMapId && !currentMap && !hasAutoSelectedMap.current) {
+      const lastMap = availableMaps.find(m => m.id === lastEditedMapId);
+      if (lastMap) {
+        hasAutoSelectedMap.current = true;
+        handleMapSelect(lastMap);
+      }
+    }
+  }, [isInitialized, availableMaps, lastEditedMapId, currentMap, loadingEnabled, handleMapSelect]);
+
+  // Reset auto-select flag when disconnecting
+  useEffect(() => {
+    if (!isConnected) {
+      hasAutoSelectedMap.current = false;
+    }
+  }, [isConnected]);
 
   useEffect(() => {
     initOpencodeSDK().catch(console.error);
@@ -115,10 +136,7 @@ export const App: React.FC = () => {
                 toggleConnected();
                 setLoadingEnabled(newState);
                 
-                if (newState) {
-                  // When connecting: show maps and load map list
-                  // No map selected by default, shows blank roadmap
-                } else {
+                if (!newState) {
                   // When disconnecting: save current roadmap to current map file
                   if (currentMap) {
                     const currentContent = await readRoadmapFile();

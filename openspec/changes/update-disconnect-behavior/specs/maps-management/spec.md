@@ -32,3 +32,37 @@ When a device disconnects from the connected state, the system SHALL NOT modify 
 - **AND** the user selects a map
 - **THEN** the map content SHALL be loaded into roadmap.md
 - **AND** tasks SHALL be loaded from the file
+
+## ADDED Requirements
+
+### Requirement: Auto-select Last Edited Map on Connect
+When the app connects, it SHALL automatically select and load the last edited map without requiring manual selection from the sidebar.
+
+#### Scenario: Auto-select last edited map on connect
+- **WHEN** the user clicks to connect (isConnected changes to true)
+- **AND** a last edited map is stored in persistent storage
+- **AND** the stored map exists in the available maps list
+- **THEN** the system SHALL automatically select that map
+- **AND** the map content SHALL be loaded into roadmap.md
+- **AND** tasks SHALL be loaded from the file
+- **AND** the sidebar SHALL remain expanded
+
+#### Scenario: No last edited map stored
+- **WHEN** the user clicks to connect
+- **AND** no last edited map is stored in persistent storage
+- **THEN** the system SHALL NOT auto-select any map
+- **AND** the sidebar SHALL expand showing available maps
+- **AND** the user SHALL manually select a map from the sidebar
+
+#### Scenario: Last edited map no longer exists
+- **WHEN** the user clicks to connect
+- **AND** a last edited map is stored in persistent storage
+- **AND** the stored map does NOT exist in the available maps list
+- **THEN** the system SHALL NOT auto-select any map
+- **AND** the sidebar SHALL expand showing available maps
+- **AND** the user SHALL manually select a map from the sidebar
+
+#### Scenario: Update last edited map on selection
+- **WHEN** the user selects a map from the sidebar
+- **THEN** the system SHALL store that map's filename as the last edited map
+- **AND** the stored map SHALL be used for auto-select on next connect

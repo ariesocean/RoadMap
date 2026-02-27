@@ -20,8 +20,15 @@ When a device disconnects, it was clearing the roadmap.md file by writing `# Roa
    - File content remains unchanged
    - Only currentMap is set to null and sidebar is collapsed
 
+5. **Auto-select last edited map on connect** (NEW)
+   - When app connects, automatically select the last edited map
+   - Store last edited map filename in persistent storage (localStorage)
+   - Update stored map when user selects a different map from sidebar
+   - On connect, load the stored map automatically
+
 ## Impact
 - Affected specs: maps-management
 - Affected code:
   - `src/components/App.tsx` - Removed writeRoadmapFile call
   - `src/store/taskStore.ts` - Added isConnected check in refreshTasks
+  - `src/store/mapsStore.ts` - Add lastEditedMap storage and auto-select logic

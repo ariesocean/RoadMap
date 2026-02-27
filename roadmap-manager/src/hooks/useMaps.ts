@@ -29,6 +29,7 @@ export const useMaps = () => {
     addMap,
     removeMap,
     updateMapName,
+    setLastEditedMapId,
   } = useMapsStore();
 
   const { refreshTasks } = useTaskStore();
@@ -78,7 +79,10 @@ export const useMaps = () => {
       // 3. Update current map in store
       setCurrentMap(map);
 
-      // 4. Reload tasks from the new roadmap.md
+      // 4. Update last edited map
+      setLastEditedMapId(map.id);
+
+      // 5. Reload tasks from the new roadmap.md
       await refreshTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to switch map');
@@ -87,7 +91,7 @@ export const useMaps = () => {
       setSwitching(false);
       setLoading(false);
     }
-  }, [currentMap, isSwitching, setSwitching, setLoading, setError, setCurrentMap, refreshTasks]);
+  }, [currentMap, isSwitching, setSwitching, setLoading, setError, setCurrentMap, setLastEditedMapId, refreshTasks]);
 
   // Handle creating a new map
   const handleCreateMap = useCallback(async (name: string) => {
