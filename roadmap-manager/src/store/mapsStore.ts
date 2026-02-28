@@ -31,7 +31,8 @@ interface MapsState {
   toggleImmediateSave: () => void;
   setImmediateSaveEnabled: (enabled: boolean) => void;
   setLastEditedMapId: (mapId: string | null) => void | Promise<void>;
-  loadLastEditedMapId: () => Promise<string | null>; // returns the loaded value
+  loadLastEditedMapId: () => Promise<string | null>;
+  resetLastEditedMapIdLoaded: () => void;
 }
 
 export type { MapInfo };
@@ -103,6 +104,8 @@ export const useMapsStore = create<MapsState>()(
         set({ lastEditedMapId: config.lastEditedMapId, lastEditedMapIdLoaded: true });
         return config.lastEditedMapId;
       },
+
+      resetLastEditedMapIdLoaded: () => set({ lastEditedMapIdLoaded: false }),
     }),
     {
       name: 'maps-storage',

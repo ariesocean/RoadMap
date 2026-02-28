@@ -17,7 +17,7 @@ export const App: React.FC = () => {
   const { refreshTasks, searchQuery, setSearchQuery, isConnected, toggleConnected } = useTaskStore();
   const { theme, toggleTheme } = useThemeStore();
   const { cleanupAllSessions } = useSession();
-  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap, currentMap, setSidebarCollapsed, availableMaps, lastEditedMapId, loadingEnabled, loadLastEditedMapId } = useMapsStore();
+  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap, currentMap, setSidebarCollapsed, availableMaps, lastEditedMapId, lastEditedMapIdLoaded, loadingEnabled, loadLastEditedMapId, resetLastEditedMapIdLoaded } = useMapsStore();
   const {
     handleMapSelect,
     handleCreateMap,
@@ -34,9 +34,10 @@ export const App: React.FC = () => {
     // Only auto-select if:
     // - loadingEnabled is true (maps have been discovered)
     // - There are available maps
+    // - We've loaded lastEditedMapId from backend
     // - We have a lastEditedMapId
     // - haven't auto-selected yet
-    if (loadingEnabled && availableMaps.length > 0 && lastEditedMapId && !hasAutoSelectedMap.current) {
+    if (loadingEnabled && availableMaps.length > 0 && lastEditedMapIdLoaded && lastEditedMapId && !hasAutoSelectedMap.current) {
       const lastMap = availableMaps.find(m => m.id === lastEditedMapId);
 
       if (lastMap && currentMap?.id !== lastMap.id) {
@@ -49,7 +50,7 @@ export const App: React.FC = () => {
         refreshTasks();
       }
     }
-  }, [isInitialized, availableMaps, lastEditedMapId, currentMap, loadingEnabled, isConnected, handleMapSelect, refreshTasks]);
+  }, [isInitialized, availableMaps, lastEditedMapId, lastEditedMapIdLoaded, currentMap, loadingEnabled, isConnected, handleMapSelect, refreshTasks]);
 
   // Reset auto-select flag when disconnecting
   useEffect(() => {
@@ -160,6 +161,7 @@ export const App: React.FC = () => {
                   // Clear current map only - lastEditedMapId stays as-is for next connect
                   setCurrentMap(null);
                   setSidebarCollapsed(true);
+                  resetLastEditedMapIdLoaded();
                   refreshTasks(); // Clear tasks since we're disconnected
                 }
               }}
