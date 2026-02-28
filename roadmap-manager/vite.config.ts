@@ -329,6 +329,41 @@ const roadmapPlugin = {
       }
     });
 
+    // Read roadmap-config.json
+    const configPath = path.resolve(process.cwd(), 'roadmap-config.json');
+    server.middlewares.use('/api/config', async (req: any, res: any, next: any) => {
+      
+      if (req.method === 'GET') {
+        try {
+          if (fs.existsSync(configPath)) {
+            const content = fs.readFileSync(configPath, 'utf-8');
+            res.setHeader('Content-Type', 'application/json');
+            res.end(content);
+          } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ lastEditedMapId: null }));
+          }
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          fs.writeFileSync(configPath, JSON.stringify(body, null, 2));
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
     server.middlewares.use('/session', async (req: any, res: any, next: any) => {
       const isHealthy = await checkServerHealth();
       

@@ -196,3 +196,36 @@ export async function switchToMap(
     return null;
   }
 }
+
+// ========== Config Operations ==========
+
+export interface RoadmapConfig {
+  lastEditedMapId: string | null;
+}
+
+export async function loadConfig(): Promise<RoadmapConfig> {
+  try {
+    const response = await fetch('/api/config');
+    if (response.ok) {
+      return await response.json();
+    }
+    return { lastEditedMapId: null };
+  } catch (error) {
+    console.error('Error loading config:', error);
+    return { lastEditedMapId: null };
+  }
+}
+
+export async function saveConfig(config: RoadmapConfig): Promise<boolean> {
+  try {
+    const response = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Error saving config:', error);
+    return false;
+  }
+}

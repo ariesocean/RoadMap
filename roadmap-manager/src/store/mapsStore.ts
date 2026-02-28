@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { MapInfo } from '@/services/fileService';
+import { loadConfig, saveConfig } from '@/services/fileService';
 
 interface MapsState {
   // State
@@ -13,6 +14,7 @@ interface MapsState {
   loadingEnabled: boolean;
   immediateSaveEnabled: boolean;
   lastEditedMapId: string | null;
+  lastEditedMapIdLoaded: boolean; // whether we've loaded from backend
 
   // Actions
   setAvailableMaps: (maps: MapInfo[]) => void;
@@ -28,7 +30,8 @@ interface MapsState {
   setLoadingEnabled: (enabled: boolean) => void;
   toggleImmediateSave: () => void;
   setImmediateSaveEnabled: (enabled: boolean) => void;
-  setLastEditedMapId: (mapId: string | null) => void;
+  setLastEditedMapId: (mapId: string | null) => void | Promise<void>;
+  loadLastEditedMapId: () => Promise<string | null>; // returns the loaded value
 }
 
 export type { MapInfo };
@@ -46,6 +49,7 @@ export const useMapsStore = create<MapsState>()(
       loadingEnabled: false,
       immediateSaveEnabled: true,
       lastEditedMapId: null,
+      lastEditedMapIdLoaded: false,
 
       // Actions
       setAvailableMaps: (maps) => set({ availableMaps: maps }),
@@ -88,15 +92,23 @@ export const useMapsStore = create<MapsState>()(
 
       setImmediateSaveEnabled: (enabled) => set({ immediateSaveEnabled: enabled }),
 
-      setLastEditedMapId: (mapId) => set({ lastEditedMapId: mapId }),
+      setLastEditedMapId: async (mapId) => {
+        if (mapId === null) return; // Never save null to backend
+        set({ lastEditedMapId: mapId });
+        await saveConfig({ lastEditedMapId: mapId });
+      },
+
+      loadLastEditedMapId: async () => {
+        const config = await loadConfig();
+        set({ lastEditedMapId: config.lastEditedMapId, lastEditedMapIdLoaded: true });
+        return config.lastEditedMapId;
+      },
     }),
     {
       name: 'maps-storage',
       partialize: (state) => ({
         isSidebarCollapsed: state.isSidebarCollapsed,
-        currentMap: state.currentMap,
         immediateSaveEnabled: state.immediateSaveEnabled,
-        lastEditedMapId: state.lastEditedMapId,
       }),
     }
   )

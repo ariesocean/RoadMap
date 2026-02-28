@@ -16,8 +16,8 @@ import { readRoadmapFile, writeMapFile } from '@/services/fileService';
 export const App: React.FC = () => {
   const { refreshTasks, searchQuery, setSearchQuery, isConnected, toggleConnected } = useTaskStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { initializeSession, cleanupAllSessions } = useSession();
-  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap, currentMap, setSidebarCollapsed, availableMaps, lastEditedMapId, loadingEnabled } = useMapsStore();
+  const { cleanupAllSessions } = useSession();
+  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap, currentMap, setSidebarCollapsed, availableMaps, lastEditedMapId, loadingEnabled, loadLastEditedMapId } = useMapsStore();
   const {
     handleMapSelect,
     handleCreateMap,
@@ -30,15 +30,26 @@ export const App: React.FC = () => {
   // Auto-select last edited map when connecting and maps are loaded
   useEffect(() => {
     if (!isInitialized) return;
-    
-    if (loadingEnabled && availableMaps.length > 0 && lastEditedMapId && !currentMap && !hasAutoSelectedMap.current) {
+
+    // Only auto-select if:
+    // - loadingEnabled is true (maps have been discovered)
+    // - There are available maps
+    // - We have a lastEditedMapId
+    // - haven't auto-selected yet
+    if (loadingEnabled && availableMaps.length > 0 && lastEditedMapId && !hasAutoSelectedMap.current) {
       const lastMap = availableMaps.find(m => m.id === lastEditedMapId);
-      if (lastMap) {
+
+      if (lastMap && currentMap?.id !== lastMap.id) {
+        // Auto-select the last edited map
         hasAutoSelectedMap.current = true;
         handleMapSelect(lastMap);
+      } else if (lastMap && currentMap?.id === lastMap.id && isConnected) {
+        // Map is already selected, just need to refresh tasks
+        hasAutoSelectedMap.current = true;
+        refreshTasks();
       }
     }
-  }, [isInitialized, availableMaps, lastEditedMapId, currentMap, loadingEnabled, handleMapSelect]);
+  }, [isInitialized, availableMaps, lastEditedMapId, currentMap, loadingEnabled, isConnected, handleMapSelect, refreshTasks]);
 
   // Reset auto-select flag when disconnecting
   useEffect(() => {
@@ -65,16 +76,13 @@ export const App: React.FC = () => {
       useThemeStore.getState().setTheme('light');
     }
 
-    initializeSession();
     setIsInitialized(true);
-
-    refreshTasks();
 
     return () => {
       cleanupAllSessions();
       closeOpencodeSDK();
     };
-  }, []);
+  }, [cleanupAllSessions]);
 
   if (!isInitialized) {
     return null;
@@ -129,21 +137,27 @@ export const App: React.FC = () => {
               />
             </div>
             
-            <div 
+            <div
               className="flex items-center gap-2 cursor-pointer hover:opacity-80"
               onClick={async () => {
                 const newState = !isConnected;
                 toggleConnected();
                 setLoadingEnabled(newState);
-                
-                if (!newState) {
+
+                if (newState) {
+                  // When connecting: load last edited map ID from backend ONLY
+                  const lastMapId = await loadLastEditedMapId();
+                  if (lastMapId) {
+                    // Auto-select will handle this via the useEffect
+                  }
+                } else {
                   // When disconnecting: save current roadmap to current map file
                   if (currentMap) {
                     const currentContent = await readRoadmapFile();
                     await writeMapFile(currentMap, currentContent);
                     console.log(`[Maps] Saved content to: ${currentMap.filename}`);
                   }
-                  // Clear current map (don't write to file to avoid affecting other devices)
+                  // Clear current map only - lastEditedMapId stays as-is for next connect
                   setCurrentMap(null);
                   setSidebarCollapsed(true);
                   refreshTasks(); // Clear tasks since we're disconnected
