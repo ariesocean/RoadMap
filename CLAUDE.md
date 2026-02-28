@@ -24,10 +24,14 @@ cd roadmap-manager
 
 # Development
 npm run dev              # Start Vite dev server (port 1430)
-
-# Build
 npm run build            # TypeScript compile + Vite build
 npm run preview          # Preview production build
+tsc --noEmit             # Type check without emitting files
+
+# Testing & Linting
+npm test                 # Run tests (if configured)
+npm run lint             # Lint code (if configured)
+npm run lint:fix         # Auto-fix lint errors (if configured)
 
 # OpenCode integration (AI assistant server)
 npm run opencode:server  # Start OpenCode server on port 51432
@@ -79,6 +83,25 @@ The `roadmapPlugin` in `vite.config.ts` provides these endpoints:
 ### Legacy
 - `GET /api/read-roadmap` - Read `roadmap.md` (original file)
 - `POST /api/write-roadmap` - Write to `roadmap.md`
+
+## Entry Points & Key Files
+- App entry: `roadmap-manager/src/main.tsx`
+- Main App component: `roadmap-manager/src/components/App.tsx`
+- Map file operations: `roadmap-manager/src/hooks/useMaps.ts`
+- File service: `roadmap-manager/src/services/fileService.ts`
+- OpenCode SDK integration: `roadmap-manager/src/services/opencodeSDK.ts`
+- Task store: `roadmap-manager/src/store/taskStore.ts`
+- Map store: `roadmap-manager/src/store/mapsStore.ts`
+
+## Environment Setup
+- OpenCode server password is configured in `opencode:server` script
+- Server ports checked: 51432, 51466, 51434 (in order)
+- Local storage keys: `lastEditedMapId`, `mapIdToConnect` (see useMaps.ts)
+
+## Notes
+- The `npm run opencode:server` command contains an absolute path to project root
+- Update the path if moving the project to a different location
+- Alternatively, start OpenCode server manually from project root: `opencode serve --port 51432`
 
 ## OpenCode Server Management
 
@@ -143,3 +166,23 @@ Sessions shown in SessionList are filtered to include only:
 2. Edit content → tasks persist in local state
 3. Disconnect action → save to map file → clear content → hide sidebar
 4. Reopen map → load from file → connection toggle controls auto-load behavior
+
+# Connection Behavior
+- Always preserve `lastEditedMapId` in localStorage and restore it on app reload
+- Never auto-connect on reload - connection must be user-initiated via toggle
+- Distinguish between "remembering state" (localStorage) vs "auto-reconnecting" (manual action required)
+
+# Common Pitfalls
+- Drag direction logic: Use `(newPos - oldPos)` not `(oldPos - newPos)` to avoid inverted behavior
+- Connection state confusion: `connected` = loading map, `disconnected` = ready to edit, `failed` = error
+
+# Commit Conventions
+- All commits must be atomic, conventional, and scoped to a single logical change
+- Example: `feat(map): sync lastEditedMapId to backend`
+- Use `/commit` for automated conventional commit messages
+
+# Working Style
+- Prefer minimal, targeted edits over broad refactors
+- For new features: Start with single-file implementation, expand only if necessary
+- For bug fixes: Make the smallest possible change to achieve the fix
+- Clarify when needed: Use explicit prompts like "Remember state but never auto-connect on reload"
