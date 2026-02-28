@@ -83,7 +83,6 @@ export interface TaskStore extends UIState {
   setProcessing: (processing: boolean) => void;
   setCurrentPrompt: (prompt: string) => void;
   setError: (error: string | null) => void;
-  setConnected: (connected: boolean) => void;
   toggleConnected: () => void;
   
   refreshTasks: () => Promise<void>;

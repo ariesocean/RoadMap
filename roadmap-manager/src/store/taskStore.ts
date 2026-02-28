@@ -40,8 +40,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   
   setError: (error: string | null) => set({ error }),
   
-  setConnected: (isConnected: boolean) => set({ isConnected }),
-
   toggleConnected: () => set((state) => ({ isConnected: !state.isConnected })),
 
   refreshTasks: async () => {
