@@ -2,3 +2,4 @@
 *.pyc
 roadmap.md.bak
 roadmap-config.json
+roadmap-manager/vite.out

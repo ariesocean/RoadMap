@@ -11,6 +11,7 @@ import {
   writeRoadmapFile,
 } from '@/services/fileService';
 import { useTaskStore } from '@/store/taskStore';
+import { showToastNotification } from '@/services/opencodeAPI';
 
 export const useMaps = () => {
   const {
@@ -30,6 +31,7 @@ export const useMaps = () => {
     removeMap,
     updateMapName,
     setLastEditedMapId,
+    loadLastEditedMapId,
   } = useMapsStore();
 
   const { refreshTasks } = useTaskStore();
@@ -66,9 +68,19 @@ export const useMaps = () => {
     try {
       // 1. Archive current roadmap.md to previous map file (if exists)
       if (currentMap) {
-        const currentContent = await readRoadmapFile();
-        await writeMapFile(currentMap, currentContent);
-        console.log(`[Maps] Archived current content to: ${currentMap.filename}`);
+        // Load latest lastEditedMapId from backend to detect multi-device conflicts
+        const latestLastEditedMapId = await loadLastEditedMapId();
+        
+        // Guard: Skip archive if lastEditedMapId doesn't match currentMap
+        // This prevents stale content from overwriting newer edits on multi-device scenarios
+        if (latestLastEditedMapId !== currentMap.id) {
+          console.log(`[Maps] Skipped archive: lastEditedMapId (${latestLastEditedMapId}) doesn't match currentMap.id (${currentMap.id})`);
+          showToastNotification('地图切换冲突：其他设备已切换地图，跳过存档以防止数据丢失', 'warning');
+        } else {
+          const currentContent = await readRoadmapFile();
+          await writeMapFile(currentMap, currentContent);
+          console.log(`[Maps] Archived current content to: ${currentMap.filename}`);
+        }
       }
 
       // 2. Load new map content into roadmap.md
@@ -91,7 +103,7 @@ export const useMaps = () => {
       setSwitching(false);
       setLoading(false);
     }
-  }, [currentMap, isSwitching, setSwitching, setLoading, setError, setCurrentMap, setLastEditedMapId, refreshTasks]);
+  }, [currentMap, isSwitching, loadLastEditedMapId, setSwitching, setLoading, setError, setCurrentMap, setLastEditedMapId, refreshTasks]);
 
   // Handle creating a new map
   const handleCreateMap = useCallback(async (name: string) => {
