@@ -322,6 +322,19 @@ The system SHALL provide a manual connection state toggle that allows users to c
 - **AND** no maps SHALL be loaded automatically
 - **AND** the UI SHALL display "disconnected" status
 
+#### Scenario: Connection state persistence
+- **WHEN** the application refreshes or reloads
+- **AND** the connection state was "connected" before refresh
+- **THEN** the system SHALL restore the connection state from localStorage
+- **AND** the system SHALL automatically load available maps
+- **AND** the system SHALL automatically select the last edited map (via lastEditedMapId)
+- **AND** the task content SHALL be loaded from the selected map file
+
+#### Scenario: Connection state cleared on disconnect
+- **WHEN** the user manually disconnects
+- **THEN** the connection state SHALL be cleared from localStorage
+- **AND** subsequent page refreshes SHALL show disconnected state
+
 #### Scenario: Manual connection toggle
 - **WHEN** the user clicks the connection status indicator
 - **THEN** the state SHALL toggle between connected and disconnected

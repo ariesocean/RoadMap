@@ -12,6 +12,7 @@ import { useSession } from '@/hooks/useSession';
 import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 import { initializeModelStore } from '@/store/modelStore';
 import { readRoadmapFile, writeMapFile } from '@/services/fileService';
+import { loadFromLocalStorage, removeFromLocalStorage, saveToLocalStorage } from '@/utils/storage';
 
 export const App: React.FC = () => {
   const { refreshTasks, searchQuery, setSearchQuery, isConnected, toggleConnected } = useTaskStore();
@@ -75,6 +76,14 @@ export const App: React.FC = () => {
       }
     } else {
       useThemeStore.getState().setTheme('light');
+    }
+
+    // Restore connection state from localStorage
+    const savedConnectionState = loadFromLocalStorage('isConnected');
+    if (savedConnectionState === 'true') {
+      toggleConnected();
+      setLoadingEnabled(true);
+      loadLastEditedMapId();
     }
 
     setIsInitialized(true);
@@ -151,6 +160,7 @@ export const App: React.FC = () => {
                   if (lastMapId) {
                     // Auto-select will handle this via the useEffect
                   }
+                  saveToLocalStorage('isConnected', 'true'); // Persist connection state
                 } else {
                   // When disconnecting: save current roadmap to current map file
                   if (currentMap) {
@@ -163,6 +173,7 @@ export const App: React.FC = () => {
                   setSidebarCollapsed(true);
                   resetLastEditedMapIdLoaded();
                   refreshTasks(); // Clear tasks since we're disconnected
+                  removeFromLocalStorage('isConnected'); // Clear persisted connection state
                 }
               }}
             >
