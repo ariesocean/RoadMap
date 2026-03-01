@@ -4,14 +4,16 @@ import { Plus } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useSession } from '@/hooks/useSession';
 import { useSessionStore } from '@/store/sessionStore';
+import { useMaps } from '@/hooks/useMaps';
 import { SessionList } from './SessionList';
 import { ModelSelector } from './ModelSelector';
 
 export const InputArea: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { submitPrompt, isProcessing, error } = useTaskStore();
+  const { submitPrompt, isProcessing, error, registerOnSubmitPromptComplete, unregisterOnSubmitPromptComplete } = useTaskStore();
   const { clearCurrentSession } = useSession();
+  const { currentMap, saveCurrentMap } = useMaps();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -20,6 +22,19 @@ export const InputArea: React.FC = () => {
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
   }, [inputValue]);
+
+  // Register saveCurrentMap callback for auto-save after OpenCode execution
+  useEffect(() => {
+    const handleSave = () => {
+      if (currentMap) {
+        saveCurrentMap();
+      }
+    };
+    registerOnSubmitPromptComplete(handleSave);
+    return () => {
+      unregisterOnSubmitPromptComplete(handleSave);
+    };
+  }, [currentMap, saveCurrentMap, registerOnSubmitPromptComplete, unregisterOnSubmitPromptComplete]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {

@@ -75,6 +75,7 @@ export interface UIState {
 export interface TaskStore extends UIState {
   tasks: Task[];
   achievements: Achievement[];
+  onSubmitPromptCompleteCallbacks: (() => void)[];
   
   setTasks: (tasks: Task[]) => void;
   setAchievements: (achievements: Achievement[]) => void;
@@ -84,6 +85,9 @@ export interface TaskStore extends UIState {
   setCurrentPrompt: (prompt: string) => void;
   setError: (error: string | null) => void;
   toggleConnected: () => void;
+  registerOnSubmitPromptComplete: (callback: () => void) => void;
+  unregisterOnSubmitPromptComplete: (callback: () => void) => void;
+  triggerOnSubmitPromptComplete: () => void;
   
   refreshTasks: () => Promise<void>;
   submitPrompt: (prompt: string) => Promise<void>;

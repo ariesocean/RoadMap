@@ -25,6 +25,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   currentPrompt: '',
   error: null,
   isConnected: false,
+  onSubmitPromptCompleteCallbacks: [],
 
   setTasks: (tasks: Task[]) => set({ tasks }),
   
@@ -41,6 +42,28 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   setError: (error: string | null) => set({ error }),
   
   toggleConnected: () => set((state) => ({ isConnected: !state.isConnected })),
+
+  registerOnSubmitPromptComplete: (callback: () => void) => {
+    set((state) => {
+      if (state.onSubmitPromptCompleteCallbacks.includes(callback)) {
+        return state;
+      }
+      return {
+        onSubmitPromptCompleteCallbacks: [...state.onSubmitPromptCompleteCallbacks, callback],
+      };
+    });
+  },
+
+  unregisterOnSubmitPromptComplete: (callback: () => void) => {
+    set((state) => ({
+      onSubmitPromptCompleteCallbacks: state.onSubmitPromptCompleteCallbacks.filter((cb) => cb !== callback),
+    }));
+  },
+
+  triggerOnSubmitPromptComplete: () => {
+    const { onSubmitPromptCompleteCallbacks } = get();
+    onSubmitPromptCompleteCallbacks.forEach((callback) => callback());
+  },
 
   refreshTasks: async () => {
     const { isConnected, setLoading, setTasks, setAchievements, setError } = get();
@@ -238,6 +261,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             setTimeout(async () => {
               await refreshTasks();
               setCurrentPrompt('');
+              get().triggerOnSubmitPromptComplete();
             }, 500);
           }
         } else if (eventType === 'error' || eventType === 'failed') {
@@ -252,6 +276,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             isFinished = true;
             appendSegment(createSegment('timeout', event.message || ''));
             setStreaming(false);
+            get().triggerOnSubmitPromptComplete();
           }
         }
       }

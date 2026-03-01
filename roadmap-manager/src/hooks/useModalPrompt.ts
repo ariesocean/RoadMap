@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { useResultModalStore, type ContentSegment } from '@/store/resultModalStore';
 import { useTaskStore } from '@/store/taskStore';
+import { useMaps } from '@/hooks/useMaps';
 import { executeModalPrompt } from '@/services/opencodeAPI';
 
 const createSegment = (type: ContentSegment['type'], content: string, metadata?: ContentSegment['metadata']): ContentSegment => ({
@@ -28,6 +29,7 @@ export function useModalPrompt() {
   } = useResultModalStore();
 
   const { refreshTasks } = useTaskStore();
+  const { currentMap, saveCurrentMap } = useMaps();
 
   const lastSegmentTypeRef = useRef<string | null>(null);
 
@@ -86,13 +88,16 @@ export function useModalPrompt() {
         async () => {
           setTimeout(async () => {
             await refreshTasks();
+            if (currentMap) {
+              saveCurrentMap();
+            }
           }, 500);
         }
       );
     } catch {
       setPromptStreaming(false);
     }
-  }, [promptInput, promptStreaming, setPromptInput, setPromptError, setPromptStreaming, appendSegment, currentSessionId, setCurrentSessionId, refreshTasks]);
+  }, [promptInput, promptStreaming, setPromptInput, setPromptError, setPromptStreaming, appendSegment, currentSessionId, setCurrentSessionId, refreshTasks, currentMap, saveCurrentMap]);
 
   return {
     promptInput,
