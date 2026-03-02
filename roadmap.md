@@ -1,72 +1,63 @@
-# arbitrage_strategy development(ASD) [created: 2026-02-11 03:53]
-> arbitrage_strategy development(ASD)
+# 铭延上海行程 5days [created: 2026-03-01 17:36]
+
+> Mingyan 来上海出差/游玩行程
 
 ## Subtasks
-* [ ] 根据spread_trade,scalp_trade梳理流程逻辑,生成文档
-* [ ] 开发ArbitrageTrade基类
-* [ ] 开发FutSpotTrade继承ArbitrageTrade, 用于期限套利
-* [ ] 开发ScalpTrade继承ArbitrageTrade, 用于极限套利
-
-**Last Updated:** 2026-02-11 03:53
+- [x] 三号仓库正大
+- [ ] 周四（3月5日）与 Mingyan 晚餐约着吃很久以前羊肉串
+- [ ] 苏州之行
+  - [ ] 3 月 6 日当天去拙政园
 
 ---
-# trade-gateway test (TGT) [created: 2026-02-11 04:06]
-> trade-gateway test (TGT)
+
+---
+
+# 宁波→上海搬家 [created: 2026-03-02]
+
+> 从宁波搬到上海
 
 ## Subtasks
-* [ ] 接口下单测试
-  * [ ] 市价/超价/低价下单测试
-  * [ ] 建仓平仓同时进行
-  * [ ] 多笔订单同时平仓
-* [ ] 优化WT平台下单逻辑
-  * [ ] 整理所有碰到过的失败订单信息
-  * [x] login逻辑加loginstatus检查
 
-**Last Updated:** 2026-02-11 04:06
+### 第一阶段：前期准备
+- [ ] 3月3日(周二) 早上回宁波
+- [ ] 确定搬家日期
+
+### 第二阶段：打包整理
+- [ ] 衣物被褥
+  - [ ] 季节性衣物
+  - [ ] 被子枕头
+  - [ ] 鞋子
+- [ ] 书籍文件
+  - [ ] 书籍
+  - [ ] 证件资料
+- [ ] 家具家电
+  - [ ] 可携带的家电
+  - [ ] 家具（床、柜子等）
+- [ ] 生活用品
+  - [ ] 厨房用品
+  - [ ] 日常杂物
+- [ ] 贵重/易碎物品
+  - [ ] 电子产品
+  - [ ] 易碎物品（需特殊包装）
+
+### 第三阶段：搬运运输
+- [ ] 3月3日(周二) 下午2点有人带来看房（宁波房子）
+- [ ] 联系搬家公司/物流
+- [ ] 确定运输方式（整车、拼车、物流）
+- [ ] 办理退租/钥匙交接
 
 ---
-# AI Agent Development [created: 2026-02-15 13:58]
-> Get ready for AI Agent Build step by step
+
+**Last Updated:** 2026-03-02
+
+# 苏总周日来 [created: 2026-03-02 21:28]
+
+> 苏总说周日来
 
 ## Subtasks
-* [x] Research and select web browser tool for AI agent - Answer PLAYWRIGHT
-* [x] Build AI-Bridge CLI for OpenCode serve communication
-  * [x] Test opencode-cli
-
-**Last Updated:** 2026-02-15 13:58
+* [ ] 确认苏总具体到达时间
+* [ ] 安排接待/行程
 
 ---
-# Roadmap Manager Refine [created: 2026-02-15 14:34]
-> Roadmap Manager Refine
 
-## Subtasks
-* [x] taskCard功能优化
-  * [x] taskCard支持手动拖动排序
-  * [x] Main task description支持点击编辑
-* [x] 支持手动删除子任务
-  * [x] 点击输入框清空则删除整行任务
-* [x] 切换方案: 通过OpenCode Serve API实现集成, 替代CLI方案
-* [x] 调研 opencode serve 现有API接口
-
-**Last Updated:** 2026-02-20 10:10
-
----
-# 预约看办公室 [created: 2026-02-25 20:54]
-> 预约看办公室
-
-## Subtasks
-- [ ] 新梅联合广场（重点商圈中心位置，人流量大）
-  - [ ] 95㎡
-  - [ ] 80㎡，12000/月（含物业费）
-- [ ] 永华大厦（大业主直租，家具装修可灵活选配）
-  - [ ] 88㎡（14楼，未装修，整层未装修，空间合适，一周可装修完成，短期内不影响）
-  - [ ] 94㎡（狭长布局，隔断已封，布局紧凑）
-- [ ] 船舶大厦 @浦东大道1号楼7楼
-  - [ ] 62㎡（国企进驻，规范，方正，浦东大道地铁口旁，停车地铁方便）
-- [ ] 世贸大厦 @2026-02-27 周五
-  - [ ] 105㎡，15000/月（含物业费）
-  - [ ] 60㎡（4月可入住）
-- [ ] 老程免费提供的办公室 170 平米 @金桥数研基地（距离远，科研办公区域）
-
----
-**Last Updated:** 2026-02-26
+**Last Updated:** 2026-03-02 21:28
