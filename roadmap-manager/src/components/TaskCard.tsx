@@ -14,11 +14,28 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
-  const { toggleTaskExpanded, updateTaskDescription } = useTaskStore();
+  const { toggleTaskExpanded, updateTaskDescription, updateTaskTitle } = useTaskStore();
+
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editDescription, setEditDescription] = useState(task.originalPrompt);
   const descriptionInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isEditingTitle) {
+      setEditTitle(task.title);
+    }
+  }, [task.title, isEditingTitle]);
+
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [isEditingTitle]);
 
   useEffect(() => {
     if (!isEditingDescription) {
@@ -33,6 +50,38 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
     }
   }, [isEditingDescription]);
 
+  const handleTitleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditingTitle(true);
+    setEditTitle(task.title);
+  };
+
+  const handleTitleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const trimmedTitle = editTitle.trim();
+      if (trimmedTitle && trimmedTitle !== task.title) {
+        await updateTaskTitle(task.id, trimmedTitle);
+      }
+      setIsEditingTitle(false);
+    } else if (e.key === 'Escape') {
+      setIsEditingTitle(false);
+      setEditTitle(task.title);
+    }
+  };
+
+  const handleTitleBlur = async () => {
+    const trimmedTitle = editTitle.trim();
+    if (trimmedTitle && trimmedTitle !== task.title) {
+      try {
+        await updateTaskTitle(task.id, trimmedTitle);
+      } catch {
+        setEditTitle(task.title);
+      }
+    }
+    setIsEditingTitle(false);
+  };
+
   const handleDescriptionDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditingDescription(true);
@@ -42,8 +91,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const handleDescriptionKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.stopPropagation();
     if (e.key === 'Enter') {
-      if (editDescription.trim() !== task.originalPrompt) {
-        await updateTaskDescription(task.id, editDescription.trim());
+      const trimmedDesc = editDescription.trim();
+      if (trimmedDesc !== task.originalPrompt) {
+        await updateTaskDescription(task.id, trimmedDesc);
       }
       setIsEditingDescription(false);
     } else if (e.key === 'Escape') {
@@ -53,8 +103,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   };
 
   const handleDescriptionBlur = async () => {
-    if (editDescription.trim() !== task.originalPrompt) {
-      await updateTaskDescription(task.id, editDescription.trim());
+    const trimmedDesc = editDescription.trim();
+    if (trimmedDesc !== task.originalPrompt) {
+      try {
+        await updateTaskDescription(task.id, trimmedDesc);
+      } catch {
+        setEditDescription(task.originalPrompt);
+      }
     }
     setIsEditingDescription(false);
   };
@@ -92,13 +147,28 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           {...attributes}
           className="flex-1 min-w-0"
         >
-          <h3
-            {...listeners}
-            onMouseDown={(e) => e.stopPropagation()}
-            className="text-sm sm:text-base md:text-base lg:text-lg font-semibold text-primary-text dark:text-dark-primary-text mb-0.5 sm:mb-1 md:mb-1 lg:mb-1 transition-colors duration-300 cursor-grab active:cursor-grabbing break-words"
-          >
-            {task.title}
-          </h3>
+          {isEditingTitle ? (
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onKeyDown={handleTitleKeyDown}
+              onBlur={handleTitleBlur}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="text-sm sm:text-base md:text-base lg:text-lg font-semibold text-primary-text dark:text-dark-primary-text mb-0.5 sm:mb-1 md:mb-1 lg:mb-1 bg-white dark:bg-dark-secondary-bg border border-primary rounded px-1.5 sm:px-2 py-0.5 sm:py-1 outline-none w-full"
+            />
+          ) : (
+            <h3
+              {...listeners}
+              onMouseDown={(e) => e.stopPropagation()}
+              onDoubleClick={handleTitleDoubleClick}
+              className="text-sm sm:text-base md:text-base lg:text-lg font-semibold text-primary-text dark:text-dark-primary-text mb-0.5 sm:mb-1 md:mb-1 lg:mb-1 transition-colors duration-300 cursor-grab active:cursor-grabbing break-words"
+            >
+              {task.title}
+            </h3>
+          )}
 
           {task.originalPrompt ? (
             isEditingDescription ? (
@@ -110,7 +180,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                 onKeyDown={handleDescriptionKeyDown}
                 onBlur={handleDescriptionBlur}
                 onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
                 className="flex-1 text-xs sm:text-sm md:text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-1.5 sm:px-2 py-0.5 sm:py-1 outline-none text-primary-text dark:text-dark-primary-text italic w-full"
               />
             ) : (

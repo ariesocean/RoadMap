@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { TaskStore, Task, Achievement, Subtask } from './types';
 import { loadTasksFromFile, readRoadmapFile, writeRoadmapFile } from '@/services/fileService';
-import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown, updateTaskDescriptionInMarkdown, deleteSubtaskFromMarkdown, appendSubtaskToMarkdown } from '@/utils/markdownUtils';
+import { updateCheckboxInMarkdown, updateSubtaskContentInMarkdown, updateSubtasksOrderInMarkdown, reorderTasksInMarkdown, updateTaskDescriptionInMarkdown, updateTaskTitleInMarkdown, deleteSubtaskFromMarkdown, appendSubtaskToMarkdown } from '@/utils/markdownUtils';
 import { generateSubtaskId } from '@/utils/idGenerator';
 import { getCurrentISOString } from '@/utils/timestamp';
 import { useResultModalStore, type ContentSegment } from './resultModalStore';
@@ -505,6 +505,33 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       await writeRoadmapWithAutoSave(updatedMarkdown);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task description');
+    }
+  },
+
+  updateTaskTitle: async (taskId: string, newTitle: string) => {
+    const { setError, tasks, setTasks } = get();
+
+    try {
+      setError(null);
+
+      const targetTask = tasks.find(t => t.id === taskId);
+      if (!targetTask) return;
+      if (targetTask.title === newTitle) return;
+
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          return { ...task, title: newTitle };
+        }
+        return task;
+      });
+
+      setTasks(updatedTasks);
+
+      const content = await readRoadmapFile();
+      const updatedMarkdown = updateTaskTitleInMarkdown(content, targetTask.title, newTitle);
+      await writeRoadmapWithAutoSave(updatedMarkdown);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task title');
     }
   },
 

@@ -467,6 +467,43 @@ export function deleteSubtaskFromMarkdown(
   return updatedLines.join('\n');
 }
 
+export function updateTaskTitleInMarkdown(
+  markdown: string,
+  oldTitle: string,
+  newTitle: string
+): string {
+  const lines = markdown.split('\n');
+  let taskStartIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.trim().startsWith('## Achievements')) {
+      if (taskStartIndex !== -1) break;
+      continue;
+    }
+
+    const taskMatch = line.match(/^# (.+)$/);
+    if (taskMatch) {
+      const title = taskMatch[1].trim();
+      const { title: cleanTitle } = extractCreatedDate(title);
+
+      if (cleanTitle === oldTitle) {
+        taskStartIndex = i;
+        const createdMatch = line.match(/\[created: ([^\]]+)\]$/);
+        if (createdMatch) {
+          lines[i] = `# ${newTitle} [created: ${createdMatch[1]}]`;
+        } else {
+          lines[i] = `# ${newTitle}`;
+        }
+        break;
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
+
 export function appendSubtaskToMarkdown(
   markdown: string,
   taskTitle: string,
