@@ -6,36 +6,39 @@
 
 ## Architecture
 
-### System Components (Recommended)
+### System Components
 
 ```
-┌─────────────────────────┐
-│     Nginx Proxy         │  (wildcard SSL: *.example.com)
-│     (Port 443/80)       │
-└───────────┬─────────────┘
-            │
-      ┌─────┼─────┬────────────┐
-      │     │     │            │
-┌─────▼┐ ┌──▼──┐ │        ┌───▼───┐
-│User1 │ │User2│ │   ...  │ Admin │
-│Container│Container│    │  Panel  │
-└───┬───┘ └──┬──┘        └────────┘
-    │         │
-    ├────┬────┴────────────┐
-    │    │                 │
-┌───▼┐ ┌▼────┐        ┌────▼────┐
-│API │ │OpenCode│        │  Data   │
-│Srv │ │Server │        │  Volume │
-└────┘ └──────┘        └─────────┘
-   │        │
-   └────────┘ (mounted /data)
+┌─────────────────┐     ┌──────────────────────┐
+│   Client App    │     │    Cloud Server      │
+│  (macOS/iOS)    │────▶│                      │
+│                 │     │  ┌────────────────┐  │
+│  - React UI     │     │  │ API Server     │  │
+│  - WebView      │     │  │ (Express)      │  │
+│                 │     │  └───────┬────────┘  │
+└─────────────────┘     │          │           │
+                        │          ▼           │
+                        │  ┌────────────────┐  │
+                        │  │ OpenCode Server│  │
+                        │  │ (Container)    │  │
+                        │  └───────┬────────┘  │
+                        │          │           │
+                        │          ▼           │
+                        │  ┌────────────────┐  │
+                        │  │ User Data      │  │
+                        │  │ /data/         │  │
+                        │  │  - roadmap.md  │  │
+                        │  │  - map-*.md    │  │
+                        │  │  - .opencode/ │  │
+                        │  └────────────────┘  │
+                        └──────────────────────┘
 ```
 
 ### Multi-User Isolation (Container-Per-User)
 
-- 每个用户拥有 **2 个独立容器**：API Server + OpenCode Server
-- 共享数据卷：`/data/` 挂载到两个容器
-- 用户数据完全隔离（容器级别 + 卷级别）
+- 每个用户拥有独立的 Docker 容器
+- 每个容器内运行独立的 OpenCode Server + API Server
+- 用户数据完全隔离（文件系统级别）
 
 ## API Endpoints
 
@@ -52,7 +55,6 @@
 | `/api/read-map` | POST | 读取 map 内容 |
 | `/api/write-map` | POST | 写入 map 内容 |
 | `/api/config` | GET/POST | 读取/保存配置 |
-| `/health` | GET | 健康检查 |
 
 ### OpenCode SDK (无需改动)
 
@@ -73,80 +75,41 @@ VITE_OPENCODE_SDK_URL=wss://user-container.example.com
 ### SDK Configuration Update
 
 ```typescript
-// opencodeSDK.ts
+// opencodeClient.ts
 const BASE_URL = import.meta.env.VITE_OPENCODE_SDK_URL || '/opencode';
 ```
 
 ## Docker Container
 
-### Image Strategy
-
-使用官方 OpenCode Docker 镜像，无需自行构建。
-
-### API Server Container
+### Image Structure
 
 ```dockerfile
 FROM node:20-bullseye
 
-WORKDIR /app
+# Install Bun (for OpenCode)
+RUN curl -fsSL https://bun.sh/install | bash
 
-COPY package*.json ./
-RUN npm install --production
+# Copy OpenCode binary
+COPY opencode /usr/local/bin/opencode
 
-COPY . .
-
-EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
-
-CMD ["node", "index.js"]
-```
-
-### OpenCode Server Container
-
-```dockerfile
-FROM opencodeai/opencode-server:latest
+# Create non-root user
+RUN useradd -m -s /bin/bash appuser
 
 WORKDIR /data
 
-# 入口点保持默认
-CMD ["serve", "--port", "8080"]
-```
+# API Server (Express)
+COPY api-server ./api-server
+RUN cd api-server && npm install --production
 
-### docker-compose.yml
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
 
-```yaml
-version: '3.8'
+EXPOSE 3000 8080
 
-services:
-  api-server:
-    build: ./api-server
-    ports:
-      - "${API_PORT:-3000}:3000"
-    volumes:
-      - user-data:/data
-    environment:
-      - DATA_DIR=/data
-      - PORT=3000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-    restart: unless-stopped
+USER appuser
 
-  opencode:
-    image: opencodeai/opencode-server:latest
-    ports:
-      - "${OCC_PORT:-8080}:8080"
-    volumes:
-      - user-data:/data
-    working_dir: /data
-    command: ["serve", "--port", "8080"]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/global/health"]
-    restart: unless-stopped
-
-volumes:
-  user-data:
+CMD ["sh", "-c", "node api-server/index.js & opencode serve --port 8080"]
 ```
 
 ### User Data Volume
@@ -163,120 +126,66 @@ volumes:
 
 ### Simple Implementation (方案三)
 
-- 轻量级 Node.js API + SQLite 持久化
+- 轻量级 Node.js API
 - 用户注册 → 创建 Docker 容器 → 分配子域名
-- 使用 Docker Engine API 创建/管理容器
+- 使用 Docker Engine API 或 Docker Compose
 
 ### Flow
 
 ```
 1. 用户注册
    └─> POST /users/register { email, password }
-   └─> 验证通过
 
 2. 系统创建容器
-   └─> 分配唯一用户 ID (user-{uuid[:8]})
-   └─> docker-compose up -d (创建 api-server + opencode 容器)
-   └─> 分配子域名: user-{id}.example.com
-   └─> 存储到 SQLite: users.db
+   └─> docker run -d --name user-xxx -p 8080-8090 ...
+   └─> 分配子域名: user-xxx.example.com
 
 3. 用户登录
    └─> POST /auth/login { email, password }
-   └─> 查询 SQLite，返回容器 URL
+   └─> 返回容器 URL
 
-4. 用户删除
-   └─> DELETE /users/{id}
-   └─> docker-compose down (停止并删除容器)
-   └─> 删除数据卷
-   └─> 从 SQLite 删除记录
+4. App 连接
+   └─> 连接 https://user-xxx.example.com
 ```
-
-### Error Handling
-
-- 容器创建失败：回滚、记录日志、返回错误
-- 端口冲突：自动重试或分配备用端口
-- 用户删除失败：重试机制、人工介入告警
 
 ## Networking
 
-### Subdomain Routing (Recommended)
+### Option A: Subdomain Routing
 
 ```
-*.example.com  ──▶  Nginx Reverse Proxy  ──▶  用户容器
-                       │
-                       ├─ user-abc.example.com  ──▶  User1 (3001, 8081)
-                       ├─ user-def.example.com  ──▶  User2 (3002, 8082)
-                       └─ user-xyz.example.com  ──▶  User3 (3003, 8083)
+user1.example.com  ──┐
+user2.example.com  ──┼──> Nginx Reverse Proxy ──> Docker
+user3.example.com  ──┘
 ```
 
-### Nginx Config Requirements
+### Option B: Port-based
 
-1. **Wildcard SSL 证书** (`*.example.com`)
-2. **动态上游配置**：
-   - 使用 `set $backend "user-xxx"` 动态路由
-   - 或使用 `docker-gen` 自动生成配置
-3. **端口映射管理**：
-   - 每个用户分配独立端口（30001+, 80801+）
+```
+example.com:8081  ──┐
+example.com:8082  ──┼──> Docker
+example.com:8083  ──┘
+```
+
+推荐 Option A（子域名），用户体验更好。
 
 ## Security Considerations
 
-1. **Authentication**: JWT token
-   ```javascript
-   // auth middleware 示例
-   const jwt = require('jsonwebtoken');
-   const authMiddleware = (req, res, next) => {
-     const token = req.headers.authorization?.split(' ')[1];
-     if (!token) return res.status(401).json({ error: 'Unauthorized' });
-     try {
-       req.user = jwt.verify(token, process.env.JWT_SECRET);
-       next();
-     } catch {
-       res.status(401).json({ error: 'Invalid token' });
-     }
-   };
-   ```
-
+1. **Authentication**: JWT token 或 API key
 2. **Container Isolation**: Docker 默认隔离
-3. **Resource Limits**:
-   ```yaml
-   deploy:
-     resources:
-       limits:
-         memory: 512M
-         cpus: '0.5'
-   ```
-4. **Data Backup**:
-   - 每日快照 `/data` 卷
-   - 保留 7 天
-
-## Backup & Restore
-
-### Backup Strategy
-
-- **频率**: 每日凌晨 3:00 (UTC)
-- **保留**: 7 天
-- **目标**: 对象存储 (S3/OSS)
-
-### Restore Procedure
-
-1. 停止用户容器
-2. 删除旧数据卷
-3. 从备份恢复数据
-4. 启动容器
+3. **Resource Limits**: CPU/内存限制
+4. **Data Backup**: 定期快照
 
 ## Estimated Resources (Per User)
 
 | Resource | Idle | Active |
 |----------|------|--------|
-| Memory (API) | ~100MB | ~150MB |
-| Memory (OpenCode) | ~100MB | ~300MB |
+| Memory | ~150MB | ~300MB |
 | CPU | 0% | 5-15% |
 | Disk | ~10MB | ~50MB |
 
 ## Timeline
 
 - Phase 1: API Server 适配 + Docker 容器化
-- Phase 2: 用户管理服务 + SQLite 持久化
+- Phase 2: 用户管理服务
 - Phase 3: 前端环境配置
-- Phase 4: Nginx 反向代理配置
-- Phase 5: 测试部署
+- Phase 4: 测试部署
