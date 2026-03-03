@@ -1,7 +1,7 @@
-import type { OpenCodeHealthResponse, OpenCodePromptResponse, Session } from '@/store/types';
+import type { Session } from '@/store/types';
 import { loadTasksFromFile, saveTasksToFile } from '@/services/fileService';
 import { useModelStore } from '@/store/modelStore';
-import { getOpenCodeClient, checkServerHealth as checkHealth, subscribeToEvents } from '@/services/opencodeClient';
+import { getOpenCodeClient, subscribeToEvents } from '@/services/opencodeClient';
 import type { Session as SDKSession } from '@opencode-ai/sdk';
 
 export interface ServerSessionResponse {
@@ -85,75 +85,6 @@ export function showToastNotification(message: string, type: 'info' | 'error' | 
     (window as any).showToast(message, type);
   } else {
     console.log(`[Toast ${type}]: ${message}`);
-  }
-}
-
-export async function syncLocalSessionToServer(session: Session): Promise<string | null> {
-  try {
-    const client = getOpenCodeClient();
-    const response = await client.session.create({ body: { title: session.title } });
-    const newSession = response.data;
-    if (!newSession) return null;
-    return newSession.id;
-  } catch (error) {
-    console.error('Failed to sync session to server:', error);
-    return null;
-  }
-}
-
-export async function checkServerHealth(): Promise<OpenCodeHealthResponse> {
-  try {
-    const health = await checkHealth();
-    return { status: health.healthy ? 'healthy' : 'unhealthy' };
-  } catch {
-    return { status: 'unhealthy' };
-  }
-}
-
-export async function processPrompt(
-  prompt: string,
-  sessionId?: string
-): Promise<OpenCodePromptResponse & { sessionId?: string }> {
-  if (!prompt || !prompt.trim()) {
-    return { success: false, message: 'Prompt cannot be empty' };
-  }
-
-  try {
-    const { selectedModel } = useModelStore.getState();
-    const modelInfo = selectedModel ? {
-      providerID: selectedModel.providerID,
-      modelID: selectedModel.modelID
-    } : undefined;
-
-    const client = getOpenCodeClient();
-    
-    let targetSessionId = sessionId;
-    let isNewSession = false;
-    
-    if (!targetSessionId) {
-      const response = await client.session.create({ body: { title: `navigate: ${prompt}` } });
-      const newSession = response.data;
-      if (!newSession) throw new Error('Failed to create session');
-      targetSessionId = newSession.id;
-      isNewSession = true;
-    }
-
-    const payload = {
-      parts: [{ type: 'text' as const, text: `use navigate: ${prompt}` }],
-    };
-    if (modelInfo) {
-      (payload as any).model = modelInfo;
-    }
-    
-    await client.session.promptAsync({ path: { id: targetSessionId }, body: payload });
-    
-    return { 
-      success: true, 
-      message: 'Command executed',
-      sessionId: isNewSession ? targetSessionId : undefined
-    };
-  } catch (error) {
-    return { success: false, message: String(error) };
   }
 }
 

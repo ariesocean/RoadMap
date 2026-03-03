@@ -27,22 +27,6 @@ export function getOpenCodeClient() {
   return getClient();
 }
 
-export async function checkServerHealth(): Promise<{ healthy: boolean; version: string }> {
-  try {
-    const client = getClient();
-    await client.session.list();
-    return { healthy: true, version: '' };
-  } catch {
-    return { healthy: false, version: '' };
-  }
-}
-
-export async function fetchSessions(): Promise<Session[]> {
-  const client = getClient();
-  const response = await client.session.list();
-  return response.data ?? [];
-}
-
 export async function createSession(title: string): Promise<Session> {
   const client = getClient();
   const response = await client.session.create({ body: { title } });
@@ -53,21 +37,6 @@ export async function deleteSession(id: string): Promise<boolean> {
   const client = getClient();
   const response = await client.session.delete({ path: { id } });
   return response.data ?? false;
-}
-
-export async function sendPrompt(
-  sessionId: string,
-  prompt: string,
-  model?: { providerID: string; modelID: string }
-): Promise<void> {
-  const client = getClient();
-  const payload: any = {
-    parts: [{ type: 'text', text: prompt }],
-  };
-  if (model) {
-    payload.model = model;
-  }
-  await client.session.prompt({ path: { id: sessionId }, body: payload });
 }
 
 export async function sendPromptAsync(

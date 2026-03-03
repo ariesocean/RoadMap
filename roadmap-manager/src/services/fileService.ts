@@ -56,16 +56,6 @@ export async function saveTasksToFile(tasks: Task[], achievements: Achievement[]
   }
 }
 
-export async function readAchievementsFile(): Promise<Achievement[]> {
-  try {
-    const { achievements } = await loadTasksFromFile();
-    return achievements;
-  } catch (error) {
-    console.error('Error loading achievements:', error);
-    return [];
-  }
-}
-
 // ========== Map File Operations ==========
 
 export interface MapInfo {
@@ -169,31 +159,6 @@ export async function writeMapFile(map: MapInfo, content: string): Promise<boole
   } catch (error) {
     console.error('Error writing map file:', error);
     return false;
-  }
-}
-
-// Switch to a different map: archive current roadmap.md to the previous map file, then load new map
-export async function switchToMap(
-  newMap: MapInfo,
-  currentContent: string,
-  currentMap: MapInfo | null
-): Promise<{ content: string; previousMap: MapInfo | null } | null> {
-  try {
-    // First, archive current content to the previous map file (if exists)
-    if (currentMap) {
-      await writeMapFile(currentMap, currentContent);
-    }
-
-    // Then load the new map content
-    const newContent = await readMapFile(newMap);
-
-    return {
-      content: newContent,
-      previousMap: currentMap,
-    };
-  } catch (error) {
-    console.error('Error switching map:', error);
-    return null;
   }
 }
 
