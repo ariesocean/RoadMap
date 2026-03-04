@@ -48,7 +48,7 @@
 * [x] 切换方案: 通过OpenCode Serve API实现集成, 替代CLI方案
 * [x] 调研 opencode serve 现有API接口
 * [ ] 部署到TradingHub (开一个新的worktrees: multi-users)
-  * [ ] 清除绝对路径
+  - [x] 清除绝对路径
   * [ ] 添加用户验证功能
   * [ ] 每个用户使用一个独立的路径，运行opencode serve以及保存maps
 
