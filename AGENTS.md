@@ -51,6 +51,24 @@ npm run preview
 npm run opencode:server
 ```
 
+## Project Directory Structure
+
+The application expects the following directory structure:
+
+```
+RoadMap/                    # Project root (parent of roadmap-manager)
+├── roadmap-manager/        # React application
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.ts
+├── roadmap.md              # Main roadmap file
+└── map-*.md                # Individual map files
+```
+
+**Important**: All data files (`roadmap.md`, `map-*.md`) must be in the **parent directory** of `roadmap-manager/`. The app reads/writes to `../roadmap.md` and `../map-*.md`.
+
+This design allows the project to be portable - clone to any machine and run `npm run dev` from `roadmap-manager/`.
+
 **No test infrastructure** - TypeScript strict mode and build validation are primary checks.
 
 ## Code Style Guidelines

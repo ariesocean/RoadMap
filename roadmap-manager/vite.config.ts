@@ -6,7 +6,7 @@ import http from 'http'
 import { spawn } from 'child_process'
 
 const DEFAULT_PORTS = [51432, 51466, 51434]
-const PROJECT_DIR = '/Users/SparkingAries/VibeProjects/RoadMap'
+const PROJECT_DIR = path.resolve(process.cwd(), '..')
 
 async function checkPort(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -102,7 +102,7 @@ const roadmapPlugin = {
     server.middlewares.use('/api/read-roadmap', async (req: any, res: any, next: any) => {
       if (req.method === 'GET') {
         try {
-          const content = fs.readFileSync('/Users/SparkingAries/VibeProjects/RoadMap/roadmap.md', 'utf-8');
+          const content = fs.readFileSync(path.resolve(PROJECT_DIR, 'roadmap.md'), 'utf-8');
           res.setHeader('Content-Type', 'text/plain');
           res.end(content);
         } catch (error) {
@@ -121,7 +121,7 @@ const roadmapPlugin = {
             chunks.push(chunk);
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
-          fs.writeFileSync('/Users/SparkingAries/VibeProjects/RoadMap/roadmap.md', body.content);
+          fs.writeFileSync(path.resolve(PROJECT_DIR, 'roadmap.md'), body.content);
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ success: true }));
         } catch (error) {
@@ -136,7 +136,7 @@ const roadmapPlugin = {
     server.middlewares.use('/api/list-maps', async (req: any, res: any, next: any) => {
       if (req.method === 'GET') {
         try {
-          const mapsDir = '/Users/SparkingAries/VibeProjects/RoadMap';
+          const mapsDir = PROJECT_DIR;
           const files = fs.readdirSync(mapsDir);
           const mapFiles = files
             .filter(f => f.startsWith('map-') && f.endsWith('.md'))
@@ -178,7 +178,7 @@ const roadmapPlugin = {
 
           const mapName = rawName.replace(/\s+/g, '-');
           const filename = `map-${mapName}.md`;
-          const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
+          const filepath = path.resolve(PROJECT_DIR, filename);
 
           if (fs.existsSync(filepath)) {
             res.status(400).end(JSON.stringify({ error: 'Map already exists' }));
@@ -211,7 +211,7 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const filename = body.filename || `map-${body.name}.md`;
-          const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
+          const filepath = path.resolve(PROJECT_DIR, filename);
 
           if (!fs.existsSync(filepath)) {
             res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
@@ -250,8 +250,8 @@ const roadmapPlugin = {
 
           const newName = rawNewName.replace(/\s+/g, '-');
           const newFilename = `map-${newName}.md`;
-          const oldPath = `/Users/SparkingAries/VibeProjects/RoadMap/${oldFilename}`;
-          const newPath = `/Users/SparkingAries/VibeProjects/RoadMap/${newFilename}`;
+          const oldPath = path.resolve(PROJECT_DIR, oldFilename);
+          const newPath = path.resolve(PROJECT_DIR, newFilename);
 
           if (!fs.existsSync(oldPath)) {
             res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
@@ -288,7 +288,7 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const filename = body.filename || `map-${body.name}.md`;
-          const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
+          const filepath = path.resolve(PROJECT_DIR, filename);
 
           if (!fs.existsSync(filepath)) {
             res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
@@ -316,7 +316,7 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const filename = body.filename || `map-${body.name}.md`;
-          const filepath = `/Users/SparkingAries/VibeProjects/RoadMap/${filename}`;
+          const filepath = path.resolve(PROJECT_DIR, filename);
 
           fs.writeFileSync(filepath, body.content);
           res.setHeader('Content-Type', 'application/json');
@@ -392,7 +392,7 @@ const roadmapPlugin = {
           }
           
           const roadmapSessions = sessions.filter((s: any) =>
-            s.directory === '/Users/SparkingAries/VibeProjects/RoadMap' &&
+            s.directory === PROJECT_DIR &&
             !s.parentID &&
             !/\(@.*subagent\)/i.test(s.title || '') &&
             !(s.title || '').startsWith('modal-prompt:')

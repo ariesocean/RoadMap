@@ -2,6 +2,15 @@
 
 ## Purpose
 TBD - created by archiving change add-multi-maps-sidebar. Update Purpose after archive.
+
+## Directory Structure
+The application uses a portable directory structure:
+- `roadmap-manager/` - React application directory
+- `../roadmap.md` - Main roadmap file (parent of roadmap-manager)
+- `../map-*.md` - Individual map files (parent of roadmap-manager)
+
+This allows the project to be cloned to any machine and run from `roadmap-manager/` without hardcoded paths.
+
 ## Requirements
 ### Requirement: Map File Discovery
 The system SHALL automatically discover all map files matching the `map-*.md` pattern in the roadmap directory.

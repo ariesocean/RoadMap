@@ -56,7 +56,6 @@ export async function fetchSessionsFromServer(): Promise<ServerSession[]> {
     const allSessions = response.data ?? [];
     
     const roadmapSessions = allSessions.filter((s: SDKSession) =>
-      s.directory === '/Users/SparkingAries/VibeProjects/RoadMap' &&
       !s.parentID &&
       !/\(@.*subagent\)/i.test(s.title || '') &&
       !(s.title || '').startsWith('modal-prompt:')
@@ -86,10 +85,6 @@ export function showToastNotification(message: string, type: 'info' | 'error' | 
   } else {
     console.log(`[Toast ${type}]: ${message}`);
   }
-}
-
-export async function fetchTasks() {
-  return loadTasksFromFile();
 }
 
 export async function toggleSubtaskCompletion(subtaskId: string): Promise<void> {
