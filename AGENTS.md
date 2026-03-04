@@ -23,78 +23,114 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 macOS native desktop application for managing `roadmap.md` with Microsoft To Do-style UI. Part of the OpenCode AI coding toolkit.
 
-- **Tech Stack**: React 18 + TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion, @dnd-kit
+- **Tech Stack**: React 18 + TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion, @dnd-kit, OpenCode SDK
 - **Main Directory**: `roadmap-manager/`
 
 ## Build & Development Commands
 
 ```bash
-# Navigate to project directory
+# Navigate to project directory first
 cd roadmap-manager
 
 # Development server (port 1430)
 npm run dev
 
-# Production build
+# Type check only (no emit)
+npx tsc --noEmit
+
+# Type check specific file
+npx tsc --noEmit src/components/TaskCard.tsx
+
+# Production build (includes type checking)
 npm run build
 
 # Preview production build
 npm run preview
 
-# Start OpenCode server (used by the app)
+# Start OpenCode server (required for app functionality)
 npm run opencode:server
 ```
 
-**No separate lint/test commands** - TypeScript strict mode and build validation are the primary checks.
+**No test infrastructure** - TypeScript strict mode and build validation are primary checks.
 
 ## Code Style Guidelines
 
 ### TypeScript Configuration
 
-- **Strict mode enabled** (`tsconfig.json`)
+- **Strict mode enabled** with `noUnusedLocals` and `noUnusedParameters`
 - **Path alias**: `@/*` maps to `src/*`
-- **No unused locals/parameters** - always enabled
+- **Target**: ES2020 with ESNext modules
 
-### Imports
+### Imports (Strict Order)
 
-- Use path aliases: `import { something } from '@/store/taskStore'`
-- Group imports: external libs → internal → types
-- Use `type` keyword for type-only imports: `import type { Task } from '@/store/types'`
+```typescript
+// 1. External libraries
+import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { create } from 'zustand';
+
+// 2. Internal modules (using path aliases)
+import { useTaskStore } from '@/store/taskStore';
+import { formatDate } from '@/utils/dateUtils';
+
+// 3. Type-only imports (always use `type` keyword)
+import type { Task, Subtask } from '@/store/types';
+```
 
 ### Naming Conventions
 
-- **Files**: camelCase for utilities/hooks, PascalCase for components (`taskStore.ts`, `TaskCard.tsx`)
-- **Components**: PascalCase, export as named export
-- **Functions**: camelCase
+- **Components**: PascalCase files (`TaskCard.tsx`), named exports
+- **Stores**: camelCase with `Store` suffix (`taskStore.ts`)
+- **Hooks**: camelCase with `use` prefix (`useSession.ts`)
+- **Utils**: camelCase (`markdownUtils.ts`)
+- **Services**: camelCase (`fileService.ts`, `opencodeClient.ts`)
 - **Types/Interfaces**: PascalCase
-- **Constants**: camelCase or UPPER_SNAKE_CASE for config
+- **Constants**: camelCase for regular, UPPER_SNAKE_CASE for config
 
 ### React Patterns
 
-- Use functional components with hooks
-- Use `useTaskStore`, `useSessionStore` etc. for Zustand stores
-- Prefer inline handlers or custom hooks over separate functions
+- Functional components with hooks only
+- Destructure store methods: `const { toggleTaskExpanded, updateTaskDescription } = useTaskStore()`
+- Use `useCallback` for handlers passed to children
+- Prefer inline handlers for simple cases
 - Use `motion` from framer-motion for animations
+- Use `@dnd-kit` for drag-and-drop
 
 ### Error Handling
 
-- Use try/catch with async/await
-- Always set error state: `setError(err instanceof Error ? err.message : 'Failed to...')`
-- Provide user-friendly error messages in Chinese for UI
-- Catch blocks should handle both Error objects and strings
+```typescript
+// Always use try/catch with async/await
+try {
+  await someAsyncOperation();
+} catch (err) {
+  // Handle both Error objects and strings
+  setError(err instanceof Error ? err.message : 'Failed to perform operation');
+}
 
-### State Management (Zustand)
+// UI messages in Chinese
+throw new Error('OpenCode Server 启动超时');
+```
+
+### State Management (Zustand Pattern)
 
 ```typescript
 export const useTaskStore = create<TaskStore>((set, get) => ({
+  // State
   tasks: [],
-  
+  isLoading: false,
+  error: null,
+
+  // Simple setters
   setTasks: (tasks: Task[]) => set({ tasks }),
-  
+  setLoading: (isLoading: boolean) => set({ isLoading }),
+  setError: (error: string | null) => set({ error }),
+
+  // Async actions with error handling
   refreshTasks: async () => {
     const { setLoading, setTasks, setError } = get();
     try {
       setLoading(true);
+      setError(null);
       const data = await loadTasksFromFile();
       setTasks(data.tasks);
     } catch (err) {
@@ -106,21 +142,38 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 }));
 ```
 
+### File Structure Pattern
+
+```
+src/
+├── components/     # React components (PascalCase.tsx)
+├── hooks/          # Custom hooks (use*.ts)
+├── services/       # API clients, external integrations
+│   ├── opencodeClient.ts   # OpenCode SDK wrapper
+│   ├── opencodeAPI.ts      # API functions
+│   └── fileService.ts      # File operations
+├── store/          # Zustand stores (*Store.ts)
+│   ├── types.ts             # Type definitions
+│   ├── taskStore.ts
+│   └── sessionStore.ts
+├── utils/          # Pure utility functions
+└── constants/      # App constants
+```
+
 ### CSS/Tailwind
 
-- Use Tailwind utility classes
-- Custom colors defined in `tailwind.config.js`
-- Support dark mode with `dark:` prefix
-- Use `className` with proper spacing: `className="flex items-center gap-2"`
+- Use Tailwind utility classes exclusively
+- Custom colors in `tailwind.config.js`: `primary`, `background`, `dark-background`, etc.
+- Dark mode with `dark:` prefix
+- Proper spacing: `className="flex items-center gap-2 p-4"`
 
-### Component Structure
+### Component Template
 
 ```typescript
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { Task } from '@/store/types';
 import { useTaskStore } from '@/store/taskStore';
-import { SubtaskList } from './SubtaskList';
 
 interface TaskCardProps {
   task: Task;
@@ -128,64 +181,49 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
-  // State and refs
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Store access
   const { toggleTaskExpanded, updateTaskDescription } = useTaskStore();
-  
-  // Effects
+
   useEffect(() => {
-    // cleanup logic
+    // Effect logic
+    return () => {
+      // Cleanup
+    };
   }, [dependency]);
-  
-  // Handlers
-  const handleClick = () => { /* ... */ };
-  
-  // Render
+
+  const handleClick = () => {
+    // Handler logic
+  };
+
   return (
-    <motion.div>
-      {/* content */}
+    <motion.div className="...">
+      {/* Component content */}
     </motion.div>
   );
 };
 ```
 
-### File Organization
-
-```
-src/
-├── components/     # React components (PascalCase)
-├── hooks/          # Custom hooks (use*.ts)
-├── services/       # API clients, file services
-├── store/          # Zustand stores (*Store.ts)
-├── utils/          # Utility functions
-└── constants/      # App constants
-```
-
 ### OpenSpec Workflow
 
-For new features or changes:
+For new features or significant changes:
 1. Check `openspec list` and `openspec list --specs` for context
-2. Create change proposal in `openspec/changes/<change-id>/`
+2. Create proposal in `openspec/changes/<change-id>/`
 3. Write `proposal.md`, `tasks.md`, and spec deltas
-4. Run `openspec validate <change-id> --strict` before implementation
+4. Validate: `openspec validate <change-id> --strict`
 5. Implement tasks from `tasks.md` sequentially
-6. After deployment, archive with `openspec archive <change-id> --yes`
+6. Archive: `openspec archive <change-id> --yes`
 
 Skip proposal for bug fixes, typos, or dependency updates.
 
-### Key Commands Reference
+## Key Commands
 
 ```bash
-# OpenSpec
-openspec list                              # Active changes
-openspec list --specs                      # All capabilities
-openspec show <item>                       # View details
-openspec validate <item> --strict          # Validate
-openspec archive <change-id> --yes         # Archive complete
+# Development
+npm run dev                    # Start dev server
+npx tsc --noEmit              # Type check only
 
-# Project
-npm run dev                                # Start dev server
-npm run build                              # Production build
+# OpenSpec
+openspec list                  # Active changes
+openspec list --specs          # All capabilities
+openspec validate <id> --strict
 ```
