@@ -29,7 +29,6 @@ export const LoginPage: React.FC = () => {
   const [registerPassword, setRegisterPassword] = useState('');
 
   const { toggleConnected, refreshTasks } = useTaskStore.getState();
-  const { setUsername } = useAuthStore.getState();
   const { theme, setTheme } = useThemeStore();
   const { setLoadingEnabled, setAvailableMaps, setCurrentMap, loadLastEditedMapId } = useMapsStore.getState();
 
@@ -43,6 +42,47 @@ export const LoginPage: React.FC = () => {
     setIsDarkMode(!isDarkMode);
     setTheme(newTheme);
   };
+
+  // Try auto-login on mount
+  useEffect(() => {
+    const tryAutoLogin = async () => {
+      const { isAuthenticated, deviceId } = useAuthStore.getState();
+      
+      if (isAuthenticated) {
+        // Already logged in, try to initialize
+        try {
+          await initializeMapsOnLogin();
+          toggleConnected();
+        } catch (err) {
+          // Auto-login failed, user needs to login
+        }
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/auth/auto-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceId }),
+        });
+
+        if (response.ok) {
+          const { userId, token } = await response.json();
+          const username = userId.split('_')[0];
+          
+          useAuthStore.getState().login(username, userId, token);
+          
+          await initializeMapsOnLogin();
+          toggleConnected();
+          saveToLocalStorage('isConnected', 'true');
+        }
+      } catch (err) {
+        // Auto-login failed, show login page
+      }
+    };
+
+    tryAutoLogin();
+  }, []);
 
   // Initialize maps on login - same logic as when switching to connected
   const initializeMapsOnLogin = async () => {
@@ -76,30 +116,43 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setLoginError(null);
 
-    // Frontend-only validation - simulate authentication
     if (!loginUsername.trim() || !loginPassword.trim()) {
       setLoginError('Please check your username or password');
       return;
     }
 
-    // Simulate successful login
-    // In a real app, this would call a backend API
     try {
-      // Set username first
-      setUsername(loginUsername);
+      const deviceId = useAuthStore.getState().deviceId;
+      
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: loginUsername,
+          password: loginPassword,
+          deviceId,
+          deviceInfo: navigator.userAgent
+        }),
+      });
 
-      // Initialize maps - same as connected state
+      if (!response.ok) {
+        const error = await response.json();
+        setLoginError(error.error || 'Login failed');
+        return;
+      }
+
+      const { userId, token } = await response.json();
+      
+      useAuthStore.getState().login(loginUsername, userId, token);
+      
       await initializeMapsOnLogin();
-
-      // Set connected state and persist to localStorage
       toggleConnected();
       saveToLocalStorage('isConnected', 'true');
 
-      // Clear form
       setLoginUsername('');
       setLoginPassword('');
     } catch (err) {
-      setLoginError('Please check your username or password');
+      setLoginError('Login failed. Please try again.');
     }
   };
 
@@ -107,32 +160,45 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setRegisterError(null);
 
-    // Frontend-only validation
     if (!registerUsername.trim() || !registerEmail.trim() || !registerPassword.trim()) {
-      setRegisterError('Please check your username or password');
+      setRegisterError('Please fill in all fields');
       return;
     }
 
-    // Simulate successful registration
-    // In a real app, this would call a backend API
     try {
-      // Set username first
-      setUsername(registerUsername);
+      const deviceId = useAuthStore.getState().deviceId;
+      
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: registerUsername,
+          email: registerEmail,
+          password: registerPassword,
+          deviceId
+        }),
+      });
 
-      // Initialize maps - same as connected state
+      if (!response.ok) {
+        const error = await response.json();
+        setRegisterError(error.error || 'Registration failed');
+        return;
+      }
+
+      const { userId, token } = await response.json();
+      
+      useAuthStore.getState().login(registerUsername, userId, token);
+      
       await initializeMapsOnLogin();
-
-      // Auto-login after registration
       toggleConnected();
       saveToLocalStorage('isConnected', 'true');
 
-      // Clear form and close modal
       setRegisterUsername('');
       setRegisterEmail('');
       setRegisterPassword('');
       setShowRegister(false);
     } catch (err) {
-      setRegisterError('Please check your username or password');
+      setRegisterError('Registration failed. Please try again.');
     }
   };
 
