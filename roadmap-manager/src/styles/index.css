@@ -220,28 +220,4 @@
     animation: subtle-pulse 2s ease-in-out infinite;
     box-shadow: 0 0 20px rgba(0, 120, 212, 0.3), 0 0 40px rgba(99, 102, 241, 0.2);
   }
-
-  /* Login card border gradient pulse animation */
-  .login-card-loading {
-    animation: border-gradient-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes border-gradient-pulse {
-    0%, 100% {
-      border-color: #0078D4;
-      box-shadow: 0 0 0 1px rgba(0, 120, 212, 0.3), 0 0 20px rgba(0, 120, 212, 0.15);
-    }
-    25% {
-      border-color: #6366F1;
-      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 0 20px rgba(99, 102, 241, 0.15);
-    }
-    50% {
-      border-color: #8B5CF6;
-      box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3), 0 0 20px rgba(139, 92, 246, 0.15);
-    }
-    75% {
-      border-color: #06B6D4;
-      box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3), 0 0 20px rgba(6, 182, 212, 0.15);
-    }
-  }
 }

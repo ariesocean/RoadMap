@@ -192,8 +192,13 @@ export const LoginPage: React.FC = () => {
       </button>
 
       {/* Login Card */}
-      <div className={`w-full max-w-md p-8 rounded-2xl shadow-lg border transition-colors duration-300 ${isDarkMode ? 'bg-[#252525] border-[#333] shadow-black/50' : 'bg-white border-gray-100 shadow-gray-200/50'} ${isLoggingIn ? 'login-card-loading' : ''}`}>
+      <div className={`w-full max-w-md rounded-2xl shadow-lg border transition-colors duration-300 overflow-hidden ${isDarkMode ? 'bg-[#252525] border-[#333] shadow-black/50' : 'bg-white border-gray-100 shadow-gray-200/50'}`}>
+        {/* Loading animation line */}
+        <div className="h-0.5 overflow-hidden">
+          <div className={`w-full h-full ${isLoggingIn ? 'gradient-line-animation' : ''}`} />
+        </div>
 
+        <div className="p-8">
         {/* Logo & Header */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-[#0066ff] rounded-xl flex items-center justify-center mb-4 shadow-md shadow-blue-600/20">
@@ -215,7 +220,8 @@ export const LoginPage: React.FC = () => {
               value={loginUsername}
               onChange={(e) => setLoginUsername(e.target.value)}
               placeholder="Enter your username"
-              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors ${
+              disabled={isLoggingIn}
+              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 isDarkMode
                   ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
                   : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
@@ -233,7 +239,8 @@ export const LoginPage: React.FC = () => {
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
               placeholder="••••••••"
-              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors ${
+              disabled={isLoggingIn}
+              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 isDarkMode
                   ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
                   : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
@@ -247,11 +254,8 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          <button 
-            disabled={isLoggingIn}
-            className={`w-full bg-[#0066ff] text-white font-medium py-2.5 rounded-xl transition-colors mt-2 shadow-md shadow-blue-600/20 ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-600'}`}
-          >
-            {isLoggingIn ? 'Signing in...' : 'Sign In'}
+          <button disabled={isLoggingIn} className="w-full bg-[#0066ff] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors mt-2 shadow-md shadow-blue-600/20">
+            {isLoggingIn ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
 
@@ -262,6 +266,7 @@ export const LoginPage: React.FC = () => {
               Sign up
             </button>
           </p>
+        </div>
         </div>
       </div>
 

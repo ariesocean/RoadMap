@@ -4,7 +4,19 @@
       "deviceId": "5a2e1dd3-c0d8-496a-8aee-d2e97bea592d",
       "name": "Current Device",
       "registeredAt": "2026-03-05T12:08:34.256Z",
-      "lastLoginAt": "2026-03-05T14:25:15.194Z"
+      "lastLoginAt": "2026-03-05T16:13:36.997Z"
+    },
+    {
+      "deviceId": "5abd2b7d-8232-4279-beaa-43c1b32f9028",
+      "name": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
+      "registeredAt": "2026-03-05T16:16:45.784Z",
+      "lastLoginAt": "2026-03-05T16:16:45.784Z"
+    },
+    {
+      "deviceId": "00be9664-8c84-4f94-953a-8588ec7d0263",
+      "name": "Mozilla/5.0 (iPad; CPU OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3 Mobile/15E148 Safari/604.1",
+      "registeredAt": "2026-03-05T16:18:50.195Z",
+      "lastLoginAt": "2026-03-05T16:18:50.195Z"
     }
   ]
 }
