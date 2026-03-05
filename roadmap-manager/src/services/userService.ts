@@ -187,14 +187,21 @@ export async function loginUser(username: string, _password: string, deviceId: s
   } catch {
     throw new Error(ERRORS.CORRUPTED_FILE);
   }
-  const device = devices.devices.find((d: Device) => d.deviceId === deviceId);
+  let device = devices.devices.find((d: Device) => d.deviceId === deviceId);
 
   if (!device) {
-    throw new Error(ERRORS.DEVICE_NOT_AUTHORIZED);
+    devices.devices.push({
+      deviceId,
+      name: deviceInfo || 'New Device',
+      registeredAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString()
+    });
+    fs.writeFileSync(devicesPath, JSON.stringify(devices, null, 2));
+    device = devices.devices.find((d: Device) => d.deviceId === deviceId);
+  } else {
+    device.lastLoginAt = new Date().toISOString();
+    fs.writeFileSync(devicesPath, JSON.stringify(devices, null, 2));
   }
-
-  device.lastLoginAt = new Date().toISOString();
-  fs.writeFileSync(devicesPath, JSON.stringify(devices, null, 2));
 
   const historyPath = path.join(USERS_DIR, userId, 'login-history.json');
   let history;

@@ -119,3 +119,4 @@
 - [x] 12.5 Use execSync instead of spawn for simpler process management
 - [x] 12.6 Remove unused userOpenCodeProcesses Map
 - [x] 12.7 Add userId query param to all fileService API calls
+- [x] 12.8 Auto-register new devices on login (allow multi-device access)

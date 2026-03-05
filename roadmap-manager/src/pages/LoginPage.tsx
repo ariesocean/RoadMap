@@ -18,6 +18,7 @@ export const LoginPage: React.FC = () => {
   const [showRegister, setShowRegister] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Login form state
   const [loginUsername, setLoginUsername] = useState('');
@@ -89,6 +90,8 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    setIsLoggingIn(true);
+
     try {
       const deviceId = useAuthStore.getState().deviceId;
       
@@ -124,6 +127,8 @@ export const LoginPage: React.FC = () => {
       setLoginPassword('');
     } catch (err) {
       setLoginError('Login failed. Please try again.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -187,7 +192,7 @@ export const LoginPage: React.FC = () => {
       </button>
 
       {/* Login Card */}
-      <div className={`w-full max-w-md p-8 rounded-2xl shadow-lg border transition-colors duration-300 ${isDarkMode ? 'bg-[#252525] border-[#333] shadow-black/50' : 'bg-white border-gray-100 shadow-gray-200/50'}`}>
+      <div className={`w-full max-w-md p-8 rounded-2xl shadow-lg border transition-colors duration-300 ${isDarkMode ? 'bg-[#252525] border-[#333] shadow-black/50' : 'bg-white border-gray-100 shadow-gray-200/50'} ${isLoggingIn ? 'login-card-loading' : ''}`}>
 
         {/* Logo & Header */}
         <div className="flex flex-col items-center mb-8">
@@ -242,8 +247,11 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          <button className="w-full bg-[#0066ff] hover:bg-blue-600 text-white font-medium py-2.5 rounded-xl transition-colors mt-2 shadow-md shadow-blue-600/20">
-            Sign In
+          <button 
+            disabled={isLoggingIn}
+            className={`w-full bg-[#0066ff] text-white font-medium py-2.5 rounded-xl transition-colors mt-2 shadow-md shadow-blue-600/20 ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-600'}`}
+          >
+            {isLoggingIn ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

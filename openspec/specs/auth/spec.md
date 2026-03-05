@@ -66,6 +66,29 @@ The system SHALL provide a registration modal for new users to create an account
 - **WHEN** user fills in username, email, password and clicks register
 - **THEN** the user SHALL be automatically logged in
 - **AND** the main interface SHALL be displayed
+- **AND** the device SHALL be automatically registered
+
+### Requirement: Multi-Device Support
+The system SHALL allow the same user account to be accessed from multiple devices without requiring explicit device authorization.
+
+#### Scenario: New device login
+- **GIVEN** a user has an existing account
+- **WHEN** a new device attempts to login with valid credentials
+- **THEN** the device SHALL be automatically added to the authorized devices list
+- **AND** the user SHALL be granted access
+- **AND** the login SHALL succeed
+
+#### Scenario: Returning device login
+- **GIVEN** a user has previously logged in from a device
+- **WHEN** the same device attempts to login with valid credentials
+- **THEN** the user SHALL be granted access
+- **AND** the last login time SHALL be updated
+
+#### Scenario: Auto-login from new device
+- **GIVEN** a user has previously logged in from a device and enabled auto-login
+- **WHEN** the same device attempts to auto-login
+- **THEN** the user SHALL be automatically logged in
+- **AND** the last login time SHALL be updated
 
 ### Requirement: Account Management
 The system SHALL provide an account management popup that allows users to manage their account information.
