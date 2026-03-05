@@ -4,6 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import http from 'http'
 import { spawn } from 'child_process'
+import { registerUser, loginUser, autoLogin, getUserPort, getDevices } from './src/services/userService'
 
 const DEFAULT_PORTS = [51432, 51466, 51434]
 const PROJECT_DIR = path.resolve(process.cwd(), '..')
@@ -358,6 +359,116 @@ const roadmapPlugin = {
           res.end(JSON.stringify({ success: true }));
         } catch (error) {
           res.status(500).end(JSON.stringify({ error: String(error) }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // Auth endpoints
+    server.middlewares.use('/api/auth/register', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          
+          const { username, email, password, deviceId } = body;
+          
+          if (!username || !email || !password || !deviceId) {
+            res.status(400).end(JSON.stringify({ error: 'Missing required fields' }));
+            return;
+          }
+          
+          if (username.length > 6) {
+            res.status(400).end(JSON.stringify({ error: 'Username must be 6 characters or less' }));
+            return;
+          }
+          
+          const result = await registerUser(username, email, password, deviceId);
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(result));
+        } catch (error) {
+          res.status(400).end(JSON.stringify({ error: error instanceof Error ? error.message : 'Registration failed' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    server.middlewares.use('/api/auth/login', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          
+          const { username, password, deviceId, deviceInfo } = body;
+          
+          if (!username || !password || !deviceId) {
+            res.status(400).end(JSON.stringify({ error: 'Missing required fields' }));
+            return;
+          }
+          
+          const result = await loginUser(username, password, deviceId, deviceInfo || 'Unknown');
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(result));
+        } catch (error) {
+          res.status(401).end(JSON.stringify({ error: error instanceof Error ? error.message : 'Login failed' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    server.middlewares.use('/api/auth/auto-login', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          
+          const { deviceId } = body;
+          
+          if (!deviceId) {
+            res.status(400).end(JSON.stringify({ error: 'Missing deviceId' }));
+            return;
+          }
+          
+          const result = await autoLogin(deviceId);
+          
+          if (!result) {
+            res.status(401).end(JSON.stringify({ error: 'Device not authorized' }));
+            return;
+          }
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(result));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: 'Auto-login failed' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    server.middlewares.use('/api/auth/user-info', async (req: any, res: any, next: any) => {
+      if (req.method === 'GET') {
+        try {
+          const userId = (req as any).userId;
+          
+          if (!userId) {
+            res.status(401).end(JSON.stringify({ error: 'Not authenticated' }));
+            return;
+          }
+          
+          const port = getUserPort(userId);
+          const devices = getDevices(userId);
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ userId, port, devices }));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: 'Failed to get user info' }));
         }
       } else {
         next();
