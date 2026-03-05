@@ -9,6 +9,7 @@ import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMapsStore } from '@/store/mapsStore';
 import { removeFromLocalStorage } from '@/utils/storage';
+import { readRoadmapFile, writeMapFile } from '@/services/fileService';
 
 export const AccountPopup: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,8 +20,8 @@ export const AccountPopup: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { toggleConnected, refreshTasks } = useTaskStore.getState();
-  const { username, updateUsername, clearUsername } = useAuthStore();
-  const { setLoadingEnabled, setCurrentMap, resetLastEditedMapIdLoaded } = useMapsStore.getState();
+  const { username, setUsername, clearUsername } = useAuthStore();
+  const { setLoadingEnabled, setCurrentMap, resetLastEditedMapIdLoaded, currentMap, setSidebarCollapsed } = useMapsStore.getState();
   const popupRef = React.useRef<HTMLDivElement>(null);
 
   // Close popup when clicking outside
@@ -61,7 +62,7 @@ export const AccountPopup: React.FC = () => {
       return;
     }
 
-    updateUsername(newUsername.trim());
+    setUsername(newUsername.trim());
     setShowUsernameEdit(false);
     setNewUsername('');
   };
@@ -80,10 +81,17 @@ export const AccountPopup: React.FC = () => {
     setNewPassword('');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setError(null);
 
     try {
+      // Save current roadmap to current map file before disconnecting
+      if (currentMap) {
+        const currentContent = await readRoadmapFile();
+        await writeMapFile(currentMap, currentContent);
+        console.log(`[Maps] Saved content to: ${currentMap.filename}`);
+      }
+
       // Set disconnected state
       toggleConnected();
 
@@ -96,6 +104,7 @@ export const AccountPopup: React.FC = () => {
       // Cleanup maps state (same as original disconnect logic)
       setLoadingEnabled(false);
       setCurrentMap(null);
+      setSidebarCollapsed(true);
       resetLastEditedMapIdLoaded();
       refreshTasks();
 
@@ -111,10 +120,9 @@ export const AccountPopup: React.FC = () => {
       {/* Username Display */}
       <div
         onClick={handleTogglePopup}
-        className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+        className="cursor-pointer hover:opacity-80 transition-opacity"
       >
-        <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-green-500' : 'bg-green-500'}`} />
-        <span className="text-xs text-secondary-text dark:text-dark-secondary-text">
+        <span className="text-sm text-secondary-text dark:text-dark-secondary-text">
           {username || 'User'}
         </span>
       </div>

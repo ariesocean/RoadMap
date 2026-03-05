@@ -8,6 +8,10 @@ import { Moon, Sun, ListTodo, X } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useMapsStore } from '@/store/mapsStore';
+import { listMaps } from '@/services/fileService';
+import type { MapInfo } from '@/services/fileService';
+import { saveToLocalStorage } from '@/utils/storage';
 
 export const LoginPage: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -24,9 +28,10 @@ export const LoginPage: React.FC = () => {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
 
-  const { toggleConnected } = useTaskStore.getState();
+  const { toggleConnected, refreshTasks } = useTaskStore.getState();
   const { setUsername } = useAuthStore.getState();
   const { theme, setTheme } = useThemeStore();
+  const { setLoadingEnabled, setAvailableMaps, setCurrentMap, loadLastEditedMapId } = useMapsStore.getState();
 
   // Sync theme with themeStore
   useEffect(() => {
@@ -39,7 +44,35 @@ export const LoginPage: React.FC = () => {
     setTheme(newTheme);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Initialize maps on login - same logic as when switching to connected
+  const initializeMapsOnLogin = async () => {
+    try {
+      // Enable maps loading
+      setLoadingEnabled(true);
+
+      // Discover available maps
+      const maps = await listMaps();
+      setAvailableMaps(maps);
+
+      // Load last edited map ID from backend
+      const lastEditedMapId = await loadLastEditedMapId();
+
+      // If there's a last edited map, select it
+      if (lastEditedMapId && maps.length > 0) {
+        const targetMap = maps.find((m: MapInfo) => m.id === lastEditedMapId);
+        if (targetMap) {
+          setCurrentMap(targetMap);
+        }
+      }
+
+      // Refresh tasks after login
+      await refreshTasks();
+    } catch (err) {
+      console.error('Failed to initialize maps on login:', err);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
 
@@ -52,8 +85,15 @@ export const LoginPage: React.FC = () => {
     // Simulate successful login
     // In a real app, this would call a backend API
     try {
-      toggleConnected();
+      // Set username first
       setUsername(loginUsername);
+
+      // Initialize maps - same as connected state
+      await initializeMapsOnLogin();
+
+      // Set connected state and persist to localStorage
+      toggleConnected();
+      saveToLocalStorage('isConnected', 'true');
 
       // Clear form
       setLoginUsername('');
@@ -63,7 +103,7 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegisterError(null);
 
@@ -76,9 +116,15 @@ export const LoginPage: React.FC = () => {
     // Simulate successful registration
     // In a real app, this would call a backend API
     try {
+      // Set username first
+      setUsername(registerUsername);
+
+      // Initialize maps - same as connected state
+      await initializeMapsOnLogin();
+
       // Auto-login after registration
       toggleConnected();
-      setUsername(registerUsername);
+      saveToLocalStorage('isConnected', 'true');
 
       // Clear form and close modal
       setRegisterUsername('');
