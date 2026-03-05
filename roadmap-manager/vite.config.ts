@@ -150,9 +150,9 @@ async function stopUserOpenCodeServer(userId: string): Promise<void> {
 
 const OPENCODE_HOST = '127.0.0.1'
 
-async function checkServerHealth(): Promise<boolean> {
+async function checkServerHealth(port: number = openCodePort): Promise<boolean> {
   return new Promise((resolve) => {
-    const req = http.get(`http://${OPENCODE_HOST}:${openCodePort}/global/health`, (res) => {
+    const req = http.get(`http://${OPENCODE_HOST}:${port}/global/health`, (res) => {
       resolve(res.statusCode === 200)
     });
     req.on('error', () => resolve(false));
@@ -447,7 +447,7 @@ const roadmapPlugin = {
     });
 
     // Read roadmap-config.json
-    const configPath = path.resolve(process.cwd(), 'roadmap-config.json');
+    const configPath = path.resolve(getCurrentUserDir(), 'roadmap-config.json');
     server.middlewares.use('/api/config', async (req: any, res: any, next: any) => {
       
       if (req.method === 'GET') {
@@ -662,6 +662,10 @@ const roadmapPlugin = {
     server.middlewares.use('/api/execute-navigate', async (req: any, res: any, next: any) => {
       if (req.method === 'POST') {
         try {
+          const url = new URL(req.url, 'http://localhost');
+          const userId = url.searchParams.get('userId');
+          const port = userId ? getUserPort(userId) : openCodePort;
+
           const chunks: Buffer[] = [];
           for await (const chunk of req) {
             chunks.push(chunk);
@@ -681,7 +685,7 @@ const roadmapPlugin = {
             res.write(`data: ${JSON.stringify(data)}\n\n`);
           };
 
-          const isHealthy = await checkServerHealth();
+          const isHealthy = await checkServerHealth(port);
 
           if (!isHealthy) {
             sendEvent({ type: 'error', message: 'OpenCode Server 未运行\n\n请先运行: npm run opencode:server' });
@@ -696,7 +700,7 @@ const roadmapPlugin = {
           if (!isValidServerSession) {
             const createSessionRes = await httpRequest({
               hostname: OPENCODE_HOST,
-              port: openCodePort,
+              port: port,
               path: '/session',
               method: 'POST',
               headers: { 'Content-Type': 'application/json' }
@@ -729,7 +733,7 @@ const roadmapPlugin = {
 
           const sendMessageRes = await httpRequest({
             hostname: OPENCODE_HOST,
-            port: openCodePort,
+            port: port,
             path: `/session/${sessionId}/prompt_async`,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
@@ -750,7 +754,7 @@ const roadmapPlugin = {
 
           const eventReq = http.get({
             hostname: OPENCODE_HOST,
-            port: openCodePort,
+            port: port,
             path: `/event?session=${sessionId}`,
             headers: {
               'Accept': 'text/event-stream',
@@ -837,6 +841,10 @@ const roadmapPlugin = {
     server.middlewares.use('/api/execute-modal-prompt', async (req: any, res: any, next: any) => {
       if (req.method === 'POST') {
         try {
+          const url = new URL(req.url, 'http://localhost');
+          const userId = url.searchParams.get('userId');
+          const port = userId ? getUserPort(userId) : openCodePort;
+
           const chunks: Buffer[] = [];
           for await (const chunk of req) {
             chunks.push(chunk);
@@ -856,7 +864,7 @@ const roadmapPlugin = {
             res.write(`data: ${JSON.stringify(data)}\n\n`);
           };
 
-          const isHealthy = await checkServerHealth();
+          const isHealthy = await checkServerHealth(port);
 
           if (!isHealthy) {
             sendEvent({ type: 'error', message: 'OpenCode Server 未运行\n\n请先运行: npm run opencode:server' });
@@ -871,7 +879,7 @@ const roadmapPlugin = {
           if (!isValidServerSession) {
             const createSessionRes = await httpRequest({
               hostname: OPENCODE_HOST,
-              port: openCodePort,
+              port: port,
               path: '/session',
               method: 'POST',
               headers: { 'Content-Type': 'application/json' }
@@ -903,7 +911,7 @@ const roadmapPlugin = {
 
           const sendMessageRes = await httpRequest({
             hostname: OPENCODE_HOST,
-            port: openCodePort,
+            port: port,
             path: `/session/${sessionId}/prompt_async`,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
@@ -924,7 +932,7 @@ const roadmapPlugin = {
 
           const eventReq = http.get({
             hostname: OPENCODE_HOST,
-            port: openCodePort,
+            port: port,
             path: `/event?session=${sessionId}`,
             headers: {
               'Accept': 'text/event-stream',

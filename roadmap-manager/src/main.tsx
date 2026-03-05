@@ -12,7 +12,7 @@ import './styles/index.css'
 const IS_CONNECTED_KEY = 'isConnected'
 
 // Initialize username from localStorage before rendering
-useAuthStore.getState().initUsername();
+useAuthStore.getState().initAuth();
 
 // Initialize connected state from localStorage and set up maps if connected
 const initConnectedState = () => {

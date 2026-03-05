@@ -20,7 +20,7 @@ export const AccountPopup: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { toggleConnected, refreshTasks } = useTaskStore.getState();
-  const { username, setUsername, clearUsername } = useAuthStore();
+  const { username, setUsername, logout } = useAuthStore();
   const { setLoadingEnabled, setCurrentMap, resetLastEditedMapIdLoaded, currentMap, setSidebarCollapsed } = useMapsStore.getState();
   const popupRef = React.useRef<HTMLDivElement>(null);
 
@@ -96,7 +96,7 @@ export const AccountPopup: React.FC = () => {
       toggleConnected();
 
       // Clear username from store and localStorage
-      clearUsername();
+      logout();
 
       // Clear connection state from localStorage
       removeFromLocalStorage('isConnected');
