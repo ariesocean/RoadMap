@@ -2,14 +2,14 @@
 
 ## Implementation Order
 
-1. [ ] **Create authStore** - Create `src/stores/authStore.ts` to manage username (reuse isConnected as login state)
-2. [ ] **Create LoginPage component** - Migrate login page code from `roadmap-manager-login/src/App.tsx`
-3. [ ] **Implement login error handling** - Add error messages for invalid credentials and localStorage failures
-4. [ ] **Update main.tsx** - Modify entry point to render LoginPage or App based on isConnected state
-5. [ ] **Create AccountPopup component** - Create account management popup component
-6. [ ] **Update App.tsx header** - Replace Connected/Disconnected with username + AccountPopup, reuse existing toggleConnected logic
-7. [ ] **Write tests** - Add test scenarios for login, registration, and error handling
-8. [ ] **Run type check** - Execute `npx tsc --noEmit` to validate types
+1. [x] **Create authStore** - Create `src/stores/authStore.ts` to manage username (reuse isConnected as login state)
+2. [x] **Create LoginPage component** - Migrate login page code from `roadmap-manager-login/src/App.tsx`
+3. [x] **Implement login error handling** - Add error messages for invalid credentials and localStorage failures
+4. [x] **Update main.tsx** - Modify entry point to render LoginPage or App based on isConnected state
+5. [x] **Create AccountPopup component** - Create account management popup component
+6. [x] **Update App.tsx header** - Replace Connected/Disconnected with username + AccountPopup, reuse existing toggleConnected logic
+7. [x] **Write tests** - Add test scenarios for login, registration, and error handling using Playwright
+8. [x] **Run type check** - Execute `npx tsc --noEmit` to validate types
 
 ## Dependencies
 

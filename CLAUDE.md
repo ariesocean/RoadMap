@@ -77,8 +77,6 @@ The `roadmapPlugin` in `vite.config.ts` provides these endpoints:
 
 ### OpenCode Integration
 - `GET /session` - List filtered sessions (roadmap directory only, excludes subagents and modal-prompt sessions)
-- `POST /api/execute-navigate` - Execute navigate commands via OpenCode Server with SSE streaming
-- `POST /api/execute-modal-prompt` - Execute modal prompts via OpenCode Server with SSE streaming
 
 ### Legacy
 - `GET /api/read-roadmap` - Read `roadmap.md` (original file)
