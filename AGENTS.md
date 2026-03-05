@@ -51,6 +51,32 @@ npm run preview
 npm run opencode:server
 ```
 
+## Testing Commands
+
+```bash
+cd roadmap-manager
+
+# Run all Playwright tests
+npx playwright test
+
+# Run specific test file
+npx playwright test tests/login.spec.ts
+
+# Run tests matching a pattern
+npx playwright test --grep "login"
+
+# Run a single test by name
+npx playwright test --grep "should login successfully"
+
+# Run tests in UI mode (debug)
+npx playwright test --ui
+
+# Run with trace viewer (on failure)
+npx playwright test --trace on
+```
+
+**Note**: Tests require the dev server to be running (port 1630). The playwright.config.ts automatically starts the dev server via `webServer` option.
+
 ## Project Directory Structure
 
 The application expects the following directory structure:
@@ -68,8 +94,6 @@ RoadMap/                    # Project root (parent of roadmap-manager)
 **Important**: All data files (`roadmap.md`, `map-*.md`) must be in the **parent directory** of `roadmap-manager/`. The app reads/writes to `../roadmap.md` and `../map-*.md`.
 
 This design allows the project to be portable - clone to any machine and run `npm run dev` from `roadmap-manager/`.
-
-**No test infrastructure** - TypeScript strict mode and build validation are primary checks.
 
 ## Code Style Guidelines
 
