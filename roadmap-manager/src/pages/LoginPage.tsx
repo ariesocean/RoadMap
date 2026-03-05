@@ -43,47 +43,6 @@ export const LoginPage: React.FC = () => {
     setTheme(newTheme);
   };
 
-  // Try auto-login on mount
-  useEffect(() => {
-    const tryAutoLogin = async () => {
-      const { isAuthenticated, deviceId } = useAuthStore.getState();
-      
-      if (isAuthenticated) {
-        // Already logged in, try to initialize
-        try {
-          await initializeMapsOnLogin();
-          toggleConnected();
-        } catch (err) {
-          // Auto-login failed, user needs to login
-        }
-        return;
-      }
-      
-      try {
-        const response = await fetch('/api/auth/auto-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ deviceId }),
-        });
-
-        if (response.ok) {
-          const { userId, token } = await response.json();
-          const username = userId.split('_')[0];
-          
-          useAuthStore.getState().login(username, userId, token);
-          
-          await initializeMapsOnLogin();
-          toggleConnected();
-          saveToLocalStorage('isConnected', 'true');
-        }
-      } catch (err) {
-        // Auto-login failed, show login page
-      }
-    };
-
-    tryAutoLogin();
-  }, []);
-
   // Initialize maps on login - same logic as when switching to connected
   const initializeMapsOnLogin = async () => {
     try {
@@ -111,6 +70,15 @@ export const LoginPage: React.FC = () => {
       console.error('Failed to initialize maps on login:', err);
     }
   };
+
+  // Sync isConnected when auth state changes (handled by main.tsx init)
+  useEffect(() => {
+    const { isAuthenticated } = useAuthStore.getState();
+    if (isAuthenticated) {
+      useTaskStore.setState({ isConnected: true });
+      initializeMapsOnLogin();
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,9 +109,12 @@ export const LoginPage: React.FC = () => {
         return;
       }
 
-      const { userId, token } = await response.json();
+      const { userId, token, port } = await response.json();
       
       useAuthStore.getState().login(loginUsername, userId, token);
+      if (port) {
+        useAuthStore.getState().setUserPort(port);
+      }
       
       await initializeMapsOnLogin();
       toggleConnected();
@@ -185,9 +156,12 @@ export const LoginPage: React.FC = () => {
         return;
       }
 
-      const { userId, token } = await response.json();
+      const { userId, token, port } = await response.json();
       
       useAuthStore.getState().login(registerUsername, userId, token);
+      if (port) {
+        useAuthStore.getState().setUserPort(port);
+      }
       
       await initializeMapsOnLogin();
       toggleConnected();

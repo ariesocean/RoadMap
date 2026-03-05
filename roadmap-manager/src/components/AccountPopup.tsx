@@ -113,6 +113,9 @@ export const AccountPopup: React.FC = () => {
       // Clear connection state from localStorage
       removeFromLocalStorage('isConnected');
 
+      // Set disconnected state to show login page
+      useTaskStore.setState({ isConnected: false });
+
       // Cleanup maps state (same as original disconnect logic)
       setLoadingEnabled(false);
       setCurrentMap(null);

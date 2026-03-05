@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
 import http from 'http'
-import { spawn } from 'child_process'
-import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices } from './src/services/userService'
+import { spawn, execSync } from 'child_process'
+import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice } from './src/services/userService'
 
 const DEFAULT_PORTS = [51432, 51466, 51434]
 const PROJECT_DIR = path.resolve(process.cwd(), '..')
@@ -59,8 +59,6 @@ async function startOpenCodeServer(port: number): Promise<void> {
   })
 }
 
-const userOpenCodeProcesses: Map<number, any> = new Map();
-
 async function startUserOpenCodeServer(userId: string): Promise<number> {
   const port = getUserPort(userId);
   if (!port) throw new Error('User not found');
@@ -82,7 +80,6 @@ async function startUserOpenCodeServer(userId: string): Promise<number> {
     });
     
     proc.unref();
-    userOpenCodeProcesses.set(port, proc);
     
     let attempts = 0;
     const maxAttempts = 30;
@@ -101,19 +98,16 @@ async function startUserOpenCodeServer(userId: string): Promise<number> {
   });
 }
 
-async function killProcessOnPort(port: number): Promise<void> {
-  return new Promise((resolve) => {
-    const proc = spawn('lsof', [`-ti:${port}`], { stdio: 'pipe' });
-    let pid = '';
-    proc.stdout.on('data', (data) => { pid += data; });
-    proc.on('close', () => {
-      if (pid) {
-        spawn('kill', [pid.trim()]).on('close', () => resolve());
-      } else {
-        resolve();
-      }
-    });
-  });
+function killOpenCodeProcess(port: number): void {
+  try {
+    const output = execSync(`pgrep -f "opencode.*serve.*--port ${port}"`, { encoding: 'utf-8' });
+    if (output.trim()) {
+      execSync(`kill ${output.trim()}`);
+      console.log(`[Kill] Stopped opencode serve on port ${port}`);
+    }
+  } catch {
+    // pgrep 没找到进程，忽略即可
+  }
 }
 
 async function stopUserOpenCodeServer(userId: string): Promise<void> {
@@ -125,27 +119,8 @@ async function stopUserOpenCodeServer(userId: string): Promise<void> {
     return;
   }
   
-  return new Promise((resolve) => {
-    const req = http.request({
-      hostname: '127.0.0.1',
-      port,
-      path: '/global/shutdown',
-      method: 'POST'
-    }, (res) => {
-      console.log(`[User ${userId}] OpenCode Server stopped on port ${port}`);
-      resolve();
-    });
-    
-    req.on('error', async () => {
-      await killProcessOnPort(port);
-      userOpenCodeProcesses.delete(port);
-      resolve();
-    });
-    
-    req.end();
-    
-    setTimeout(() => resolve(), 5000);
-  });
+  killOpenCodeProcess(port);
+  console.log(`[User ${userId}] OpenCode Server stopped on port ${port}`);
 }
 
 const OPENCODE_HOST = '127.0.0.1'
@@ -497,8 +472,10 @@ const roadmapPlugin = {
           }
           
           const result = await registerUser(username, email, password, deviceId);
+          await startUserOpenCodeServer(result.userId);
+          const port = getUserPort(result.userId);
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify(result));
+          res.end(JSON.stringify({ ...result, port }));
         } catch (error) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Registration failed' }));
@@ -526,8 +503,10 @@ const roadmapPlugin = {
           
           await startUserOpenCodeServer(result.userId);
           
+          const port = getUserPort(result.userId);
+          
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify(result));
+          res.end(JSON.stringify({ ...result, port }));
         } catch (error) {
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Login failed' }));
@@ -560,14 +539,16 @@ const roadmapPlugin = {
           
           await startUserOpenCodeServer(result.userId);
           
+          const port = getUserPort(result.userId);
+          
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify(result));
+          res.end(JSON.stringify({ ...result, port }));
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Auto-login failed' }));
         }
       } else {
-        next();
+
       }
     });
 
@@ -590,6 +571,57 @@ const roadmapPlugin = {
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Failed to get user info' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // GET /api/auth/devices - list all devices for a user
+    server.middlewares.use('/api/auth/devices', async (req: any, res: any, next: any) => {
+      if (req.method === 'GET') {
+        try {
+          const url = new URL(req.url, 'http://localhost');
+          const userId = url.searchParams.get('userId');
+          
+          if (!userId) {
+            res.writeHead(400).end(JSON.stringify({ error: 'Missing userId' }));
+            return;
+          }
+          
+          const devices = getDevices(userId);
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ devices }));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to get devices' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // DELETE /api/auth/devices/:deviceId - remove a device
+    server.middlewares.use('/api/auth/devices/:deviceId', async (req: any, res: any, next: any) => {
+      if (req.method === 'DELETE') {
+        try {
+          const url = new URL(req.url, 'http://localhost');
+          const userId = url.searchParams.get('userId');
+          const deviceId = url.searchParams.get('deviceId');
+          
+          if (!userId || !deviceId) {
+            res.writeHead(400).end(JSON.stringify({ error: 'Missing userId or deviceId' }));
+            return;
+          }
+          
+          await removeDevice(userId, deviceId);
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to remove device' }));
         }
       } else {
         next();

@@ -1,10 +1,13 @@
 import { parseMarkdownTasks, generateMarkdownFromTasks } from '@/utils/markdownUtils';
 import type { Task, Achievement } from '@/store/types';
 import { showToastNotification } from './opencodeAPI';
+import { useAuthStore } from '@/store/authStore';
 
 export async function readRoadmapFile(): Promise<string> {
   try {
-    const response = await fetch('/api/read-roadmap');
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/read-roadmap?userId=${encodeURIComponent(userId)}` : '/api/read-roadmap';
+    const response = await fetch(url);
     if (response.ok) {
       return await response.text();
     }
@@ -17,7 +20,9 @@ export async function readRoadmapFile(): Promise<string> {
 
 export async function writeRoadmapFile(content: string, currentMap?: MapInfo | null): Promise<void> {
   try {
-    await fetch('/api/write-roadmap', {
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/write-roadmap?userId=${encodeURIComponent(userId)}` : '/api/write-roadmap';
+    await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content }),
@@ -66,7 +71,9 @@ export interface MapInfo {
 
 export async function listMaps(): Promise<MapInfo[]> {
   try {
-    const response = await fetch('/api/list-maps');
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/list-maps?userId=${encodeURIComponent(userId)}` : '/api/list-maps';
+    const response = await fetch(url);
     if (response.ok) {
       return await response.json();
     }
@@ -79,7 +86,9 @@ export async function listMaps(): Promise<MapInfo[]> {
 
 export async function createMap(name: string): Promise<MapInfo | null> {
   try {
-    const response = await fetch('/api/create-map', {
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/create-map?userId=${encodeURIComponent(userId)}` : '/api/create-map';
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
@@ -97,7 +106,9 @@ export async function createMap(name: string): Promise<MapInfo | null> {
 
 export async function deleteMap(map: MapInfo): Promise<boolean> {
   try {
-    const response = await fetch('/api/delete-map', {
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/delete-map?userId=${encodeURIComponent(userId)}` : '/api/delete-map';
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: map.name, filename: map.filename }),
@@ -111,7 +122,9 @@ export async function deleteMap(map: MapInfo): Promise<boolean> {
 
 export async function renameMap(oldMap: MapInfo, newName: string): Promise<MapInfo | null> {
   try {
-    const response = await fetch('/api/rename-map', {
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/rename-map?userId=${encodeURIComponent(userId)}` : '/api/rename-map';
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -133,7 +146,9 @@ export async function renameMap(oldMap: MapInfo, newName: string): Promise<MapIn
 
 export async function readMapFile(map: MapInfo): Promise<string> {
   try {
-    const response = await fetch('/api/read-map', {
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/read-map?userId=${encodeURIComponent(userId)}` : '/api/read-map';
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: map.name, filename: map.filename }),
@@ -150,7 +165,9 @@ export async function readMapFile(map: MapInfo): Promise<string> {
 
 export async function writeMapFile(map: MapInfo, content: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/write-map', {
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/write-map?userId=${encodeURIComponent(userId)}` : '/api/write-map';
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: map.name, filename: map.filename, content }),
@@ -170,7 +187,9 @@ export interface RoadmapConfig {
 
 export async function loadConfig(): Promise<RoadmapConfig> {
   try {
-    const response = await fetch('/api/config');
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/config?userId=${encodeURIComponent(userId)}` : '/api/config';
+    const response = await fetch(url);
     if (response.ok) {
       return await response.json();
     }
@@ -183,7 +202,9 @@ export async function loadConfig(): Promise<RoadmapConfig> {
 
 export async function saveConfig(config: RoadmapConfig): Promise<boolean> {
   try {
-    const response = await fetch('/api/config', {
+    const userId = useAuthStore.getState().userId;
+    const url = userId ? `/api/config?userId=${encodeURIComponent(userId)}` : '/api/config';
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config),
