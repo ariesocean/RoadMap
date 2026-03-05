@@ -19,8 +19,8 @@ export const AccountPopup: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const { toggleConnected, refreshTasks } = useTaskStore.getState();
-  const { username, setUsername, logout } = useAuthStore();
+  const { refreshTasks } = useTaskStore.getState();
+  const { username, setUsername } = useAuthStore();
   const { setLoadingEnabled, setCurrentMap, resetLastEditedMapIdLoaded, currentMap, setSidebarCollapsed } = useMapsStore.getState();
   const popupRef = React.useRef<HTMLDivElement>(null);
 
@@ -84,6 +84,8 @@ export const AccountPopup: React.FC = () => {
   const handleLogout = async () => {
     setError(null);
 
+    const { userId, logout } = useAuthStore.getState();
+
     try {
       // Save current roadmap to current map file before disconnecting
       if (currentMap) {
@@ -92,8 +94,18 @@ export const AccountPopup: React.FC = () => {
         console.log(`[Maps] Saved content to: ${currentMap.filename}`);
       }
 
-      // Set disconnected state
-      toggleConnected();
+      // Stop OpenCode server for this user
+      if (userId) {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId }),
+          });
+        } catch {
+          // Continue with local logout even if server fails
+        }
+      }
 
       // Clear username from store and localStorage
       logout();
