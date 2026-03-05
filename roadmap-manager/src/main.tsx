@@ -61,14 +61,14 @@ initConnectedState();
 
 const Root = () => {
   const { isConnected } = useTaskStore();
-  const { username } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
-  // Show LoginPage when not connected or no username (handles incomplete logout)
-  if (!isConnected || !username) {
+  // Show LoginPage when not connected or not authenticated
+  if (!isConnected || !isAuthenticated) {
     return <LoginPage />;
   }
 
-  // Show App when connected and has username
+  // Show App when connected and authenticated
   return <App />;
 };
 

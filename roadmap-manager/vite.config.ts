@@ -223,7 +223,7 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'text/plain');
           res.end(content);
         } catch (error) {
-          res.status(500).end('Error reading roadmap.md');
+          res.writeHead(500).end('Error reading roadmap.md');
         }
       } else {
         next();
@@ -242,7 +242,7 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ success: true }));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else {
         next();
@@ -268,7 +268,7 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(mapFiles));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else {
         next();
@@ -289,7 +289,7 @@ const roadmapPlugin = {
           const rawName = body.name?.trim();
           const validNameRegex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9-]*$/;
           if (!rawName || !validNameRegex.test(rawName)) {
-            res.status(400).end(JSON.stringify({ error: 'Invalid map name. Use letters (including Chinese), numbers, and hyphens. Must start with a letter, number, or Chinese character.' }));
+            res.writeHead(400).end(JSON.stringify({ error: 'Invalid map name. Use letters (including Chinese), numbers, and hyphens. Must start with a letter, number, or Chinese character.' }));
             return;
           }
 
@@ -298,7 +298,7 @@ const roadmapPlugin = {
           const filepath = path.resolve(getCurrentUserDir(), filename);
 
           if (fs.existsSync(filepath)) {
-            res.status(400).end(JSON.stringify({ error: 'Map already exists' }));
+            res.writeHead(400).end(JSON.stringify({ error: 'Map already exists' }));
             return;
           }
 
@@ -311,7 +311,7 @@ const roadmapPlugin = {
             filename: filename
           }));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else {
         next();
@@ -331,7 +331,7 @@ const roadmapPlugin = {
           const filepath = path.resolve(getCurrentUserDir(), filename);
 
           if (!fs.existsSync(filepath)) {
-            res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
+            res.writeHead(404).end(JSON.stringify({ error: 'Map file not found' }));
             return;
           }
 
@@ -339,7 +339,7 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ success: true }));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else {
         next();
@@ -361,7 +361,7 @@ const roadmapPlugin = {
           const rawNewName = body.newName?.trim();
           const validNameRegex = /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9-]*$/;
           if (!rawNewName || !validNameRegex.test(rawNewName)) {
-            res.status(400).end(JSON.stringify({ error: 'Invalid map name. Use letters (including Chinese), numbers, and hyphens. Must start with a letter, number, or Chinese character.' }));
+            res.writeHead(400).end(JSON.stringify({ error: 'Invalid map name. Use letters (including Chinese), numbers, and hyphens. Must start with a letter, number, or Chinese character.' }));
             return;
           }
 
@@ -371,12 +371,12 @@ const roadmapPlugin = {
           const newPath = path.resolve(getCurrentUserDir(), newFilename);
 
           if (!fs.existsSync(oldPath)) {
-            res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
+            res.writeHead(404).end(JSON.stringify({ error: 'Map file not found' }));
             return;
           }
 
           if (fs.existsSync(newPath)) {
-            res.status(400).end(JSON.stringify({ error: 'A map with that name already exists' }));
+            res.writeHead(400).end(JSON.stringify({ error: 'A map with that name already exists' }));
             return;
           }
 
@@ -388,7 +388,7 @@ const roadmapPlugin = {
             filename: newFilename
           }));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else {
         next();
@@ -408,7 +408,7 @@ const roadmapPlugin = {
           const filepath = path.resolve(getCurrentUserDir(), filename);
 
           if (!fs.existsSync(filepath)) {
-            res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
+            res.writeHead(404).end(JSON.stringify({ error: 'Map file not found' }));
             return;
           }
 
@@ -416,7 +416,7 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'text/plain');
           res.end(content);
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else {
         next();
@@ -439,7 +439,7 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ success: true }));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else {
         next();
@@ -461,7 +461,7 @@ const roadmapPlugin = {
             res.end(JSON.stringify({ lastEditedMapId: null }));
           }
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else if (req.method === 'POST') {
         try {
@@ -474,7 +474,7 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ success: true }));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: String(error) }));
+          res.writeHead(500).end(JSON.stringify({ error: String(error) }));
         }
       } else {
         next();
@@ -492,7 +492,7 @@ const roadmapPlugin = {
           const { username, email, password, deviceId } = body;
           
           if (!username || !email || !password || !deviceId) {
-            res.status(400).end(JSON.stringify({ error: 'Missing required fields' }));
+            res.writeHead(400).end(JSON.stringify({ error: 'Missing required fields' }));
             return;
           }
           
@@ -500,7 +500,8 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(result));
         } catch (error) {
-          res.status(400).end(JSON.stringify({ error: error instanceof Error ? error.message : 'Registration failed' }));
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Registration failed' }));
         }
       } else {
         next();
@@ -517,7 +518,7 @@ const roadmapPlugin = {
           const { username, password, deviceId, deviceInfo } = body;
           
           if (!username || !password || !deviceId) {
-            res.status(400).end(JSON.stringify({ error: 'Missing required fields' }));
+            res.writeHead(400).end(JSON.stringify({ error: 'Missing required fields' }));
             return;
           }
           
@@ -525,7 +526,8 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(result));
         } catch (error) {
-          res.status(401).end(JSON.stringify({ error: error instanceof Error ? error.message : 'Login failed' }));
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Login failed' }));
         }
       } else {
         next();
@@ -542,21 +544,22 @@ const roadmapPlugin = {
           const { deviceId } = body;
           
           if (!deviceId) {
-            res.status(400).end(JSON.stringify({ error: 'Missing deviceId' }));
+            res.writeHead(400).end(JSON.stringify({ error: 'Missing deviceId' }));
             return;
           }
           
           const result = await autoLogin(deviceId);
           
           if (!result) {
-            res.status(401).end(JSON.stringify({ error: 'Device not authorized' }));
+            res.writeHead(401).end(JSON.stringify({ error: 'Device not authorized' }));
             return;
           }
           
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(result));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: 'Auto-login failed' }));
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Auto-login failed' }));
         }
       } else {
         next();
@@ -570,7 +573,7 @@ const roadmapPlugin = {
           const userId = url.searchParams.get('userId');
           
           if (!userId) {
-            res.status(400).end(JSON.stringify({ error: 'Missing userId' }));
+            res.writeHead(400).end(JSON.stringify({ error: 'Missing userId' }));
             return;
           }
           
@@ -580,7 +583,8 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ userId, port, devices }));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: 'Failed to get user info' }));
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to get user info' }));
         }
       } else {
         next();
@@ -603,7 +607,8 @@ const roadmapPlugin = {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ success: true }));
         } catch (error) {
-          res.status(500).end(JSON.stringify({ error: 'Logout failed' }));
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Logout failed' }));
         }
       } else {
         next();
@@ -1060,7 +1065,7 @@ async function ensureOpenCodeServer() {
   }
 }
 
-const openCodePort = await ensureOpenCodeServer();
+const openCodePort: number = DEFAULT_PORTS[0]; // Fallback for non-logged-in state
 
 export default defineConfig({
   plugins: [react(), roadmapPlugin as any],
