@@ -1,5 +1,7 @@
 # model-selection Specification
 
+> **Deprecation Notice**: The `/api/execute-navigate` endpoint that previously forwarded the selected model to OpenCode Server has been removed. The frontend now uses the OpenCode SDK directly which handles model selection. This spec is kept for historical reference only.
+
 ## Purpose
 TBD - created by archiving change add-model-selection. Update Purpose after archive.
 ## Requirements

@@ -1,5 +1,7 @@
 # modal-prompt Specification
 
+> **Deprecation Notice**: The `/api/execute-modal-prompt` and `/api/execute-navigate` endpoints have been removed from the codebase (vite.config.ts). The frontend now uses the OpenCode SDK directly. This spec is kept for historical reference only.
+
 ## Purpose
 TBD - created by archiving change add-modal-prompt-interface. Update Purpose after archive.
 ## Requirements

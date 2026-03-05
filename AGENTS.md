@@ -21,10 +21,11 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ## Project Overview
 
-macOS native desktop application for managing `roadmap.md` with Microsoft To Do-style UI. Part of the OpenCode AI coding toolkit.
+macOS native desktop application for managing `roadmap.md` with Microsoft To Do-style UI. Supports multi-user authentication with individual user sessions and isolated data storage.
 
 - **Tech Stack**: React 18 + TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion, @dnd-kit, OpenCode SDK
 - **Main Directory**: `roadmap-manager/`
+- **Features**: Multi-user login, session management, per-user roadmap data, OpenCode integration
 
 ## Build & Development Commands
 
@@ -49,7 +50,11 @@ npm run preview
 
 # Start OpenCode server (required for app functionality)
 npm run opencode:server
+
+# Lint (not configured - use npx tsc --noEmit for type checking)
 ```
+
+**Note**: No ESLint/Prettier configured. Use `npx tsc --noEmit` for type checking.
 
 ## Testing Commands
 
@@ -184,7 +189,27 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 }));
 ```
 
-### File Structure Pattern
+### Multi-User Session Patterns
+
+For authentication and per-user data isolation:
+
+```typescript
+// Session store manages user sessions
+// User data is isolated per-session in users/<username>_<timestamp>/
+
+// Login flow: create session with username
+const session = await createSession(username);
+
+// Per-user data paths
+const userDir = `../users/${username}_${timestamp}/`;
+const roadmapPath = `${userDir}roadmap.md`;
+const mapDir = `../map-${username}_${timestamp}/`;
+```
+
+- Sessions are stored in `users/<username>_<timestamp>/` directories
+- Each user has isolated `roadmap.md` and `map-*.md` files
+- Use `useSession()` hook to access current session
+- Use `useSessionStore()` for session management (create, list, cleanup)
 
 ```
 src/
