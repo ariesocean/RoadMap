@@ -32,7 +32,7 @@ macOS native desktop application for managing `roadmap.md` with Microsoft To Do-
 # Navigate to project directory first
 cd roadmap-manager
 
-# Development server (port 1430)
+# Development server (port 1630)
 npm run dev
 
 # Type check only (no emit)
