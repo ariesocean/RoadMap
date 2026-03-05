@@ -4,7 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import http from 'http'
 import { spawn } from 'child_process'
-import { registerUser, loginUser, autoLogin, getUserPort, getDevices } from './src/services/userService'
+import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices } from './src/services/userService'
 
 const DEFAULT_PORTS = [51432, 51466, 51434]
 const PROJECT_DIR = path.resolve(process.cwd(), '..')
@@ -57,6 +57,85 @@ async function startOpenCodeServer(port: number): Promise<void> {
       }
     }, 1000)
   })
+}
+
+const userOpenCodeProcesses: Map<number, any> = new Map();
+
+async function startUserOpenCodeServer(userId: string): Promise<number> {
+  const port = getUserPort(userId);
+  if (!port) throw new Error('User not found');
+  
+  if (await checkPort(port)) {
+    console.log(`[User ${userId}] OpenCode Server already running on port ${port}`);
+    return port;
+  }
+  
+  const userDir = getUserDir(userId);
+  
+  return new Promise((resolve, reject) => {
+    const env = { ...process.env, OPENCODE_SERVER_PASSWORD: '' };
+    const proc = spawn('opencode', ['serve', '--port', String(port)], {
+      cwd: userDir,
+      env,
+      detached: true,
+      stdio: 'ignore'
+    });
+    
+    proc.unref();
+    userOpenCodeProcesses.set(port, proc);
+    
+    let attempts = 0;
+    const maxAttempts = 30;
+    
+    const checkInterval = setInterval(async () => {
+      attempts++;
+      if (await checkPort(port)) {
+        clearInterval(checkInterval);
+        console.log(`[User ${userId}] OpenCode Server started on port ${port}`);
+        resolve(port);
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkInterval);
+        reject(new Error('OpenCode Server 启动超时'));
+      }
+    }, 1000);
+  });
+}
+
+async function stopUserOpenCodeServer(userId: string): Promise<void> {
+  const port = getUserPort(userId);
+  if (!port) return;
+  
+  if (!await checkPort(port)) {
+    console.log(`[User ${userId}] OpenCode Server not running on port ${port}`);
+    return;
+  }
+  
+  return new Promise((resolve) => {
+    const req = http.request({
+      hostname: '127.0.0.1',
+      port,
+      path: '/global/shutdown',
+      method: 'POST'
+    }, (res) => {
+      console.log(`[User ${userId}] OpenCode Server stopped on port ${port}`);
+      resolve();
+    });
+    
+    req.on('error', () => {
+      const proc = userOpenCodeProcesses.get(port);
+      if (proc) {
+        try {
+          process.kill(-proc.pid);
+        } catch {}
+        userOpenCodeProcesses.delete(port);
+      }
+      resolve();
+    });
+    
+    req.end();
+    
+    setTimeout(() => resolve(), 5000);
+  });
 }
 
 const OPENCODE_HOST = '127.0.0.1'
@@ -380,11 +459,6 @@ const roadmapPlugin = {
             return;
           }
           
-          if (username.length > 6) {
-            res.status(400).end(JSON.stringify({ error: 'Username must be 6 characters or less' }));
-            return;
-          }
-          
           const result = await registerUser(username, email, password, deviceId);
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(result));
@@ -455,10 +529,11 @@ const roadmapPlugin = {
     server.middlewares.use('/api/auth/user-info', async (req: any, res: any, next: any) => {
       if (req.method === 'GET') {
         try {
-          const userId = (req as any).userId;
+          const url = new URL(req.url, 'http://localhost');
+          const userId = url.searchParams.get('userId');
           
           if (!userId) {
-            res.status(401).end(JSON.stringify({ error: 'Not authenticated' }));
+            res.status(400).end(JSON.stringify({ error: 'Missing userId' }));
             return;
           }
           
@@ -469,6 +544,29 @@ const roadmapPlugin = {
           res.end(JSON.stringify({ userId, port, devices }));
         } catch (error) {
           res.status(500).end(JSON.stringify({ error: 'Failed to get user info' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    server.middlewares.use('/api/auth/logout', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          
+          const { userId } = body;
+          
+          if (userId) {
+            await stopUserOpenCodeServer(userId);
+          }
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          res.status(500).end(JSON.stringify({ error: 'Logout failed' }));
         }
       } else {
         next();
