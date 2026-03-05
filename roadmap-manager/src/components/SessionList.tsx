@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Plus, RefreshCw, MessageSquare, Trash2 } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
+import { useAuthStore } from '@/store/authStore';
 
 interface SessionListProps {
   onSelect?: () => void;
@@ -36,23 +37,24 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
   const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const allSessions = Object.values(sessions).sort((a, b) => {
-    const aIsNavigate = /navigate:/i.test(a.title);
-    const bIsNavigate = /navigate:/i.test(b.title);
+  const userId = useAuthStore.getState().userId;
+  const allSessions = Object.values(sessions)
+    .filter(s => {
+      const isNavigate = /^navigate:/i.test(s.title);
+      const matchesUserId = userId && s.title.endsWith(`:${userId}`);
+      return isNavigate && matchesUserId;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.lastUsedAt).getTime();
+      const timeB = new Date(b.lastUsedAt).getTime();
+      if (timeA !== timeB) return timeB - timeA;
 
-    if (aIsNavigate && !bIsNavigate) return -1;
-    if (!aIsNavigate && bIsNavigate) return 1;
+      const createdA = new Date(a.createdAt).getTime();
+      const createdB = new Date(b.createdAt).getTime();
+      if (createdA !== createdB) return createdB - createdA;
 
-    const timeA = new Date(a.lastUsedAt).getTime();
-    const timeB = new Date(b.lastUsedAt).getTime();
-    if (timeA !== timeB) return timeB - timeA;
-
-    const createdA = new Date(a.createdAt).getTime();
-    const createdB = new Date(b.createdAt).getTime();
-    if (createdA !== createdB) return createdB - createdA;
-
-    return a.title.localeCompare(b.title);
-  });
+      return a.title.localeCompare(b.title);
+    });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

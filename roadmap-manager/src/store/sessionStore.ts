@@ -5,6 +5,7 @@ import { createSession, deleteSession as deleteSessionFromSDK } from '@/services
 import { generateUUID, generateMessageId } from '@/utils/idGenerator';
 import { getCurrentISOString } from '@/utils/timestamp';
 import { saveToLocalStorage, loadFromLocalStorage, removeFromLocalStorage } from '@/utils/storage';
+import { useAuthStore } from './authStore';
 
 const ACTIVE_SESSION_KEY = 'roadmap-active-session';
 
@@ -256,9 +257,22 @@ export const useSessionStore = create<SessionStore>((set, get) => {
     },
 
     getAllSessions: () => {
-      return Object.values(sessions).sort(
-        (a, b) => new Date(b.lastUsedAt).getTime() - new Date(a.lastUsedAt).getTime()
-      );
+      const userId = useAuthStore.getState().userId;
+      return Object.values(sessions)
+        .filter(s => {
+          const isNavigate = /^navigate:/i.test(s.title);
+          const matchesUserId = userId && s.title.endsWith(`:${userId}`);
+          return isNavigate && matchesUserId;
+        })
+        .sort((a, b) => {
+          const timeA = new Date(a.lastUsedAt).getTime();
+          const timeB = new Date(b.lastUsedAt).getTime();
+          if (timeA !== timeB) return timeB - timeA;
+          const createdA = new Date(a.createdAt).getTime();
+          const createdB = new Date(b.createdAt).getTime();
+          if (createdA !== createdB) return createdB - createdA;
+          return a.title.localeCompare(b.title);
+        });
     },
 
     cleanupAllSessions: () => {
@@ -366,16 +380,16 @@ export const useSessionStore = create<SessionStore>((set, get) => {
     },
     
     selectDefaultSession: () => {
-      const allSessions = Object.values(sessions);
-      if (allSessions.length === 0) return;
+      const userId = useAuthStore.getState().userId;
+      const filteredSessions = Object.values(sessions).filter(s => {
+        const isNavigate = /^navigate:/i.test(s.title);
+        const matchesUserId = userId && s.title.endsWith(`:${userId}`);
+        return isNavigate && matchesUserId;
+      });
+      
+      if (filteredSessions.length === 0) return;
 
-      const sorted = allSessions.sort((a, b) => {
-        const aIsNavigate = /navigate:/i.test(a.title);
-        const bIsNavigate = /navigate:/i.test(b.title);
-
-        if (aIsNavigate && !bIsNavigate) return -1;
-        if (!aIsNavigate && bIsNavigate) return 1;
-
+      const sorted = filteredSessions.sort((a, b) => {
         const timeA = new Date(a.lastUsedAt).getTime();
         const timeB = new Date(b.lastUsedAt).getTime();
         if (timeA !== timeB) return timeB - timeA;

@@ -180,21 +180,30 @@ The system SHALL fetch all sessions from the OpenCode server using the `GET /ses
 ### Requirement: Server Session Display
 The system SHALL display all sessions retrieved from the OpenCode server in the conversation dropdown, replacing the current "New Conversation" behavior.
 
-**Refactoring Note**: Session sorting now uses centralized `sessionUtils.ts` utility.
+**Refactoring Note**: Session filtering and sorting now uses `useAuthStore` for userId matching.
 
 #### Scenario: Display server sessions in dropdown
 - **WHEN** the session dropdown is opened
-- **THEN** all sessions from the server SHALL be listed in the dropdown
+- **THEN** only sessions matching the current user SHALL be listed in the dropdown
 - **AND** the dropdown SHALL show the session title for each server session
 - **AND** the current active session SHALL be highlighted in the dropdown
 
+#### Scenario: Session filtering by user
+- **WHEN** the session dropdown is rendered
+- **THEN** only sessions with title starting with "navigate:" SHALL be displayed
+- **AND** only sessions with title ending with ":{currentUserId}" SHALL be displayed
+- **AND** sessions not matching both criteria SHALL be hidden from the dropdown
+
 #### Scenario: Dropdown session ordering
-- **WHEN** both server and local sessions exist
-- **THEN** the dropdown SHALL display all server sessions first
-- **AND** locally created sessions SHALL follow server sessions
-- **AND** sessions SHALL be sorted by lastUsedAt timestamp (most recent first)
+- **WHEN** sessions are filtered by user criteria
+- **THEN** sessions SHALL be sorted by lastUsedAt timestamp (most recent first)
 - **AND** if timestamps are equal, sessions SHALL be sorted by createdAt (newest first)
 - **AND** if both timestamps are equal, sessions SHALL be sorted alphabetically by title
+
+#### Scenario: Empty session list
+- **WHEN** no sessions match the user filter criteria
+- **THEN** the dropdown SHALL display "No sessions found"
+- **AND** the "New Conversation" option SHALL still be available
 
 #### Scenario: New Conversation as dropdown option
 - **WHEN** the dropdown is opened
@@ -206,18 +215,23 @@ The system SHALL display all sessions retrieved from the OpenCode server in the 
 ### Requirement: Default Session Selection
 The system SHALL automatically select the first session (most recently used) when multiple sessions are available.
 
-**Refactoring Note**: Uses centralized `sessionUtils.ts` for sorting.
+**Refactoring Note**: Uses `useAuthStore` for userId-based filtering.
 
 #### Scenario: Auto-select first session on load
 - **WHEN** sessions are loaded from the server
-- **AND** more than one session exists
+- **AND** more than one session matches the user filter (navigate: prefix + userId suffix)
 - **THEN** the system SHALL automatically select the first session in the sorted list
 - **AND** the selected session SHALL become the active session for conversation context
 
 #### Scenario: Single session auto-selection
-- **WHEN** exactly one session exists
+- **WHEN** exactly one session exists and matches the user filter
 - **THEN** that session SHALL be automatically selected as the active session
 - **AND** the conversation context SHALL be initialized with that session
+
+#### Scenario: No matching sessions
+- **WHEN** sessions are loaded but none match the user filter
+- **THEN** no session SHALL be auto-selected
+- **AND** the "New Conversation" option SHALL be available for the user to create a new session
 
 ### Requirement: Session Synchronization
 The system SHALL synchronize session state with the OpenCode server when needed.
@@ -279,12 +293,13 @@ The system SHALL create new sessions locally by default, with optional server sy
 - **AND** the local session SHALL be updated with the server ID
 
 ### Requirement: Session Deletion from UI
-The system SHALL provide a delete button in the session list UI that allows users to delete sessions starting with "navigate:" prefix.
+The system SHALL provide a delete button in the session list UI that allows users to delete sessions starting with "navigate:" prefix and matching the current userId.
 
 #### Scenario: Delete button visibility
 - **WHEN** the session dropdown is displayed
 - **THEN** a delete button SHALL appear on the far right of each session row
 - **AND** the delete button SHALL only be visible for sessions with title starting with "navigate:"
+- **AND** the session title SHALL also end with ":{currentUserId}"
 
 #### Scenario: Delete button default state
 - **WHEN** the delete button is rendered
