@@ -101,6 +101,21 @@ async function startUserOpenCodeServer(userId: string): Promise<number> {
   });
 }
 
+async function killProcessOnPort(port: number): Promise<void> {
+  return new Promise((resolve) => {
+    const proc = spawn('lsof', [`-ti:${port}`], { stdio: 'pipe' });
+    let pid = '';
+    proc.stdout.on('data', (data) => { pid += data; });
+    proc.on('close', () => {
+      if (pid) {
+        spawn('kill', [pid.trim()]).on('close', () => resolve());
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 async function stopUserOpenCodeServer(userId: string): Promise<void> {
   const port = getUserPort(userId);
   if (!port) return;
@@ -121,14 +136,9 @@ async function stopUserOpenCodeServer(userId: string): Promise<void> {
       resolve();
     });
     
-    req.on('error', () => {
-      const proc = userOpenCodeProcesses.get(port);
-      if (proc) {
-        try {
-          process.kill(-proc.pid);
-        } catch {}
-        userOpenCodeProcesses.delete(port);
-      }
+    req.on('error', async () => {
+      await killProcessOnPort(port);
+      userOpenCodeProcesses.delete(port);
       resolve();
     });
     
@@ -179,10 +189,37 @@ async function httpRequest(options: any, body?: string): Promise<{ status: numbe
 const roadmapPlugin = {
   name: 'roadmap-api',
   configureServer(server: any) {
+    let currentUserId: string | null = null;
+
+    function setCurrentUser(userId: string | null) {
+      currentUserId = userId;
+    }
+
+    function getCurrentUserDir(): string {
+      if (!currentUserId) {
+        return PROJECT_DIR;
+      }
+      return path.join(PROJECT_DIR, 'users', currentUserId);
+    }
+
+    // Middleware to extract userId from request and set current user directory
+    server.middlewares.use('/api/', async (req: any, res: any, next: any) => {
+      const url = new URL(req.url, 'http://localhost');
+      const userId = url.searchParams.get('userId');
+      
+      if (userId) {
+        setCurrentUser(userId);
+      } else {
+        setCurrentUser(null);
+      }
+      
+      next();
+    });
+
     server.middlewares.use('/api/read-roadmap', async (req: any, res: any, next: any) => {
       if (req.method === 'GET') {
         try {
-          const content = fs.readFileSync(path.resolve(PROJECT_DIR, 'roadmap.md'), 'utf-8');
+          const content = fs.readFileSync(path.resolve(getCurrentUserDir(), 'roadmap.md'), 'utf-8');
           res.setHeader('Content-Type', 'text/plain');
           res.end(content);
         } catch (error) {
@@ -201,7 +238,7 @@ const roadmapPlugin = {
             chunks.push(chunk);
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
-          fs.writeFileSync(path.resolve(PROJECT_DIR, 'roadmap.md'), body.content);
+          fs.writeFileSync(path.resolve(getCurrentUserDir(), 'roadmap.md'), body.content);
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ success: true }));
         } catch (error) {
@@ -216,7 +253,7 @@ const roadmapPlugin = {
     server.middlewares.use('/api/list-maps', async (req: any, res: any, next: any) => {
       if (req.method === 'GET') {
         try {
-          const mapsDir = PROJECT_DIR;
+          const mapsDir = getCurrentUserDir();
           const files = fs.readdirSync(mapsDir);
           const mapFiles = files
             .filter(f => f.startsWith('map-') && f.endsWith('.md'))
@@ -258,7 +295,7 @@ const roadmapPlugin = {
 
           const mapName = rawName.replace(/\s+/g, '-');
           const filename = `map-${mapName}.md`;
-          const filepath = path.resolve(PROJECT_DIR, filename);
+          const filepath = path.resolve(getCurrentUserDir(), filename);
 
           if (fs.existsSync(filepath)) {
             res.status(400).end(JSON.stringify({ error: 'Map already exists' }));
@@ -291,7 +328,7 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const filename = body.filename || `map-${body.name}.md`;
-          const filepath = path.resolve(PROJECT_DIR, filename);
+          const filepath = path.resolve(getCurrentUserDir(), filename);
 
           if (!fs.existsSync(filepath)) {
             res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
@@ -330,8 +367,8 @@ const roadmapPlugin = {
 
           const newName = rawNewName.replace(/\s+/g, '-');
           const newFilename = `map-${newName}.md`;
-          const oldPath = path.resolve(PROJECT_DIR, oldFilename);
-          const newPath = path.resolve(PROJECT_DIR, newFilename);
+          const oldPath = path.resolve(getCurrentUserDir(), oldFilename);
+          const newPath = path.resolve(getCurrentUserDir(), newFilename);
 
           if (!fs.existsSync(oldPath)) {
             res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
@@ -368,7 +405,7 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const filename = body.filename || `map-${body.name}.md`;
-          const filepath = path.resolve(PROJECT_DIR, filename);
+          const filepath = path.resolve(getCurrentUserDir(), filename);
 
           if (!fs.existsSync(filepath)) {
             res.status(404).end(JSON.stringify({ error: 'Map file not found' }));
@@ -396,7 +433,7 @@ const roadmapPlugin = {
           }
           const body = JSON.parse(Buffer.concat(chunks).toString());
           const filename = body.filename || `map-${body.name}.md`;
-          const filepath = path.resolve(PROJECT_DIR, filename);
+          const filepath = path.resolve(getCurrentUserDir(), filename);
 
           fs.writeFileSync(filepath, body.content);
           res.setHeader('Content-Type', 'application/json');
@@ -601,7 +638,7 @@ const roadmapPlugin = {
           }
           
           const roadmapSessions = sessions.filter((s: any) =>
-            s.directory === PROJECT_DIR &&
+            s.directory === getCurrentUserDir() &&
             !s.parentID &&
             !/\(@.*subagent\)/i.test(s.title || '') &&
             !(s.title || '').startsWith('modal-prompt:')

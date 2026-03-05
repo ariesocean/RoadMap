@@ -6,6 +6,24 @@ const PROJECT_DIR = path.resolve(process.cwd(), '..');
 const USERS_DIR = path.join(PROJECT_DIR, 'users');
 const PORTS_FILE = path.join(USERS_DIR, 'ports.json');
 
+const ERRORS = {
+  USER_NOT_FOUND: 'User not found',
+  USER_ALREADY_EXISTS: 'User already exists',
+  INVALID_CREDENTIALS: 'Invalid credentials',
+  DEVICE_NOT_AUTHORIZED: 'Device not authorized',
+  NO_AVAILABLE_PORTS: 'No available ports',
+  INVALID_USERNAME: 'Invalid username',
+  INVALID_EMAIL: 'Invalid email',
+  CORRUPTED_FILE: 'Corrupted data file',
+} as const;
+
+export interface UserCredentials {
+  username: string;
+  email: string;
+  passwordHash: string;
+  createdAt: string;
+}
+
 interface PortMapping {
   users: Record<string, number>;
   nextPort: number;
@@ -35,11 +53,44 @@ function getPorts(): PortMapping {
   if (!fs.existsSync(PORTS_FILE)) {
     return { users: {}, nextPort: 51000 };
   }
-  return JSON.parse(fs.readFileSync(PORTS_FILE, 'utf-8'));
+  try {
+    return JSON.parse(fs.readFileSync(PORTS_FILE, 'utf-8'));
+  } catch {
+    return { users: {}, nextPort: 51000 };
+  }
 }
 
 function savePorts(ports: PortMapping): void {
   fs.writeFileSync(PORTS_FILE, JSON.stringify(ports, null, 2));
+}
+
+function validateUsername(username: string): void {
+  if (!username || typeof username !== 'string') {
+    throw new Error(ERRORS.INVALID_USERNAME);
+  }
+  const trimmed = username.trim();
+  if (trimmed.length < 3 || trimmed.length > 32) {
+    throw new Error(ERRORS.INVALID_USERNAME);
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+    throw new Error(ERRORS.INVALID_USERNAME);
+  }
+}
+
+function validateEmail(email: string): void {
+  if (!email || typeof email !== 'string') {
+    throw new Error(ERRORS.INVALID_EMAIL);
+  }
+  const trimmed = email.trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmed)) {
+    throw new Error(ERRORS.INVALID_EMAIL);
+  }
+}
+
+function userExists(userId: string): boolean {
+  const userDir = path.join(USERS_DIR, userId);
+  return fs.existsSync(userDir);
 }
 
 export function hashPassword(_password: string): string {
@@ -55,141 +106,207 @@ function generateUserId(username: string): string {
 
 export async function registerUser(username: string, _email: string, _password: string, deviceId: string): Promise<{ userId: string; token: string }> {
   ensureUsersDir();
-  
+
+  validateUsername(username);
+  validateEmail(_email);
+
   const ports = getPorts();
-  
+
   const existingUsers = fs.readdirSync(USERS_DIR).filter(f => f !== 'ports.json');
   const userExists = existingUsers.some(f => f.startsWith(username + '_'));
   if (userExists) {
-    throw new Error('Username already exists');
+    throw new Error(ERRORS.USER_ALREADY_EXISTS);
   }
-  
+
   const userId = generateUserId(username);
   const userDir = path.join(USERS_DIR, userId);
-  
+
   if (fs.existsSync(userDir)) {
-    throw new Error('User already exists');
+    throw new Error(ERRORS.USER_ALREADY_EXISTS);
   }
-  
+
   fs.mkdirSync(userDir, { recursive: true });
-  
+
   const port = ports.nextPort;
   if (port > 51099) {
-    throw new Error('No available ports');
+    throw new Error(ERRORS.NO_AVAILABLE_PORTS);
   }
   ports.users[userId] = port;
   ports.nextPort = port + 1;
   savePorts(ports);
-  
+
   fs.writeFileSync(path.join(userDir, 'roadmap.md'), '# Roadmap\n\n');
   fs.writeFileSync(path.join(userDir, 'roadmap-config.json'), JSON.stringify({ lastEditedMapId: null }));
   fs.writeFileSync(path.join(userDir, 'devices.json'), JSON.stringify({
     devices: [{ deviceId, name: 'Current Device', registeredAt: new Date().toISOString(), lastLoginAt: new Date().toISOString() }]
   }));
   fs.writeFileSync(path.join(userDir, 'login-history.json'), JSON.stringify({ history: [] }));
-  
+
+  const passwordHash = hashPassword(_password);
+  fs.writeFileSync(path.join(userDir, 'user.json'), JSON.stringify({
+    username,
+    email: _email,
+    passwordHash,
+    createdAt: new Date().toISOString()
+  }, null, 2));
+
   const token = crypto.randomUUID();
-  
+
   return { userId, token };
 }
 
 export async function loginUser(username: string, _password: string, deviceId: string, deviceInfo: string): Promise<{ userId: string; token: string }> {
   ensureUsersDir();
-  
-  getPorts();
-  
+
   const existingUsers = fs.readdirSync(USERS_DIR).filter(f => f !== 'ports.json');
   const userDir = existingUsers.find(f => f.startsWith(username + '_'));
-  
+
   if (!userDir) {
-    throw new Error('Invalid credentials');
+    throw new Error(ERRORS.INVALID_CREDENTIALS);
   }
-  
+
   const userId = userDir;
-  
-  const devicesPath = path.join(USERS_DIR, userId, 'devices.json');
-  const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
-  const device = devices.devices.find((d: Device) => d.deviceId === deviceId);
-  
-  if (!device) {
-    throw new Error('Device not authorized');
+
+  const userPath = path.join(USERS_DIR, userId, 'user.json');
+  let credentials: UserCredentials;
+  try {
+    credentials = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+  } catch {
+    throw new Error(ERRORS.CORRUPTED_FILE);
   }
-  
+  const storedHash = Buffer.from(credentials.passwordHash, 'hex');
+  const inputHash = Buffer.from(hashPassword(_password), 'hex');
+  if (!crypto.timingSafeEqual(storedHash, inputHash)) {
+    throw new Error(ERRORS.INVALID_CREDENTIALS);
+  }
+
+  const devicesPath = path.join(USERS_DIR, userId, 'devices.json');
+  let devices;
+  try {
+    devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
+  } catch {
+    throw new Error(ERRORS.CORRUPTED_FILE);
+  }
+  const device = devices.devices.find((d: Device) => d.deviceId === deviceId);
+
+  if (!device) {
+    throw new Error(ERRORS.DEVICE_NOT_AUTHORIZED);
+  }
+
   device.lastLoginAt = new Date().toISOString();
   fs.writeFileSync(devicesPath, JSON.stringify(devices, null, 2));
-  
+
   const historyPath = path.join(USERS_DIR, userId, 'login-history.json');
-  const history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+  let history;
+  try {
+    history = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+  } catch {
+    history = { history: [] };
+  }
   history.history.unshift({ deviceId, loginAt: new Date().toISOString(), deviceInfo });
   fs.writeFileSync(historyPath, JSON.stringify(history, null, 2));
-  
+
   const token = crypto.randomUUID();
-  
+
   return { userId, token };
 }
 
 export async function autoLogin(deviceId: string): Promise<{ userId: string; token: string } | null> {
   ensureUsersDir();
-  
-  getPorts();
+
   const existingUsers = fs.readdirSync(USERS_DIR).filter(f => f !== 'ports.json');
-  
+
   for (const userId of existingUsers) {
     const devicesPath = path.join(USERS_DIR, userId, 'devices.json');
     if (!fs.existsSync(devicesPath)) continue;
-    
-    const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
+
+    let devices;
+    try {
+      devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
+    } catch {
+      continue;
+    }
     const device = devices.devices.find((d: Device) => d.deviceId === deviceId);
-    
+
     if (device) {
       device.lastLoginAt = new Date().toISOString();
       fs.writeFileSync(devicesPath, JSON.stringify(devices, null, 2));
-      
+
       const token = crypto.randomUUID();
       return { userId, token };
     }
   }
-  
+
   return null;
 }
 
 export function getUserPort(userId: string): number | null {
+  if (!userExists(userId)) {
+    throw new Error(ERRORS.USER_NOT_FOUND);
+  }
   const ports = getPorts();
   return ports.users[userId] || null;
 }
 
 export function getUserDir(userId: string): string {
+  if (!userExists(userId)) {
+    throw new Error(ERRORS.USER_NOT_FOUND);
+  }
   return path.join(USERS_DIR, userId);
 }
 
 export async function addDevice(userId: string, deviceId: string, deviceName: string): Promise<void> {
+  if (!userExists(userId)) {
+    throw new Error(ERRORS.USER_NOT_FOUND);
+  }
   const devicesPath = path.join(USERS_DIR, userId, 'devices.json');
-  const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
-  
+  let devices;
+  try {
+    devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
+  } catch {
+    throw new Error(ERRORS.CORRUPTED_FILE);
+  }
+
   const exists = devices.devices.some((d: Device) => d.deviceId === deviceId);
   if (exists) return;
-  
+
   devices.devices.push({
     deviceId,
     name: deviceName,
     registeredAt: new Date().toISOString(),
     lastLoginAt: new Date().toISOString()
   });
-  
+
   fs.writeFileSync(devicesPath, JSON.stringify(devices, null, 2));
 }
 
 export async function removeDevice(userId: string, deviceId: string): Promise<void> {
+  if (!userExists(userId)) {
+    throw new Error(ERRORS.USER_NOT_FOUND);
+  }
   const devicesPath = path.join(USERS_DIR, userId, 'devices.json');
-  const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
-  
+  let devices;
+  try {
+    devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
+  } catch {
+    throw new Error(ERRORS.CORRUPTED_FILE);
+  }
+
   devices.devices = devices.devices.filter((d: Device) => d.deviceId !== deviceId);
-  
+
   fs.writeFileSync(devicesPath, JSON.stringify(devices, null, 2));
 }
 
 export function getDevices(userId: string): Device[] {
+  if (!userExists(userId)) {
+    throw new Error(ERRORS.USER_NOT_FOUND);
+  }
   const devicesPath = path.join(USERS_DIR, userId, 'devices.json');
-  const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
+  let devices;
+  try {
+    devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'));
+  } catch {
+    throw new Error(ERRORS.CORRUPTED_FILE);
+  }
   return devices.devices;
 }
