@@ -6,6 +6,7 @@ import { generateSubtaskId } from '@/utils/idGenerator';
 import { getCurrentISOString } from '@/utils/timestamp';
 import { useResultModalStore, type ContentSegment } from './resultModalStore';
 import { useSessionStore } from './sessionStore';
+import { useAuthStore } from './authStore';
 import { useModelStore } from './modelStore';
 import { useMapsStore } from './mapsStore';
 import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
@@ -135,7 +136,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       let isNewSession = false;
       
       if (!targetSessionId) {
-        const response = await client.session.create({ body: { title: `navigate: ${prompt}` } });
+        const userId = useAuthStore.getState().userId || 'unknown';
+        const response = await client.session.create({ body: { title: `navigate: ${prompt} :${userId}` } });
         const newSession = response.data;
         if (!newSession) throw new Error('Failed to create session');
         targetSessionId = newSession.id;

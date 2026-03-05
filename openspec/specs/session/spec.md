@@ -37,9 +37,9 @@ The system SHALL provide the ability to create new sessions on demand, with auto
 - **AND** the new session SHALL become the active session
 - **AND** previous session data SHALL remain persisted
 
-#### Scenario: Auto-generate session title
-- **WHEN** a new session is created
-- **THEN** the session title SHALL be generated from the first user message
+#### Scenario: Auto-generate session title for navigate
+- **WHEN** a new session is created via navigate
+- **THEN** the session title SHALL be generated with format `navigate: {userMessage} :{userId}`
 - **AND** if the first message is too long, it SHALL be truncated to 50 characters
 - **AND** ellipses SHALL be added if truncation occurs
 
