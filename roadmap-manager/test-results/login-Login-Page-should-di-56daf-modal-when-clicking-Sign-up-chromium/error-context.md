@@ -1,0 +1,44 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - button "Collapse sidebar" [ref=e6] [cursor=pointer]:
+      - img [ref=e7]
+    - generic [ref=e8]:
+      - button "New Map" [ref=e10] [cursor=pointer]:
+        - img [ref=e11]
+        - generic [ref=e12]: New Map
+      - generic [ref=e14]:
+        - img [ref=e15]
+        - paragraph [ref=e17]: No maps found
+    - generic [ref=e18]:
+      - img [ref=e20]
+      - heading "Roadmap Manager" [level=1] [ref=e23]
+    - generic [ref=e24]:
+      - button "Switch to dark mode" [ref=e25] [cursor=pointer]:
+        - img [ref=e26]
+      - generic [ref=e28]:
+        - img [ref=e29]
+        - textbox "Search tasks..." [ref=e32]
+      - generic [ref=e35] [cursor=pointer]: Disconnected
+  - main [ref=e36]:
+    - generic [ref=e38]:
+      - img [ref=e39]
+      - heading "No tasks yet" [level=3] [ref=e42]
+      - paragraph [ref=e43]: Enter a prompt below to create your first task
+  - generic [ref=e46]:
+    - textbox "Enter a prompt to create or update tasks..." [ref=e48]
+    - generic [ref=e52]:
+      - button "MiniMax M2.5 MiniMax" [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]: MiniMax M2.5
+        - generic [ref=e57]: MiniMax
+        - img [ref=e58]
+      - generic [ref=e60]:
+        - 'button "navigate: 苏总来了后说要看有店面的" [ref=e62] [cursor=pointer]':
+          - img [ref=e63]
+          - generic [ref=e65]: "navigate: 苏总来了后说要看有店面的"
+          - img [ref=e66]
+        - button "New conversation" [ref=e68] [cursor=pointer]:
+          - img [ref=e69]
+```

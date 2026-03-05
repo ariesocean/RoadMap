@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ListTodo, Search, Sun, Moon } from 'lucide-react';
 import { TaskList } from './TaskList';
 import { InputArea } from './InputArea';
 import { ResultModal } from './ResultModal';
 import { MapsSidebar } from './MapsSidebar';
+import { AccountPopup } from './AccountPopup';
 import { useMaps } from '@/hooks/useMaps';
 import { useMapsStore } from '@/store/mapsStore';
 import { useTaskStore } from '@/store/taskStore';
@@ -11,14 +12,12 @@ import { useThemeStore } from '@/store/themeStore';
 import { useSession } from '@/hooks/useSession';
 import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 import { initializeModelStore } from '@/store/modelStore';
-import { readRoadmapFile, writeMapFile } from '@/services/fileService';
-import { loadFromLocalStorage, removeFromLocalStorage, saveToLocalStorage } from '@/utils/storage';
 
 export const App: React.FC = () => {
-  const { refreshTasks, searchQuery, setSearchQuery, isConnected, toggleConnected } = useTaskStore();
+  const { searchQuery, setSearchQuery } = useTaskStore();
   const { theme, toggleTheme } = useThemeStore();
   const { cleanupAllSessions } = useSession();
-  const { isSidebarCollapsed, setLoadingEnabled, setCurrentMap, currentMap, setSidebarCollapsed, availableMaps, lastEditedMapId, lastEditedMapIdLoaded, loadingEnabled, loadLastEditedMapId, resetLastEditedMapIdLoaded } = useMapsStore();
+  const { isSidebarCollapsed } = useMapsStore();
   const {
     handleMapSelect,
     handleCreateMap,
@@ -26,39 +25,6 @@ export const App: React.FC = () => {
     handleRenameMap,
   } = useMaps();
   const [isInitialized, setIsInitialized] = useState(false);
-  const hasAutoSelectedMap = useRef(false);
-
-  // Auto-select last edited map when connecting and maps are loaded
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    // Only auto-select if:
-    // - loadingEnabled is true (maps have been discovered)
-    // - There are available maps
-    // - We've loaded lastEditedMapId from backend
-    // - We have a lastEditedMapId
-    // - haven't auto-selected yet
-    if (loadingEnabled && availableMaps.length > 0 && lastEditedMapIdLoaded && lastEditedMapId && !hasAutoSelectedMap.current) {
-      const lastMap = availableMaps.find(m => m.id === lastEditedMapId);
-
-      if (lastMap && currentMap?.id !== lastMap.id) {
-        // Auto-select the last edited map
-        hasAutoSelectedMap.current = true;
-        handleMapSelect(lastMap);
-      } else if (lastMap && currentMap?.id === lastMap.id && isConnected) {
-        // Map is already selected, just need to refresh tasks
-        hasAutoSelectedMap.current = true;
-        refreshTasks();
-      }
-    }
-  }, [isInitialized, availableMaps, lastEditedMapId, lastEditedMapIdLoaded, currentMap, loadingEnabled, isConnected, handleMapSelect, refreshTasks]);
-
-  // Reset auto-select flag when disconnecting
-  useEffect(() => {
-    if (!isConnected) {
-      hasAutoSelectedMap.current = false;
-    }
-  }, [isConnected]);
 
   useEffect(() => {
     initOpencodeSDK().catch(console.error);
@@ -76,14 +42,6 @@ export const App: React.FC = () => {
       }
     } else {
       useThemeStore.getState().setTheme('light');
-    }
-
-    // Restore connection state from localStorage
-    const savedConnectionState = loadFromLocalStorage('isConnected');
-    if (savedConnectionState === 'true') {
-      toggleConnected();
-      setLoadingEnabled(true);
-      loadLastEditedMapId();
     }
 
     setIsInitialized(true);
@@ -146,46 +104,9 @@ export const App: React.FC = () => {
                 className="w-[88px] sm:w-40 md:w-44 lg:w-48 pl-9 pr-4 py-2 text-sm search-input"
               />
             </div>
-            
-            <div
-              className="flex items-center gap-2 cursor-pointer hover:opacity-80"
-              onClick={async () => {
-                const newState = !isConnected;
-                toggleConnected();
-                setLoadingEnabled(newState);
 
-                if (newState) {
-                  // When connecting: load last edited map ID from backend ONLY
-                  const lastMapId = await loadLastEditedMapId();
-                  if (lastMapId) {
-                    // Auto-select will handle this via the useEffect
-                  }
-                  saveToLocalStorage('isConnected', 'true'); // Persist connection state
-                } else {
-                  // When disconnecting: save current roadmap to current map file
-                  if (currentMap) {
-                    const currentContent = await readRoadmapFile();
-                    await writeMapFile(currentMap, currentContent);
-                    console.log(`[Maps] Saved content to: ${currentMap.filename}`);
-                  }
-                  // Clear current map only - lastEditedMapId stays as-is for next connect
-                  setCurrentMap(null);
-                  setSidebarCollapsed(true);
-                  resetLastEditedMapIdLoaded();
-                  refreshTasks(); // Clear tasks since we're disconnected
-                  removeFromLocalStorage('isConnected'); // Clear persisted connection state
-                }
-              }}
-            >
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-green-500' : 'bg-red-500'
-                }`}
-              />
-              <span className="text-xs text-secondary-text dark:text-dark-secondary-text">
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
-            </div>
+            {/* Account Popup - replaces Connected/Disconnected indicator */}
+            <AccountPopup />
           </div>
         </header>
 
