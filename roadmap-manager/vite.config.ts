@@ -523,6 +523,9 @@ const roadmapPlugin = {
           }
           
           const result = await loginUser(username, password, deviceId, deviceInfo || 'Unknown');
+          
+          await startUserOpenCodeServer(result.userId);
+          
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(result));
         } catch (error) {
@@ -554,6 +557,8 @@ const roadmapPlugin = {
             res.writeHead(401).end(JSON.stringify({ error: 'Device not authorized' }));
             return;
           }
+          
+          await startUserOpenCodeServer(result.userId);
           
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(result));

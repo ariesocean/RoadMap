@@ -15,13 +15,36 @@ const IS_CONNECTED_KEY = 'isConnected'
 useAuthStore.getState().initAuth();
 
 // Initialize connected state from localStorage and set up maps if connected
-const initConnectedState = () => {
+const initConnectedState = async () => {
   const savedIsConnected = loadFromLocalStorage(IS_CONNECTED_KEY);
+  
   if (savedIsConnected === 'true') {
-    // Mark as connected without triggering full refresh yet
-    useTaskStore.setState({ isConnected: true });
-    // Initialize maps in background
-    initializeMapsOnReconnect();
+    const { deviceId, userId: savedUserId } = useAuthStore.getState();
+    
+    if (savedUserId && deviceId) {
+      try {
+        const response = await fetch('/api/auth/auto-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceId }),
+        });
+
+        if (response.ok) {
+          const { userId, token } = await response.json();
+          const username = userId.split('_')[0];
+          
+          useAuthStore.getState().login(username, userId, token);
+          useTaskStore.setState({ isConnected: true });
+          initializeMapsOnReconnect();
+          return;
+        }
+      } catch (err) {
+        console.error('Auto-login failed on reconnect:', err);
+      }
+    }
+    
+    useAuthStore.getState().logout();
+    useTaskStore.setState({ isConnected: false });
   }
 };
 
