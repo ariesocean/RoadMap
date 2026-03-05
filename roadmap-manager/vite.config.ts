@@ -1075,7 +1075,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 1430,
+    port: 1630,
     proxy: {
       '/opencode': {
         target: 'http://localhost:51432',
