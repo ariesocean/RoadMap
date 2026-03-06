@@ -28,11 +28,6 @@ function getClient() {
     clientInstance = createOpencodeClient({
       baseUrl: getBaseUrl(),
     });
-  } else {
-    // 重新创建客户端以使用新的 baseUrl
-    clientInstance = createOpencodeClient({
-      baseUrl: getBaseUrl(),
-    });
   }
   return clientInstance;
 }

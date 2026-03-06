@@ -173,6 +173,24 @@ The system SHALL authenticate users with username and password.
 - **AND** the device is added to the authorized devices list
 - **AND** login proceeds normally
 
+#### Scenario: SDK client update after login
+- **WHEN** the user successfully logs in via the login form
+- **AND** the user has an assigned OpenCode server port
+- **THEN** `updateClientBaseUrl()` SHALL be called after `setUserPort()`
+- **AND** subsequent SDK operations SHALL use the correct user port
+
+#### Scenario: SDK client update after registration
+- **WHEN** the user successfully registers a new account
+- **AND** the user has an assigned OpenCode server port
+- **THEN** `updateClientBaseUrl()` SHALL be called after `setUserPort()`
+- **AND** subsequent SDK operations SHALL use the correct user port
+
+#### Scenario: SDK client update after auto-login
+- **WHEN** the application auto-login succeeds on startup
+- **AND** the user has an assigned OpenCode server port
+- **THEN** `updateClientBaseUrl()` SHALL be called after `setUserPort()`
+- **AND** subsequent SDK operations SHALL use the correct user port
+
 ### Requirement: Device Auto-Login
 The system SHALL allow previously authorized devices to login without credentials.
 
