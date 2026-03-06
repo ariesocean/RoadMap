@@ -1,4 +1,5 @@
 .worktrees/
+users/
 *.pyc
 roadmap.md.bak
 roadmap-config.json
