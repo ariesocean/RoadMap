@@ -7,6 +7,7 @@ import { useMapsStore } from './store/mapsStore'
 import { loadFromLocalStorage } from './utils/storage'
 import { listMaps } from './services/fileService'
 import type { MapInfo } from './services/fileService'
+import { updateClientBaseUrl } from './services/opencodeClient'
 import './styles/index.css'
 
 const IS_CONNECTED_KEY = 'isConnected'
@@ -35,6 +36,7 @@ const initConnectedState = async () => {
           useAuthStore.getState().login(username, userId, token);
           if (port) {
             useAuthStore.getState().setUserPort(port);
+            updateClientBaseUrl();
           }
           useTaskStore.setState({ isConnected: true });
           initializeMapsOnReconnect();

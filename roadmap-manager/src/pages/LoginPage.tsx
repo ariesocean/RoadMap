@@ -13,6 +13,7 @@ import { listMaps } from '@/services/fileService';
 import type { MapInfo } from '@/services/fileService';
 import { saveToLocalStorage } from '@/utils/storage';
 import { PasswordInput } from '@/components/PasswordInput';
+import { updateClientBaseUrl } from '@/services/opencodeClient';
 
 export const LoginPage: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -120,6 +121,7 @@ export const LoginPage: React.FC = () => {
       useAuthStore.getState().login(loginUsername, userId, token);
       if (port) {
         useAuthStore.getState().setUserPort(port);
+        updateClientBaseUrl();
       }
       
       await initializeMapsOnLogin();
@@ -179,6 +181,7 @@ export const LoginPage: React.FC = () => {
       useAuthStore.getState().login(registerUsername, userId, token);
       if (port) {
         useAuthStore.getState().setUserPort(port);
+        updateClientBaseUrl();
       }
       
       await initializeMapsOnLogin();

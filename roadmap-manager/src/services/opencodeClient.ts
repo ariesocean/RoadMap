@@ -1,6 +1,15 @@
 import { createOpencodeClient, type Session } from '@opencode-ai/sdk';
+import { useAuthStore } from '@/store/authStore';
 
-const BASE_URL = '/opencode';
+const DEFAULT_PORT = 51432;
+
+function getBaseUrl(): string {
+  const userPort = useAuthStore.getState().userPort;
+  if (userPort) {
+    return `http://localhost:${userPort}`;
+  }
+  return `http://localhost:${DEFAULT_PORT}`;
+}
 
 let clientInstance: ReturnType<typeof createOpencodeClient> | null = null;
 
@@ -17,10 +26,19 @@ export interface ServerEvent {
 function getClient() {
   if (!clientInstance) {
     clientInstance = createOpencodeClient({
-      baseUrl: BASE_URL,
+      baseUrl: getBaseUrl(),
+    });
+  } else {
+    // 重新创建客户端以使用新的 baseUrl
+    clientInstance = createOpencodeClient({
+      baseUrl: getBaseUrl(),
     });
   }
   return clientInstance;
+}
+
+export function updateClientBaseUrl() {
+  clientInstance = null;
 }
 
 export function getOpenCodeClient() {
