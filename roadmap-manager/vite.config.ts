@@ -4,7 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import http from 'http'
 import { spawn, execSync } from 'child_process'
-import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice } from './src/services/userService'
+import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice, updateUsername, updatePassword, getUserInfo } from './src/services/userService'
 
 const DEFAULT_PORTS = [51432, 51466, 51434]
 const PROJECT_DIR = path.resolve(process.cwd(), '..')
@@ -540,9 +540,10 @@ const roadmapPlugin = {
           await startUserOpenCodeServer(result.userId);
           
           const port = getUserPort(result.userId);
+          const userInfo = getUserInfo(result.userId);
           
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ ...result, port }));
+          res.end(JSON.stringify({ ...result, port, username: userInfo.username }));
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Auto-login failed' }));
@@ -565,9 +566,10 @@ const roadmapPlugin = {
           
           const port = getUserPort(userId);
           const devices = getDevices(userId);
+          const userInfo = getUserInfo(userId);
           
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ userId, port, devices }));
+          res.end(JSON.stringify({ userId, port, devices, username: userInfo.username, email: userInfo.email }));
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Failed to get user info' }));
@@ -646,6 +648,62 @@ const roadmapPlugin = {
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Logout failed' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // POST /api/auth/username - update username
+    server.middlewares.use('/api/auth/username', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          
+          const { userId, username } = body;
+          
+          if (!userId || !username) {
+            res.writeHead(400).end(JSON.stringify({ error: 'Missing userId or username' }));
+            return;
+          }
+          
+          updateUsername(userId, username);
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to update username' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // POST /api/auth/password - update password
+    server.middlewares.use('/api/auth/password', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          
+          const { userId, currentPassword, newPassword } = body;
+          
+          if (!userId || !currentPassword || !newPassword) {
+            res.writeHead(400).end(JSON.stringify({ error: 'Missing required fields' }));
+            return;
+          }
+          
+          updatePassword(userId, currentPassword, newPassword);
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to update password' }));
         }
       } else {
         next();

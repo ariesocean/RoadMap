@@ -88,6 +88,15 @@ function validateEmail(email: string): void {
   }
 }
 
+function validatePassword(password: string): void {
+  if (!password || typeof password !== 'string') {
+    throw new Error('Password is required');
+  }
+  if (password.length < 6) {
+    throw new Error('Password must be at least 6 characters');
+  }
+}
+
 function userExists(userId: string): boolean {
   const userDir = path.join(USERS_DIR, userId);
   return fs.existsSync(userDir);
@@ -113,9 +122,21 @@ export async function registerUser(username: string, _email: string, _password: 
   const ports = getPorts();
 
   const existingUsers = fs.readdirSync(USERS_DIR).filter(f => f !== 'ports.json');
-  const userExists = existingUsers.some(f => f.startsWith(username + '_'));
-  if (userExists) {
-    throw new Error(ERRORS.USER_ALREADY_EXISTS);
+  
+  for (const dir of existingUsers) {
+    const userPath = path.join(USERS_DIR, dir, 'user.json');
+    if (!fs.existsSync(userPath)) continue;
+    try {
+      const userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+      if (userData.username === username) {
+        throw new Error(ERRORS.USER_ALREADY_EXISTS);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message === ERRORS.USER_ALREADY_EXISTS) {
+        throw err;
+      }
+      continue;
+    }
   }
 
   const userId = generateUserId(username);
@@ -159,13 +180,25 @@ export async function loginUser(username: string, _password: string, deviceId: s
   ensureUsersDir();
 
   const existingUsers = fs.readdirSync(USERS_DIR).filter(f => f !== 'ports.json');
-  const userDir = existingUsers.find(f => f.startsWith(username + '_'));
-
-  if (!userDir) {
-    throw new Error(ERRORS.INVALID_CREDENTIALS);
+  
+  let userId: string | null = null;
+  for (const dir of existingUsers) {
+    const userPath = path.join(USERS_DIR, dir, 'user.json');
+    if (!fs.existsSync(userPath)) continue;
+    try {
+      const userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+      if (userData.username === username) {
+        userId = dir;
+        break;
+      }
+    } catch {
+      continue;
+    }
   }
 
-  const userId = userDir;
+  if (!userId) {
+    throw new Error(ERRORS.INVALID_CREDENTIALS);
+  }
 
   const userPath = path.join(USERS_DIR, userId, 'user.json');
   let credentials: UserCredentials;
@@ -316,4 +349,91 @@ export function getDevices(userId: string): Device[] {
     throw new Error(ERRORS.CORRUPTED_FILE);
   }
   return devices.devices;
+}
+
+export function getUserInfo(userId: string): { username: string; email: string } {
+  if (!userExists(userId)) {
+    throw new Error(ERRORS.USER_NOT_FOUND);
+  }
+  const userPath = path.join(USERS_DIR, userId, 'user.json');
+  let userData: UserCredentials;
+  try {
+    userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+  } catch {
+    throw new Error(ERRORS.CORRUPTED_FILE);
+  }
+  return { username: userData.username, email: userData.email };
+}
+
+export function updateUsername(userId: string, newUsername: string): void {
+  if (!userExists(userId)) {
+    throw new Error(ERRORS.USER_NOT_FOUND);
+  }
+  validateUsername(newUsername);
+  
+  const existingUsers = fs.readdirSync(USERS_DIR).filter(f => f !== 'ports.json');
+  
+  for (const dir of existingUsers) {
+    if (dir === userId) continue;
+    const userPath = path.join(USERS_DIR, dir, 'user.json');
+    if (!fs.existsSync(userPath)) continue;
+    try {
+      const userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+      if (userData.username === newUsername) {
+        throw new Error(ERRORS.USER_ALREADY_EXISTS);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message === ERRORS.USER_ALREADY_EXISTS) {
+        throw err;
+      }
+      continue;
+    }
+  }
+  
+  const userPath = path.join(USERS_DIR, userId, 'user.json');
+  let userData: UserCredentials;
+  try {
+    userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+  } catch {
+    throw new Error(ERRORS.CORRUPTED_FILE);
+  }
+  
+  userData.username = newUsername.trim();
+  fs.writeFileSync(userPath, JSON.stringify(userData, null, 2));
+
+  const devicesPath = path.join(USERS_DIR, userId, 'devices.json');
+  fs.writeFileSync(devicesPath, JSON.stringify({ devices: [] }));
+}
+
+export function updatePassword(userId: string, currentPassword: string, newPassword: string): void {
+  if (!userExists(userId)) {
+    throw new Error(ERRORS.USER_NOT_FOUND);
+  }
+  
+  validatePassword(newPassword);
+  
+  const userPath = path.join(USERS_DIR, userId, 'user.json');
+  let userData: UserCredentials;
+  try {
+    userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+  } catch {
+    throw new Error(ERRORS.CORRUPTED_FILE);
+  }
+  
+  const storedHash = Buffer.from(userData.passwordHash, 'hex');
+  const inputHash = Buffer.from(hashPassword(currentPassword), 'hex');
+  if (!crypto.timingSafeEqual(storedHash, inputHash)) {
+    throw new Error('Current password is incorrect');
+  }
+  
+  const newPasswordHash = hashPassword(newPassword);
+  if (Buffer.from(newPasswordHash, 'hex').equals(storedHash)) {
+    throw new Error('New password must be different from current password');
+  }
+  
+  userData.passwordHash = newPasswordHash;
+  fs.writeFileSync(userPath, JSON.stringify(userData, null, 2));
+
+  const devicesPath = path.join(USERS_DIR, userId, 'devices.json');
+  fs.writeFileSync(devicesPath, JSON.stringify({ devices: [] }));
 }

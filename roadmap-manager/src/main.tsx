@@ -30,8 +30,7 @@ const initConnectedState = async () => {
         });
 
         if (response.ok) {
-          const { userId, token, port } = await response.json();
-          const username = userId.split('_')[0];
+          const { userId, token, port, username } = await response.json();
           
           useAuthStore.getState().login(username, userId, token);
           if (port) {

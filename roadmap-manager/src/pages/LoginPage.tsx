@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, ListTodo, X } from 'lucide-react';
+import { Moon, Sun, ListTodo, X, Eye, EyeOff } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -12,6 +12,7 @@ import { useMapsStore } from '@/store/mapsStore';
 import { listMaps } from '@/services/fileService';
 import type { MapInfo } from '@/services/fileService';
 import { saveToLocalStorage } from '@/utils/storage';
+import { PasswordInput } from '@/components/PasswordInput';
 
 export const LoginPage: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -28,6 +29,8 @@ export const LoginPage: React.FC = () => {
   const [registerUsername, setRegisterUsername] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   const { toggleConnected, refreshTasks } = useTaskStore.getState();
   const { theme, setTheme } = useThemeStore();
@@ -141,6 +144,16 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    if (registerPassword !== registerConfirmPassword) {
+      setRegisterError('Passwords do not match');
+      return;
+    }
+
+    if (registerPassword.length < 6) {
+      setRegisterError('Password must be at least 6 characters');
+      return;
+    }
+
     try {
       const deviceId = useAuthStore.getState().deviceId;
       
@@ -175,6 +188,7 @@ export const LoginPage: React.FC = () => {
       setRegisterUsername('');
       setRegisterEmail('');
       setRegisterPassword('');
+      setRegisterConfirmPassword('');
       setShowRegister(false);
     } catch (err) {
       setRegisterError('Registration failed. Please try again.');
@@ -233,19 +247,28 @@ export const LoginPage: React.FC = () => {
               <label htmlFor="login-password" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Password</label>
               <a href="#" className="text-sm text-[#0066ff] hover:text-blue-500 hover:underline">Forgot password?</a>
             </div>
-            <input
-              id="login-password"
-              type="password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={isLoggingIn}
-              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isDarkMode
-                  ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
-                  : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
-              }`}
-            />
+            <div className="relative">
+              <input
+                id="login-password"
+                type={showLoginPassword ? 'text' : 'password'}
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••"
+                disabled={isLoggingIn}
+                className={`w-full px-4 py-2.5 pr-10 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDarkMode
+                    ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
+                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowLoginPassword(!showLoginPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+              >
+                {showLoginPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
+            </div>
           </div>
 
           {loginError && (
@@ -325,17 +348,15 @@ export const LoginPage: React.FC = () => {
               </div>
               <div>
                 <label htmlFor="register-password" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Password</label>
-                <input
+                <PasswordInput
                   id="register-password"
-                  type="password"
                   value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                  placeholder="Create a password"
-                  className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors ${
-                    isDarkMode
-                      ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
-                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
-                  }`}
+                  onChange={setRegisterPassword}
+                  placeholder="Create a password (min 6 characters)"
+                  confirmValue={registerConfirmPassword}
+                  confirmOnChange={setRegisterConfirmPassword}
+                  confirmPlaceholder="Confirm your password"
+                  error={registerError && registerError.includes('match') ? registerError : null}
                 />
               </div>
 

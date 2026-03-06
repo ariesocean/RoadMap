@@ -10,17 +10,22 @@ import { useAuthStore } from '@/store/authStore';
 import { useMapsStore } from '@/store/mapsStore';
 import { removeFromLocalStorage } from '@/utils/storage';
 import { readRoadmapFile, writeMapFile } from '@/services/fileService';
+import { PasswordInput } from '@/components/PasswordInput';
 
 export const AccountPopup: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUsernameEdit, setShowUsernameEdit] = useState(false);
   const [showPasswordEdit, setShowPasswordEdit] = useState(false);
   const [newUsername, setNewUsername] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const { refreshTasks } = useTaskStore.getState();
-  const { username, setUsername } = useAuthStore();
+  const username = useAuthStore((state) => state.username);
+  const setUsername = useAuthStore((state) => state.setUsername);
   const { setLoadingEnabled, setCurrentMap, resetLastEditedMapIdLoaded, currentMap, setSidebarCollapsed } = useMapsStore.getState();
   const popupRef = React.useRef<HTMLDivElement>(null);
 
@@ -48,37 +53,104 @@ export const AccountPopup: React.FC = () => {
       setShowUsernameEdit(false);
       setShowPasswordEdit(false);
       setNewUsername('');
+      setCurrentPassword('');
       setNewPassword('');
+      setConfirmNewPassword('');
       setError(null);
+      setSuccess(null);
     }
   };
 
-  const handleUpdateUsername = (e: React.FormEvent) => {
+  const handleUpdateUsername = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
     if (!newUsername.trim()) {
       setError('Username cannot be empty');
       return;
     }
 
-    setUsername(newUsername.trim());
-    setShowUsernameEdit(false);
-    setNewUsername('');
-  };
-
-  const handleUpdatePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!newPassword.trim()) {
-      setError('Password cannot be empty');
+    const userId = useAuthStore.getState().userId;
+    if (!userId) {
+      setError('User not logged in');
       return;
     }
 
-    // Frontend-only simulation - no actual validation
-    setShowPasswordEdit(false);
-    setNewPassword('');
+    try {
+      const response = await fetch('/api/auth/username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, username: newUsername.trim() }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || 'Failed to update username');
+        return;
+      }
+
+      setUsername(newUsername.trim());
+      setShowUsernameEdit(false);
+      setNewUsername('');
+      setSuccess('Username updated successfully');
+    } catch (err) {
+      setError('Failed to update username');
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!currentPassword.trim()) {
+      setError('Current password is required');
+      return;
+    }
+
+    if (!newPassword.trim()) {
+      setError('New password cannot be empty');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    const userId = useAuthStore.getState().userId;
+    if (!userId) {
+      setError('User not logged in');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, currentPassword, newPassword }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || 'Failed to update password');
+        return;
+      }
+
+      setShowPasswordEdit(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setSuccess('Password updated successfully');
+    } catch (err) {
+      setError('Failed to update password');
+    }
   };
 
   const handleLogout = async () => {
@@ -168,6 +240,13 @@ export const AccountPopup: React.FC = () => {
               </div>
             )}
 
+            {/* Success message */}
+            {success && (
+              <div className="mt-3 p-2 rounded-lg text-xs bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                {success}
+              </div>
+            )}
+
             {/* Account Management Options */}
             <div className="mt-3 space-y-2">
               {/* Change Username */}
@@ -199,7 +278,7 @@ export const AccountPopup: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setShowUsernameEdit(false); setNewUsername(''); setError(null); }}
+                      onClick={() => { setShowUsernameEdit(false); setNewUsername(''); setError(null); setSuccess(null); }}
                       className="flex-1 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       Cancel
@@ -218,17 +297,27 @@ export const AccountPopup: React.FC = () => {
                   <span className="text-sm text-gray-700 dark:text-gray-300">Change Password</span>
                 </button>
               ) : (
-                <form onSubmit={handleUpdatePassword} className="p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
+                <form onSubmit={handleUpdatePassword} className="p-2 rounded-lg bg-gray-50 dark:bg-gray-800 space-y-2">
                   <input
-                    id="new-password-input"
+                    id="current-password-input"
                     type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="New password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Current password"
                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50"
                     autoFocus
                   />
-                  <div className="flex gap-2 mt-2">
+                  <PasswordInput
+                    id="new-password-input"
+                    value={newPassword}
+                    onChange={setNewPassword}
+                    placeholder="New password"
+                    confirmValue={confirmNewPassword}
+                    confirmOnChange={setConfirmNewPassword}
+                    confirmPlaceholder="Confirm new password"
+                    error={error && error.includes('match') ? error : null}
+                  />
+                  <div className="flex gap-2">
                     <button
                       type="submit"
                       className="flex-1 px-3 py-1.5 text-xs font-medium bg-[#0066ff] text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -237,7 +326,7 @@ export const AccountPopup: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setShowPasswordEdit(false); setNewPassword(''); setError(null); }}
+                      onClick={() => { setShowPasswordEdit(false); setCurrentPassword(''); setNewPassword(''); setConfirmNewPassword(''); setError(null); setSuccess(null); }}
                       className="flex-1 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       Cancel
