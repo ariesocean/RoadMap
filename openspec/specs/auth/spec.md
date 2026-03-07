@@ -147,7 +147,16 @@ The system SHALL allow users to register with username, password, and email.
 - **AND** credentials are stored in users/{userId}/credentials.json
 - **AND** a port is allocated from the available pool (51000-51099)
 - **AND** the user's first device is automatically authorized
-- **AND** the user is logged in automatically
+- **AND** a success message is displayed: "Registration successful! Please log in with your credentials."
+- **AND** the user is returned to the login page
+- **AND** the user must manually log in with their credentials
+
+#### Scenario: Successful registration creates UserGuide map
+- **GIVEN** a user provides valid username, password, and email
+- **WHEN** the user submits the registration form
+- **THEN** the map-UserGuide.md file from the project root is copied to the user's directory
+- **AND** the roadmap-config.json is created with lastEditedMapId set to "UserGuide"
+- **AND** the UserGuide map becomes the default map for the new user
 
 #### Scenario: Username already exists
 - **GIVEN** a user provides a username that already exists

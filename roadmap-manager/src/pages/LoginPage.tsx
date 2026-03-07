@@ -9,7 +9,7 @@ import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useMapsStore } from '@/store/mapsStore';
-import { listMaps } from '@/services/fileService';
+import { listMaps, readMapFile, writeRoadmapFile } from '@/services/fileService';
 import type { MapInfo } from '@/services/fileService';
 import { saveToLocalStorage } from '@/utils/storage';
 import { PasswordInput } from '@/components/PasswordInput';
@@ -20,6 +20,7 @@ export const LoginPage: React.FC = () => {
   const [showRegister, setShowRegister] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [registerSuccess, setRegisterSuccess] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Login form state
@@ -66,6 +67,15 @@ export const LoginPage: React.FC = () => {
         const targetMap = maps.find((m: MapInfo) => m.id === lastEditedMapId);
         if (targetMap) {
           setCurrentMap(targetMap);
+          // Load map content into roadmap.md
+          const mapContent = await readMapFile(targetMap);
+          try {
+            await writeRoadmapFile(mapContent, null);
+          } catch (writeErr) {
+            console.error('Failed to load map content into roadmap.md:', writeErr);
+          }
+        } else {
+          console.warn(`[Maps] Target map "${lastEditedMapId}" not found in available maps`);
         }
       }
 
@@ -176,18 +186,7 @@ export const LoginPage: React.FC = () => {
         return;
       }
 
-      const { userId, token, port } = await response.json();
-      
-      useAuthStore.getState().login(registerUsername, userId, token);
-      if (port) {
-        useAuthStore.getState().setUserPort(port);
-        updateClientBaseUrl();
-      }
-      
-      await initializeMapsOnLogin();
-      toggleConnected();
-      saveToLocalStorage('isConnected', 'true');
-
+      setRegisterSuccess('Registration successful! Please log in with your credentials.');
       setRegisterUsername('');
       setRegisterEmail('');
       setRegisterPassword('');
@@ -289,6 +288,12 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
+          {registerSuccess && (
+            <div className={`p-3 rounded-lg text-sm ${isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-50 text-green-600'}`}>
+              {registerSuccess}
+            </div>
+          )}
+
           <button disabled={isLoggingIn} className="w-full bg-[#0066ff] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors mt-2 shadow-md shadow-blue-600/20">
             {isLoggingIn ? 'Signing In...' : 'Sign In'}
           </button>
@@ -297,7 +302,7 @@ export const LoginPage: React.FC = () => {
         <div className="mt-6 sm:mt-7 md:mt-8 text-center">
           <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             Don't have an account?{' '}
-            <button onClick={() => { setShowRegister(true); setRegisterError(null); }} className="text-[#0066ff] hover:text-blue-500 font-medium hover:underline">
+            <button onClick={() => { setShowRegister(true); setRegisterError(null); setRegisterSuccess(null); }} className="text-[#0066ff] hover:text-blue-500 font-medium hover:underline">
               Sign up
             </button>
           </p>
