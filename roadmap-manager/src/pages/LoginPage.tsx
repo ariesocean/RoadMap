@@ -209,21 +209,30 @@ export const LoginPage: React.FC = () => {
       </button>
 
       {/* Login Card */}
-      <div className={`w-full max-w-md rounded-2xl shadow-lg border transition-colors duration-300 overflow-hidden ${isDarkMode ? 'bg-[#252525] border-[#333] shadow-black/50' : 'bg-white border-gray-100 shadow-gray-200/50'}`}>
+      <div className={`w-full max-w-md mx-4 sm:mx-6 md:mx-0 rounded-2xl shadow-lg border transition-colors duration-300 overflow-hidden ${isDarkMode ? 'bg-[#252525] border-[#333] shadow-black/50' : 'bg-white border-gray-100 shadow-gray-200/50'}`}>
         {/* Loading animation line */}
         <div className="h-0.5 overflow-hidden">
           <div className={`w-full h-full ${isLoggingIn ? 'gradient-line-animation' : ''}`} />
         </div>
 
-        <div className="p-8">
+        <div className="p-6 sm:p-7 md:p-8">
         {/* Logo & Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 bg-[#0066ff] rounded-xl flex items-center justify-center mb-4 shadow-md shadow-blue-600/20">
-            <ListTodo className="text-white" size={24} />
+        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-7 md:mb-8">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-[#0066ff] rounded-xl flex items-center justify-center shadow-md shadow-blue-600/20">
+            <ListTodo className="text-white" size={20} />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight mb-2">Roadmap Manager</h1>
-          <p className={`text-sm text-center leading-relaxed px-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            A Personal task management tool using LLM-assisted semantic analysis to manage to-do list with natural language commands.
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Roadmap Manager</h1>
+        </div>
+
+        {/* AI Assistant Tagline */}
+        <div className="mb-6 sm:mb-7 md:mb-8">
+          <p className="text-sm sm:text-base font-medium mb-1">
+            <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+              Your AI Personal Task Assistant
+            </span>
+          </p>
+          <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Turn natural language into structured tasks and notes
           </p>
         </div>
 
@@ -285,8 +294,8 @@ export const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        <div className="mt-8 text-center">
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+        <div className="mt-6 sm:mt-7 md:mt-8 text-center">
+          <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             Don't have an account?{' '}
             <button onClick={() => { setShowRegister(true); setRegisterError(null); }} className="text-[#0066ff] hover:text-blue-500 font-medium hover:underline">
               Sign up
