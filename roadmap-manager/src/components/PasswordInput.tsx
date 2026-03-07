@@ -12,6 +12,7 @@ interface PasswordInputProps {
   confirmPlaceholder?: string;
   autoFocus?: boolean;
   error?: string | null;
+  autoComplete?: string;
 }
 
 export const PasswordInput: React.FC<PasswordInputProps> = ({
@@ -24,16 +25,17 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
   confirmPlaceholder = 'Confirm password',
   autoFocus = false,
   error,
+  autoComplete,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
-  const inputClass = `w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 ${
+  const inputClass = `w-full px-3 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 ${
     isDark
-      ? 'bg-[#1c1c1c] text-white placeholder-gray-500'
-      : 'bg-white text-gray-900 placeholder-gray-400'
+      ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
+      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
   }`;
 
   return (
@@ -46,6 +48,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoFocus={autoFocus}
+          autoComplete={autoComplete}
           className={inputClass}
         />
         <button
@@ -65,6 +68,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
             value={confirmValue}
             onChange={(e) => confirmOnChange(e.target.value)}
             placeholder={confirmPlaceholder}
+            autoComplete={autoComplete ? `${autoComplete}-confirmation` : undefined}
             className={inputClass}
           />
           <button
