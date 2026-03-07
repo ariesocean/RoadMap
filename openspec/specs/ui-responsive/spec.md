@@ -92,3 +92,7 @@ The following components SHALL implement the 4-level responsive breakpoint syste
 - **WHEN** ModelSelector.tsx renders
 - **THEN** model selector font and spacing SHALL follow breakpoint rules
 
+#### Scenario: LoginPage responsive layout
+- **WHEN** LoginPage.tsx renders
+- **THEN** card padding, logo size, title font, tagline text, and form spacing SHALL follow breakpoint rules
+

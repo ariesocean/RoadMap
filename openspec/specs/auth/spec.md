@@ -6,6 +6,17 @@ TBD - created by archiving change add-login-page. Update Purpose after archive.
 ### Requirement: Login Page Display
 The system SHALL display a login page as the entry point when the user is not logged in.
 
+#### Scenario: Login page layout
+- **WHEN** login page renders
+- **THEN** the logo SHALL be displayed horizontally aligned with the app title
+- **AND** the app title SHALL display "Roadmap Manager"
+- **AND** the AI assistant tagline SHALL be displayed below the title
+
+#### Scenario: Login page AI tagline
+- **WHEN** login page renders
+- **THEN** the primary tagline "Your AI Personal Task Assistant" SHALL be displayed with gradient text styling
+- **AND** the secondary tagline "Turn natural language into structured tasks and notes" SHALL be displayed below
+
 #### Scenario: User opens application
 - **GIVEN** user is not logged in
 - **WHEN** user opens the application
