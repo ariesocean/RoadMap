@@ -318,12 +318,13 @@ export const LoginPage: React.FC = () => {
               <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Join Roadmap Manager to organize your tasks.</p>
             </div>
 
-            <form className="space-y-4" onSubmit={handleRegister}>
+            <form className="space-y-4" onSubmit={handleRegister} autoComplete="off">
               <div>
                 <label htmlFor="register-username" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Username</label>
                 <input
                   id="register-username"
                   type="text"
+                  autoComplete="new-username"
                   value={registerUsername}
                   onChange={(e) => setRegisterUsername(e.target.value)}
                   placeholder="Choose a username"
@@ -339,6 +340,7 @@ export const LoginPage: React.FC = () => {
                 <input
                   id="register-email"
                   type="email"
+                  autoComplete="new-email"
                   value={registerEmail}
                   onChange={(e) => setRegisterEmail(e.target.value)}
                   placeholder="Enter your email"
@@ -359,6 +361,7 @@ export const LoginPage: React.FC = () => {
                   confirmValue={registerConfirmPassword}
                   confirmOnChange={setRegisterConfirmPassword}
                   confirmPlaceholder="Confirm your password"
+                  autoComplete="new-password"
                   error={registerError && registerError.includes('match') ? registerError : null}
                 />
               </div>
