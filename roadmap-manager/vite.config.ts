@@ -472,7 +472,6 @@ const roadmapPlugin = {
           }
           
           const result = await registerUser(username, email, password, deviceId);
-          await startUserOpenCodeServer(result.userId);
           const port = getUserPort(result.userId);
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ ...result, port }));

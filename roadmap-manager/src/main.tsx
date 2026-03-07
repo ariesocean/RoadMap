@@ -5,7 +5,7 @@ import { useTaskStore } from './store/taskStore'
 import { useAuthStore } from './store/authStore'
 import { useMapsStore } from './store/mapsStore'
 import { loadFromLocalStorage } from './utils/storage'
-import { listMaps } from './services/fileService'
+import { listMaps, readMapFile, writeRoadmapFile } from './services/fileService'
 import type { MapInfo } from './services/fileService'
 import { updateClientBaseUrl } from './services/opencodeClient'
 import './styles/index.css'
@@ -73,10 +73,19 @@ const initializeMapsOnReconnect = async () => {
       const targetMap = maps.find((m: MapInfo) => m.id === lastEditedMapId);
       if (targetMap) {
         setCurrentMap(targetMap);
+        // Load map content into roadmap.md
+        const mapContent = await readMapFile(targetMap);
+        try {
+          await writeRoadmapFile(mapContent, null);
+        } catch (writeErr) {
+          console.error('Failed to load map content into roadmap.md:', writeErr);
+        }
+      } else {
+        console.warn(`[Maps] Target map "${lastEditedMapId}" not found in available maps`);
       }
     }
 
-    // Refresh tasks
+    // Refresh tasks after map is loaded
     await refreshTasks();
   } catch (err) {
     console.error('Failed to initialize maps on reconnect:', err);

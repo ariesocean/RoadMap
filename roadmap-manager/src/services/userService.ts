@@ -148,6 +148,11 @@ export async function registerUser(username: string, _email: string, _password: 
 
   fs.mkdirSync(userDir, { recursive: true });
 
+  const userGuideSource = path.join(PROJECT_DIR, 'map-UserGuide.md');
+  if (fs.existsSync(userGuideSource)) {
+    fs.copyFileSync(userGuideSource, path.join(userDir, 'map-UserGuide.md'));
+  }
+
   const port = ports.nextPort;
   if (port > 51099) {
     throw new Error(ERRORS.NO_AVAILABLE_PORTS);
@@ -157,7 +162,7 @@ export async function registerUser(username: string, _email: string, _password: 
   savePorts(ports);
 
   fs.writeFileSync(path.join(userDir, 'roadmap.md'), '# Roadmap\n\n');
-  fs.writeFileSync(path.join(userDir, 'roadmap-config.json'), JSON.stringify({ lastEditedMapId: null }));
+  fs.writeFileSync(path.join(userDir, 'roadmap-config.json'), JSON.stringify({ lastEditedMapId: 'UserGuide' }));
   fs.writeFileSync(path.join(userDir, 'devices.json'), JSON.stringify({
     devices: [{ deviceId, name: 'Current Device', registeredAt: new Date().toISOString(), lastLoginAt: new Date().toISOString() }]
   }));
