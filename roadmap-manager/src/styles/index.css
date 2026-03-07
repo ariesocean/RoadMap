@@ -101,6 +101,29 @@
   .dark .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: #3D3D3D;
   }
+
+  /* Browser autofill fix - Light mode */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    transition: background-color 9999s ease-in-out 0s !important;
+    -webkit-box-shadow: 0 0 0 2000px #ffffff inset !important;
+    -webkit-text-fill-color: #1f2937 !important;
+    background-clip: content-box !important;
+    caret-color: #1f2937 !important;
+  }
+
+  /* Browser autofill fix - Dark mode */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 2000px #1c1c1c inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background-clip: content-box !important;
+    caret-color: #ffffff !important;
+  }
 }
 
 @layer utilities {
