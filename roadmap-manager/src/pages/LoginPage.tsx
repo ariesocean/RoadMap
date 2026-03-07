@@ -116,9 +116,9 @@ export const LoginPage: React.FC = () => {
         return;
       }
 
-      const { userId, token, port } = await response.json();
+      const { userId, token, port, username } = await response.json();
       
-      useAuthStore.getState().login(loginUsername, userId, token);
+      useAuthStore.getState().login(username, userId, token);
       if (port) {
         useAuthStore.getState().setUserPort(port);
         updateClientBaseUrl();

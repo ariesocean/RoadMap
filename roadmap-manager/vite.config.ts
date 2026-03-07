@@ -504,9 +504,10 @@ const roadmapPlugin = {
           await startUserOpenCodeServer(result.userId);
           
           const port = getUserPort(result.userId);
+          const userInfo = getUserInfo(result.userId);
           
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ ...result, port }));
+          res.end(JSON.stringify({ ...result, port, username: userInfo.username }));
         } catch (error) {
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Login failed' }));
