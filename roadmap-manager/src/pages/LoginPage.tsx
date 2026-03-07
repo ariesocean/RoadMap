@@ -199,7 +199,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDarkMode ? 'bg-[#1c1c1c] text-white' : 'bg-[#f9fafb] text-gray-900'}`}>
+    <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDarkMode ? 'dark bg-[#1c1c1c] text-white' : 'bg-[#f9fafb] text-gray-900'}`}>
       {/* Theme Toggle */}
       <button
         onClick={handleThemeToggle}
