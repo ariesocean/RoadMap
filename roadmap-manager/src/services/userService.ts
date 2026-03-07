@@ -187,7 +187,7 @@ export async function loginUser(username: string, _password: string, deviceId: s
     if (!fs.existsSync(userPath)) continue;
     try {
       const userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
-      if (userData.username === username) {
+      if (userData.username === username || userData.email === username) {
         userId = dir;
         break;
       }
