@@ -387,7 +387,13 @@ export const useSessionStore = create<SessionStore>((set, get) => {
         return isNavigate && matchesUserId;
       });
       
-      if (filteredSessions.length === 0) return;
+      if (filteredSessions.length === 0) {
+        activeSessionId = null;
+        currentSession = null;
+        clearActiveSessionId();
+        set({ activeSessionId, currentSession });
+        return;
+      }
 
       const sorted = filteredSessions.sort((a, b) => {
         const timeA = new Date(a.lastUsedAt).getTime();

@@ -231,7 +231,15 @@ The system SHALL automatically select the first session (most recently used) whe
 #### Scenario: No matching sessions
 - **WHEN** sessions are loaded but none match the user filter
 - **THEN** no session SHALL be auto-selected
+- **AND** currentSession SHALL be set to null
 - **AND** the "New Conversation" option SHALL be available for the user to create a new session
+
+#### Scenario: First prompt auto-creates server session
+- **WHEN** currentSession is null (no matching sessions)
+- **AND** the user submits the first prompt
+- **THEN** the system SHALL automatically create a new session on the server
+- **AND** the session title SHALL be generated with format `navigate: {userMessage} :{userId}`
+- **AND** the prompt SHALL be executed within the newly created server session
 
 ### Requirement: Session Synchronization
 The system SHALL synchronize session state with the OpenCode server when needed.
