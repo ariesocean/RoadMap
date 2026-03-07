@@ -82,6 +82,10 @@ npx playwright test --trace on
 
 **Note**: Tests require the dev server to be running (port 1630). The playwright.config.ts automatically starts the dev server via `webServer` option.
 
+## Testing Guidelines
+
+- Always stop running processes (e.g., dev server, vite) after testing is complete
+
 ## Project Directory Structure
 
 The application expects the following directory structure:

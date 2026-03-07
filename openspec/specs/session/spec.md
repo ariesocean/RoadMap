@@ -59,6 +59,7 @@ The system SHALL display the current session title in the UI with an icon to cre
 - **THEN** the session title SHALL be displayed in the header area
 - **AND** the title SHALL be visible above or near the input area
 - **AND** the title SHALL update when the session changes
+- **AND** the suffix ` :{userId}` SHALL be removed from the display (using `getSessionTitle()` utility)
 
 #### Scenario: New session icon
 - **WHEN** the session title is displayed
@@ -186,6 +187,7 @@ The system SHALL display all sessions retrieved from the OpenCode server in the 
 - **WHEN** the session dropdown is opened
 - **THEN** only sessions matching the current user SHALL be listed in the dropdown
 - **AND** the dropdown SHALL show the session title for each server session
+- **AND** the userId suffix ` :{userId}` SHALL be removed from the displayed title
 - **AND** the current active session SHALL be highlighted in the dropdown
 
 #### Scenario: Session filtering by user
