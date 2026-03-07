@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Plus, RefreshCw, MessageSquare, Trash2 } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
 import { useAuthStore } from '@/store/authStore';
+import { getSessionTitle } from '@/utils/sessionUtils';
 
 interface SessionListProps {
   onSelect?: () => void;
@@ -119,7 +120,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
       >
         <MessageSquare className="w-3.5 h-3.5 opacity-60" />
         <span className="truncate max-w-[60px] sm:max-w-[160px]">
-          {currentSession?.title || 'New Conversation'}
+          {currentSession?.title ? getSessionTitle(currentSession.title) : 'New Conversation'}
         </span>
         <ChevronDown className="w-3 h-3 opacity-60" />
       </button>
@@ -167,7 +168,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                 >
                   <div className="flex items-center justify-between">
                     <span className={`text-xs truncate flex-1 ${isNavigate ? 'text-primary-text dark:text-dark-primary-text' : 'text-secondary-text'}`}>
-                      {session.title}
+                      {getSessionTitle(session.title)}
                     </span>
                     {isNavigate && (
                       <button

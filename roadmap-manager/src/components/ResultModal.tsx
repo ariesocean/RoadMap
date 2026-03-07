@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { Loader2, Send, Sparkles, X } from 'lucide-react';
 import { useResultModalStore } from '@/store/resultModalStore';
 import { useModalPrompt } from '@/hooks/useModalPrompt';
+import { getSessionTitle } from '@/utils/sessionUtils';
 
 const HIDDEN_TYPES = ['step-start', 'step-end', 'message-complete'] as const;
 type HiddenType = typeof HIDDEN_TYPES[number];
@@ -68,7 +69,7 @@ export const ResultModal: React.FC = () => {
               <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm md:text-base">
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">Session: </span>
-                  <span className="text-gray-700 dark:text-gray-300">{sessionInfo.title}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{getSessionTitle(sessionInfo.title)}</span>
                 </div>
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">Prompt: </span>
