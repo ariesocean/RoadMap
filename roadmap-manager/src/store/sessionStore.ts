@@ -186,22 +186,27 @@ export const useSessionStore = create<SessionStore>((set, get) => {
 
       if (activeSessionId === sessionId) {
         clearActiveSessionId();
-        if (Object.keys(newSessions).length > 0) {
-          const firstSessionId = Object.keys(newSessions)[0];
-          const session = newSessions[firstSessionId];
-          session.lastUsedAt = new Date().toISOString();
-
+        
+        const userId = useAuthStore.getState().userId;
+        const filteredRemaining = Object.values(newSessions).filter(s => {
+          const isNavigate = /^navigate:/i.test(s.title);
+          const matchesUserId = userId && s.title.endsWith(`:${userId}`);
+          return isNavigate && matchesUserId;
+        });
+        
+        if (filteredRemaining.length > 0) {
+          const sorted = filteredRemaining.sort((a, b) => 
+            new Date(b.lastUsedAt).getTime() - new Date(a.lastUsedAt).getTime()
+          );
+          const firstSessionId = sorted[0].id;
           activeSessionId = firstSessionId;
-          currentSession = session;
+          currentSession = sorted[0];
           setActiveSessionId(firstSessionId);
           set({ sessions: newSessions, activeSessionId, currentSession });
         } else {
-          const newSession = createNewSession();
-          sessions = { [newSession.id]: newSession };
-
-          activeSessionId = newSession.id;
-          currentSession = newSession;
-          setActiveSessionId(newSession.id);
+          activeSessionId = null;
+          currentSession = null;
+          sessions = newSessions;
           set({ sessions, activeSessionId, currentSession });
         }
       } else {

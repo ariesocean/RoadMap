@@ -336,6 +336,13 @@ The system SHALL provide a delete button in the session list UI that allows user
 - **THEN** the delete button SHALL NOT be rendered for that session
 - **AND** users cannot delete non-server-created sessions from the UI
 
+#### Scenario: Delete last matching session
+- **WHEN** the user deletes the last session that matches the user filter (navigate: prefix + userId suffix)
+- **AND** there are other sessions that do not match the filter
+- **THEN** currentSession SHALL be set to null
+- **AND** the UI SHALL display "New Conversation"
+- **AND** the next prompt SHALL automatically create a new server session
+
 ### Requirement: Device Connection State
 The system SHALL provide a manual connection state toggle that allows users to control when maps are loaded, preventing multi-device conflicts.
 
