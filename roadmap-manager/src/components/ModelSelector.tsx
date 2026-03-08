@@ -86,21 +86,19 @@ export const ModelSelector: React.FC = () => {
                   key={`${model.providerID}-${model.modelID}`}
                   onClick={() => handleSelect(model)}
                   className={`
-                    w-full text-left px-3 py-2.5 text-xs transition-all duration-150 flex items-center gap-2
-                    ${isSelected 
-                      ? 'bg-secondary-bg dark:bg-dark-secondary-bg' 
+                    w-full text-left px-3 py-2.5 text-xs transition-all duration-150 flex items-center
+                    ${isSelected
+                      ? 'bg-secondary-bg dark:bg-dark-secondary-bg'
                       : 'hover:bg-secondary-bg/50 dark:hover:bg-dark-secondary-bg/50'
                     }
                   `}
                 >
-                  <div className="flex flex-col">
-                    <span className={`font-semibold ${isSelected ? 'text-primary-text dark:text-dark-primary-text' : 'text-secondary-text dark:text-dark-secondary-text'}`}>
-                      {model.displayName}
-                    </span>
-                    <span className="text-[10px] opacity-50">
-                      {formatProviderName(model.providerID)}
-                    </span>
-                  </div>
+                  <span className={`font-semibold ${isSelected ? 'text-primary-text dark:text-dark-primary-text' : 'text-secondary-text dark:text-dark-secondary-text'}`}>
+                    {model.displayName}
+                  </span>
+                  <span className="ml-2 text-[10px] opacity-50">
+                    {formatProviderName(model.providerID)}
+                  </span>
                 </button>
               );
             })}
