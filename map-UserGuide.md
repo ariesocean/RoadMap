@@ -1,4 +1,35 @@
-# Roadmap Manager 用户指南 [created: 2026-03-08 02:11]
+# User Guide [created: 2026-03-11 15:53]
+> Your AI personal task assistant - Turn natural language into structured tasks and notes
+
+## Subtasks
+
+* [ ] Quick Start (tell the AI directly what you want to do or note)
+  * [ ] "Help me create a plan for designing an AI Agent"
+  * [ ] "My colleague already sent the meeting invite" > Action: Check "Send meeting invite"
+  * [ ] "Cook lamb chops tonight; help me create a shopping list for Hema"
+  * [ ] "Planning a trip to Sanya for May Day; what do I need to prepare?" > Action: Generate Sanya May Day checklist
+* [ ] Main Features
+  * [ ] Describe your thoughts; the AI will automatically generate structured tasks or notes.
+  * [ ] Edit tasks: Manually add, delete, or modify tasks, or ask the AI to handle it for you.
+  * [ ] Mark complete: Use the checkbox to mark a task as finished.
+  * [ ] Reorder: Drag and drop tasks to reorganize their order and hierarchy.
+  * [ ] Archive main task: Notify the AI when a main task has been fully completed.
+* [ ] Multiple Maps
+  * [ ] Expand the sidebar (top-left) to switch between different maps.
+  * [ ] Create and manage multiple independent task lists (Maps).
+* [ ] Model Selection (located at the bottom-left of the input field)
+  * [ ] Switch between various AI models (Harvey provides free access).
+  * [ ] Each model has unique characteristics; feel free to experiment with them.
+* [ ] Session Management (located at the bottom-right of the input field)
+  * [ ] Sessions (chat windows) manage AI memory and context; switch or create as needed.
+  * [ ] For best results, keep related tasks within the same Session to improve AI performance over time.
+
+---
+**Last Updated:** 2026-03-11 16:30
+
+---
+
+# 用户指南 [created: 2026-03-08 02:11]
 > 你的 AI 个人任务助手，把自然语言变成结构化的任务和笔记
 
 ## Subtasks
@@ -10,19 +41,19 @@
   * [ ] "打算五一去三亚，需要准备什么" > 生成：五一三亚之旅准备清单
 * [ ] 主要功能说明
   * [ ] 用自然语言告诉 AI 你的想法，AI 自动创建结构化任务或者笔记
-  - [ ] 编辑任务：你可以手动进行增删改的操作或者直接让AI 帮你完成
-  - [ ] 标记完成：勾选checkbox标记任务完成
-  - [ ] 调整顺序：拖拽任务改变排列顺序和层级
-  - [ ] 归档主任务：告诉 AI 某个主任务已全部完成
+  * [ ] 编辑任务：你可以手动进行增删改的操作或者直接让AI 帮你完成
+  * [ ] 标记完成：勾选checkbox标记任务完成
+  * [ ] 调整顺序：拖拽任务改变排列顺序和层级
+  * [ ] 归档主任务：告诉 AI 某个主任务已全部完成
 * [ ] 多地图功能
-  - [ ] 点击左上角展开侧边栏切换不同地图
-  - [ ] 支持创建多个独立的任务清单（Maps）
+  * [ ] 点击左上角展开侧边栏切换不同地图
+  * [ ] 支持创建多个独立的任务清单（Maps）
 * [ ] 模型选择（输入框左下角）
-  - [ ] 支持切换不同 AI 模型，Harvey免费提供
+  * [ ] 支持切换不同 AI 模型，Harvey免费提供
   * [ ] 每个模型有不同的特性，都可以尝试体验
 * [ ] 会话管理（输入框右下角）
-  - [ ] Session 是对话窗口，管理 AI 的记忆和上下文，支持切换创建
-  - [ ] 建议主任务在同一个 Session 里进行对话，AI 越用越聪明
+  * [ ] Session 是对话窗口，管理 AI 的记忆和上下文，支持切换创建
+  * [ ] 建议主任务在同一个 Session 里进行对话，AI 越用越聪明
 
 ---
 **Last Updated:** 2026-03-08 02:11
