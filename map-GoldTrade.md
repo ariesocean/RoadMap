@@ -47,13 +47,13 @@
   * [x] 点击输入框清空则删除整行任务
 * [x] 切换方案: 通过OpenCode Serve API实现集成, 替代CLI方案
 * [x] 调研 opencode serve 现有API接口
-* [ ] 当前有一个bug，如果在一个新的路径下没有session的情况下不点击new conversation的话会执行失败
-* [ ] 部署到TradingHub (开一个新的worktrees: login-design)
+- [x] 当前有一个bug，如果在一个新的路径下没有session的情况下不点击new conversation的话会执行失败
+- [ ] 部署到TradingHub (开一个新的worktrees: login-design)
   * [x] 清除绝对路径
   * [x] 添加用户验证功能
   * [x] 每个用户使用一个独立的路径，运行opencode serve以及保存maps
-  * [ ] 弹窗modal中的session输出信息不要有后缀
-  * [ ] signup的聊天框密码框有白边框，不好看，去掉，与整体风格要统一
+  - [x] 弹窗modal中的session输出信息不要有后缀
+  - [x] signup的聊天框密码框有白边框，不好看，去掉，与整体风格要统一
   * [ ] 有办法检测到用户的连接状态吗？比如当用户直接关闭浏览器则默认登出
   * [ ] 准备preview和production模式
 
