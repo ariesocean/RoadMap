@@ -6,7 +6,6 @@ import http from 'http'
 import { spawn, execSync } from 'child_process'
 import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice, updateUsername, updatePassword, getUserInfo } from './src/services/server/userServiceServer'
 
-const DEFAULT_PORTS = [51432, 51466, 51434]
 const PROJECT_DIR = path.resolve(process.cwd(), '..')
 
 async function checkPort(port: number): Promise<boolean> {
@@ -19,43 +18,6 @@ async function checkPort(port: number): Promise<boolean> {
       req.destroy()
       resolve(false)
     })
-  })
-}
-
-async function findAvailablePort(): Promise<number | null> {
-  for (const port of DEFAULT_PORTS) {
-    if (await checkPort(port)) {
-      return port
-    }
-  }
-  return null
-}
-
-async function startOpenCodeServer(port: number): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const env = { ...process.env, OPENCODE_SERVER_PASSWORD: '' }
-    const proc = spawn('opencode', ['serve', '--port', String(port)], {
-      cwd: PROJECT_DIR,
-      env,
-      detached: true,
-      stdio: 'ignore'
-    })
-    
-    proc.unref()
-    
-    let attempts = 0
-    const maxAttempts = 30
-    
-    const checkInterval = setInterval(async () => {
-      attempts++
-      if (await checkPort(port)) {
-        clearInterval(checkInterval)
-        resolve()
-      } else if (attempts >= maxAttempts) {
-        clearInterval(checkInterval)
-        reject(new Error('OpenCode Server 启动超时'))
-      }
-    }, 1000)
   })
 }
 
@@ -121,44 +83,6 @@ async function stopUserOpenCodeServer(userId: string): Promise<void> {
   
   killOpenCodeProcess(port);
   console.log(`[User ${userId}] OpenCode Server stopped on port ${port}`);
-}
-
-const OPENCODE_HOST = '127.0.0.1'
-
-async function checkServerHealth(port: number = openCodePort): Promise<boolean> {
-  return new Promise((resolve) => {
-    const req = http.get(`http://${OPENCODE_HOST}:${port}/global/health`, (res) => {
-      resolve(res.statusCode === 200)
-    });
-    req.on('error', () => resolve(false));
-    req.setTimeout(2000, () => {
-      req.destroy();
-      resolve(false);
-    });
-  });
-}
-
-async function httpRequest(options: any, body?: string): Promise<{ status: number; data: any }> {
-  return new Promise((resolve, reject) => {
-    const req = http.request(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => data += chunk);
-      res.on('end', () => {
-        try {
-          resolve({ status: res.statusCode || 0, data: JSON.parse(data) });
-        } catch {
-          resolve({ status: res.statusCode || 0, data });
-        }
-      });
-    });
-    req.on('error', reject);
-    req.setTimeout(30000, () => {
-      req.destroy();
-      reject(new Error('Request timeout'));
-    });
-    if (body) req.write(body);
-    req.end();
-  });
 }
 
 const roadmapPlugin = {
@@ -710,85 +634,11 @@ const roadmapPlugin = {
       }
     });
 
-    server.middlewares.use('/session', async (req: any, res: any, next: any) => {
-      const isHealthy = await checkServerHealth();
-      
-      if (!isHealthy) {
-        res.writeHead(503, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'OpenCode server not running' }));
-        return;
-      }
-
-      if (req.method === 'GET') {
-        try {
-          const sessionsRes = await httpRequest({
-            hostname: OPENCODE_HOST,
-            port: openCodePort,
-            path: '/session',
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-          });
-          
-          let sessions: any[] = [];
-          
-          if (Array.isArray(sessionsRes.data)) {
-            sessions = sessionsRes.data;
-          } else if (sessionsRes.data && Array.isArray((sessionsRes.data as any).sessions)) {
-            sessions = (sessionsRes.data as any).sessions;
-          }
-          
-          const roadmapSessions = sessions.filter((s: any) =>
-            s.directory === getCurrentUserDir() &&
-            !s.parentID &&
-            !/\(@.*subagent\)/i.test(s.title || '') &&
-            !(s.title || '').startsWith('modal-prompt:')
-          );
-
-          roadmapSessions.sort((a: any, b: any) =>
-            (b.time?.created || 0) - (a.time?.created || 0)
-          );
-
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(roadmapSessions));
-        } catch (error) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: String(error) }));
-        }
-      } else {
-        next();
-      }
-    });
-
     server.middlewares.use(async (req: any, res: any, next: any) => {
       next();
     });
   }
 };
-
-async function ensureOpenCodeServer() {
-  console.log('[Roadmap] 检测 OpenCode Server...');
-  
-  let port = await findAvailablePort();
-  
-  if (port) {
-    console.log(`[Roadmap] 找到运行中的 OpenCode Server: 端口 ${port}`);
-    return port;
-  }
-  
-  console.log('[Roadmap] 未找到 OpenCode Server，尝试启动...');
-  const targetPort = DEFAULT_PORTS[0];
-  
-  try {
-    await startOpenCodeServer(targetPort);
-    console.log(`[Roadmap] OpenCode Server 已启动: 端口 ${targetPort}`);
-    return targetPort;
-  } catch (error) {
-    console.error('[Roadmap] 启动 OpenCode Server 失败:', error);
-    process.exit(1);
-  }
-}
-
-const openCodePort: number = DEFAULT_PORTS[0]; // Fallback for non-logged-in state
 
 export default defineConfig({
   plugins: [react(), roadmapPlugin as any],
