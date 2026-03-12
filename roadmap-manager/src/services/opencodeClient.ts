@@ -1,4 +1,4 @@
-import { createOpencodeClient, type Session } from '@opencode-ai/sdk';
+import { createOpencodeClient, type Session } from '@opencode-ai/sdk/client';
 import { useAuthStore } from '@/store/authStore';
 
 const DEFAULT_PORT = 51432;

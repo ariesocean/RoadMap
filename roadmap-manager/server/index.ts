@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PROJECT_DIR = path.resolve(__dirname, '..');
+const PROJECT_DIR = path.resolve(__dirname, '../..');
 const USERS_DIR = path.join(PROJECT_DIR, 'users');
 const PORTS_FILE = path.join(USERS_DIR, 'ports.json');
 
@@ -1044,8 +1044,6 @@ app.get('*', (req: Request, res: Response) => {
 const PORT = process.env.PORT || 3000;
 
 async function main() {
-  await ensureOpenCodeServer();
-  
   app.listen(PORT, () => {
     console.log(`[Production Server] Running on http://localhost:${PORT}`);
   });

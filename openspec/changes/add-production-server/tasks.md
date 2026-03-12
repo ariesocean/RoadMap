@@ -16,5 +16,12 @@
 ## 4. Validation
 - [x] 4.1 Run `npm run build` successfully
 - [x] 4.2 Run `npm run build:server` successfully  
-- [ ] 4.3 Run `npm run serve` and verify all endpoints work
+- [x] 4.3 Run `npm run serve` and verify all endpoints work
 - [x] 4.4 Verify dev mode still works (`npm run dev`)
+
+## 5. Production Build Fix
+- [x] 5.1 Separate server-only code from client-compatible code
+- [x] 5.2 Create `src/services/server/userServiceServer.ts` for Node.js-dependent logic
+- [x] 5.3 Update `vite.config.ts` to import from server-only file
+- [x] 5.4 Remove `rollupOptions.external` from `vite.config.ts`
+- [x] 5.5 Rebuild and verify production server works without CORS errors

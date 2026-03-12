@@ -8,6 +8,7 @@
 - 创建 `tsconfig.server.json` 用于编译服务器代码
 - 修改 `package.json` 添加 `build:server`, `serve`, `start` 脚本
 - 迁移所有 API 端点逻辑到生产服务器
+- 修复生产构建：将 Node.js 依赖代码 (`fs`, `path`, `crypto`, `child_process`) 从客户端代码中分离，避免浏览器尝试加载 Node.js 内置模块导致 CORS 错误
 
 ## Impact
 - Affected specs: `maps-management`, `auth`

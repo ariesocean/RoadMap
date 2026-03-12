@@ -4,7 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import http from 'http'
 import { spawn, execSync } from 'child_process'
-import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice, updateUsername, updatePassword, getUserInfo } from './src/services/userService'
+import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice, updateUsername, updatePassword, getUserInfo } from './src/services/server/userServiceServer'
 
 const DEFAULT_PORTS = [51432, 51466, 51434]
 const PROJECT_DIR = path.resolve(process.cwd(), '..')
@@ -810,8 +810,5 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    rollupOptions: {
-      external: ['node:child_process', 'node:fs', 'node:path', 'node:url', 'node:os', 'node:stream', 'node:http', 'node:https'],
-    },
   },
 })
