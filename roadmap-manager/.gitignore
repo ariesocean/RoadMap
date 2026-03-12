@@ -4,6 +4,7 @@ node_modules/
 # Build outputs
 dist/
 dist-sources/
+dist-server/
 
 # Rust build artifacts
 src-tauri/target/
@@ -22,3 +23,6 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Machine-specific config
+src/config.cjs

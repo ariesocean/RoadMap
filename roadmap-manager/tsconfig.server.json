@@ -7,7 +7,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "outDir": "./dist-server",
-    "rootDir": "./server",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -17,6 +17,6 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["node"]
   },
-  "include": ["server/**/*.ts"],
+  "include": ["server/**/*.ts", "src/config.cjs"],
   "exclude": ["node_modules"]
 }

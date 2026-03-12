@@ -21,7 +21,8 @@
       ".mypy_cache/**",
       ".gradle/**",
       "target/**",
-      "docs/**"
+      "docs/**",
+      ".env"
     ]
   }
 }

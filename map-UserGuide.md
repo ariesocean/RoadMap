@@ -1,5 +1,5 @@
 # Roadmap Manager User Guide [created: 2026-03-11 15:53]
-> Your AI personal task assistant - Turn natural language into structured tasks and notes
+> AI personal assistant - Turn natural language into structured tasks and notes
 
 ## Subtasks
 

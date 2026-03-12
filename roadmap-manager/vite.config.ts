@@ -6,7 +6,9 @@ import http from 'http'
 import { spawn, execSync } from 'child_process'
 import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice, updateUsername, updatePassword, getUserInfo } from './src/services/server/userServiceServer'
 
-const PROJECT_DIR = path.resolve(process.cwd(), '..')
+const config = require('./src/config.cjs')
+const PROJECT_DIR = process.env.PROJECT_DIR || config.projectDir
+const USERS_DIR = process.env.USERS_DIR || config.usersDir || path.join(PROJECT_DIR, 'users')
 
 async function checkPort(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -98,7 +100,7 @@ const roadmapPlugin = {
       if (!currentUserId) {
         return PROJECT_DIR;
       }
-      return path.join(PROJECT_DIR, 'users', currentUserId);
+      return path.join(USERS_DIR, currentUserId);
     }
 
     // Middleware to extract userId from request and set current user directory

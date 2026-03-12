@@ -2,8 +2,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
-const PROJECT_DIR = path.resolve(process.cwd(), '..');
-const USERS_DIR = path.join(PROJECT_DIR, 'users');
+const config = require('../../config.cjs');
+const PROJECT_DIR = process.env.PROJECT_DIR || config.projectDir;
+const USERS_DIR = process.env.USERS_DIR || config.usersDir || path.join(PROJECT_DIR, 'users');
 const PORTS_FILE = path.join(USERS_DIR, 'ports.json');
 
 const ERRORS = {

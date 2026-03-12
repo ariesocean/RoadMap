@@ -10,8 +10,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PROJECT_DIR = path.resolve(__dirname, '../..');
-const USERS_DIR = path.join(PROJECT_DIR, 'users');
+const config = require('../src/config.cjs');
+const PROJECT_DIR = process.env.PROJECT_DIR || config.projectDir;
+const USERS_DIR = process.env.USERS_DIR || config.usersDir || path.join(PROJECT_DIR, 'users');
+
 const PORTS_FILE = path.join(USERS_DIR, 'ports.json');
 
 const DEFAULT_PORTS = [51432, 51466, 51434];
@@ -1035,10 +1037,10 @@ app.get('/session', async (req: Request, res: Response) => {
   }
 });
 
-app.use(express.static(path.join(__dirname, '../dist')));
+app.use(express.static(path.join(__dirname, '../../dist')));
 
 app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+  res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
