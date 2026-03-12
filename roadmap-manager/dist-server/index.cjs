@@ -46,7 +46,7 @@ const child_process_1 = require("child_process");
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-const PROJECT_DIR = path.resolve(__dirname, '../..');
+const PROJECT_DIR = path.resolve(__dirname, '..');
 const USERS_DIR = path.join(PROJECT_DIR, 'users');
 const PORTS_FILE = path.join(USERS_DIR, 'ports.json');
 const DEFAULT_PORTS = [51432, 51466, 51434];
