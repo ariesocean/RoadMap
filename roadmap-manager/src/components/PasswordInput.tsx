@@ -32,7 +32,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
   const theme = useThemeStore((state) => state.theme);
   const isDark = theme === 'dark';
 
-  const inputClass = `w-full px-3 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 ${
+  const inputClass = `w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 ${
     isDark
       ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
       : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'

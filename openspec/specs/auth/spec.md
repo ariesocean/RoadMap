@@ -174,6 +174,52 @@ The system SHALL allow users to register with username, password, and email.
 - **WHEN** the user submits the registration form
 - **AND** the response returns an error message: "Username must be at least 6 characters"
 
+### Requirement: Invitation Code
+The system SHALL require a valid invitation code for user registration to restrict access.
+
+#### Scenario: Invitation code displayed on registration form
+- **GIVEN** the registration modal is open
+- **WHEN** the form is rendered
+- **THEN** an invitation code input field SHALL be displayed
+- **AND** the label SHALL include a red asterisk (*) indicating it is required
+- **AND** a "How to get invitation code?" link SHALL be displayed on the right side
+
+#### Scenario: User clicks "How to get invitation code?"
+- **GIVEN** the registration modal is open
+- **WHEN** user clicks the "How to get invitation code?" link
+- **THEN** a help modal SHALL be displayed
+- **AND** the modal SHALL explain that the app is currently by invitation only
+- **AND** the modal SHALL display the WeChat ID for contacting the author
+
+#### Scenario: User copies WeChat ID
+- **GIVEN** the help modal is displayed
+- **WHEN** user clicks on the WeChat ID area
+- **THEN** the WeChat ID SHALL be copied to the clipboard
+- **AND** a "Copied!" feedback SHALL be displayed
+- **AND** the feedback SHALL disappear after 2 seconds
+
+#### Scenario: User registers with valid invitation code
+- **GIVEN** the registration modal is open
+- **WHEN** user enters the correct invitation code "roadmap2026"
+- **AND** user submits the registration form
+- **THEN** the registration SHALL succeed
+- **AND** a new user account SHALL be created
+
+#### Scenario: User registers with invalid invitation code
+- **GIVEN** the registration modal is open
+- **WHEN** user enters an incorrect invitation code
+- **AND** user submits the registration form
+- **THEN** an error message SHALL be displayed: "Invalid invitation code"
+- **AND** the registration SHALL fail
+- **AND** no new account SHALL be created
+
+#### Scenario: User registers without invitation code
+- **GIVEN** the registration modal is open
+- **WHEN** user leaves the invitation code field empty
+- **AND** user submits the registration form
+- **THEN** an error message SHALL be displayed: "Invalid invitation code"
+- **AND** the registration SHALL fail
+
 ### Requirement: User Login
 The system SHALL authenticate users with username and password.
 

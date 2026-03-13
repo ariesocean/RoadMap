@@ -820,10 +820,15 @@ app.post('/api/config', (req: Request, res: Response) => {
 
 app.post('/api/auth/register', async (req: Request, res: Response) => {
   try {
-    const { username, email, password, deviceId } = req.body;
+    const { username, email, password, deviceId, invitationCode } = req.body;
     
     if (!username || !email || !password || !deviceId) {
       res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+    
+    if (!invitationCode || invitationCode !== 'roadmap2026') {
+      res.status(400).json({ error: 'Invalid invitation code' });
       return;
     }
     

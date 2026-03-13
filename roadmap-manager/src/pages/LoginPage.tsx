@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, ListTodo, X, Eye, EyeOff } from 'lucide-react';
+import { Moon, Sun, ListTodo, X, Eye, EyeOff, Copy, Check, MessageCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -32,7 +33,20 @@ export const LoginPage: React.FC = () => {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [registerInvitationCode, setRegisterInvitationCode] = useState('');
+  const [showInvitationHelp, setShowInvitationHelp] = useState(false);
+  const [copiedWeChatId, setCopiedWeChatId] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  const handleCopyWeChatId = async () => {
+    try {
+      await navigator.clipboard.writeText('-harveyhe-');
+      setCopiedWeChatId(true);
+      setTimeout(() => setCopiedWeChatId(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   const { toggleConnected, refreshTasks } = useTaskStore.getState();
   const { theme, setTheme } = useThemeStore();
@@ -176,7 +190,8 @@ export const LoginPage: React.FC = () => {
           username: registerUsername,
           email: registerEmail,
           password: registerPassword,
-          deviceId
+          deviceId,
+          invitationCode: registerInvitationCode
         }),
       });
 
@@ -191,6 +206,7 @@ export const LoginPage: React.FC = () => {
       setRegisterEmail('');
       setRegisterPassword('');
       setRegisterConfirmPassword('');
+      setRegisterInvitationCode('');
       setShowRegister(false);
     } catch (err) {
       setRegisterError('Registration failed. Please try again.');
@@ -379,6 +395,34 @@ export const LoginPage: React.FC = () => {
                   error={registerError && registerError.includes('match') ? registerError : null}
                 />
               </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1">
+                    <label htmlFor="register-invitation-code" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Invitation Code</label>
+                    <span className="text-red-500">*</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowInvitationHelp(true)}
+                    className="text-xs text-[#0066ff] hover:text-blue-500 underline"
+                  >
+                    How to get invitation code?
+                  </button>
+                </div>
+                <input
+                  id="register-invitation-code"
+                  type="text"
+                  autoComplete="new-invitation-code"
+                  value={registerInvitationCode}
+                  onChange={(e) => setRegisterInvitationCode(e.target.value)}
+                  placeholder="Enter invitation code"
+                  className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors ${
+                    isDarkMode
+                      ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
+                  }`}
+                />
+              </div>
 
               {registerError && (
                 <div className={`p-3 rounded-lg text-sm ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-600'}`}>
@@ -404,6 +448,70 @@ export const LoginPage: React.FC = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Invitation Code Help Modal */}
+      {showInvitationHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className={`w-full max-w-sm p-6 rounded-2xl shadow-2xl border ${
+              isDarkMode ? 'bg-[#252525] border-[#333]' : 'bg-white border-gray-100'
+            }`}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-[#0066ff]/20' : 'bg-blue-50'}`}>
+                <MessageCircle className="text-[#0066ff]" size={20} />
+              </div>
+              <h2 className="text-lg font-semibold">Get Invitation Code</h2>
+            </div>
+
+            <p className={`text-sm mb-5 leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              This app is currently by invitation only. Please contact the author on WeChat to get an invitation code.
+            </p>
+
+            <button
+              onClick={handleCopyWeChatId}
+              className={`w-full p-4 rounded-xl border transition-all duration-200 group cursor-pointer ${
+                copiedWeChatId
+                  ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                  : isDarkMode
+                    ? 'border-gray-600 bg-[#1c1c1c] hover:border-[#0066ff] hover:bg-[#252525]'
+                    : 'border-gray-200 bg-gray-50 hover:border-[#0066ff] hover:bg-white'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className={`text-xs mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>WeChat ID</p>
+                  <p className={`text-base font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>-harveyhe-</p>
+                </div>
+                <div className={`flex items-center gap-1 transition-colors ${copiedWeChatId ? 'text-green-500' : 'text-gray-400 group-hover:text-[#0066ff]'}`}>
+                  {copiedWeChatId ? (
+                    <>
+                      <Check size={18} />
+                      <span className="text-sm">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={18} />
+                      <span className="text-sm">Copy</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setShowInvitationHelp(false)}
+              className="w-full mt-5 bg-[#0066ff] hover:bg-blue-600 text-white font-medium py-2.5 rounded-xl transition-all duration-200 shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30"
+            >
+              Got it
+            </button>
+          </motion.div>
         </div>
       )}
     </div>
