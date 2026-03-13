@@ -25,6 +25,7 @@ export const AccountPopup: React.FC = () => {
 
   const { refreshTasks } = useTaskStore.getState();
   const username = useAuthStore((state) => state.username);
+  const email = useAuthStore((state) => state.email);
   const setUsername = useAuthStore((state) => state.setUsername);
   const { setLoadingEnabled, setCurrentMap, resetLastEditedMapIdLoaded, currentMap, setSidebarCollapsed } = useMapsStore.getState();
   const popupRef = React.useRef<HTMLDivElement>(null);
@@ -227,7 +228,7 @@ export const AccountPopup: React.FC = () => {
                   {username || 'User'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {username || 'user@example.com'}
+                  {email || 'user@example.com'}
                 </p>
               </div>
             </div>

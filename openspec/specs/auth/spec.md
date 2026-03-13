@@ -109,6 +109,12 @@ The system SHALL provide an account management popup that allows users to manage
 - **WHEN** user clicks on the username in the header
 - **THEN** an account management popup SHALL be displayed
 
+#### Scenario: Account popup displays username and email
+- **GIVEN** user is logged in
+- **WHEN** user clicks on the username in the header
+- **THEN** the popup SHALL display the username on the first line
+- **AND** the popup SHALL display the user's registered email on the second line
+
 #### Scenario: User updates username
 - **GIVEN** account popup is open
 - **WHEN** user enters a new username and confirms
@@ -291,15 +297,15 @@ The system MUST provide user authentication endpoints in production mode.
 
 #### Scenario: Login user
 - **WHEN** POST request to `/api/auth/login` with JSON body `{username, password, deviceId, deviceInfo}`
-- **THEN** validates credentials and returns `{userId, token, port, username}`
+- **THEN** validates credentials and returns `{userId, token, port, username, email}`
 
 #### Scenario: Auto login
 - **WHEN** POST request to `/api/auth/auto-login` with JSON body `{deviceId}`
-- **THEN** validates device and returns `{userId, token, port, username}`
+- **THEN** validates device and returns `{userId, token, port, username, email}`
 
 #### Scenario: Get user info
 - **WHEN** GET request to `/api/auth/user-info?userId=xxx`
-- **THEN** returns user information including port and devices
+- **THEN** returns user information including port, devices, username, and email
 
 #### Scenario: Logout
 - **WHEN** POST request to `/api/auth/logout` with JSON body `{userId}`

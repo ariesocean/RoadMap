@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { loadFromLocalStorage, saveToLocalStorage, removeFromLocalStorage } from '@/utils/storage';
 
 const USERNAME_STORAGE_KEY = 'username';
+const EMAIL_STORAGE_KEY = 'email';
 const USER_ID_KEY = 'userId';
 const TOKEN_KEY = 'authToken';
 const DEVICE_ID_KEY = 'deviceId';
@@ -25,6 +26,7 @@ function getOrCreateDeviceId(): string {
 
 export interface AuthState {
   username: string | null;
+  email: string | null;
   userId: string | null;
   token: string | null;
   deviceId: string;
@@ -32,16 +34,18 @@ export interface AuthState {
   userPort: number | null;
   
   setUsername: (username: string) => void;
+  setEmail: (email: string) => void;
   setUserId: (userId: string) => void;
   setToken: (token: string) => void;
   setUserPort: (port: number) => void;
-  login: (username: string, userId: string, token: string) => void;
+  login: (username: string, email: string, userId: string, token: string) => void;
   logout: () => void;
   initAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   username: null,
+  email: null,
   userId: null,
   token: null,
   deviceId: getOrCreateDeviceId(),
@@ -51,6 +55,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUsername: (username: string) => {
     set({ username });
     saveToLocalStorage(USERNAME_STORAGE_KEY, username);
+  },
+
+  setEmail: (email: string) => {
+    set({ email });
+    saveToLocalStorage(EMAIL_STORAGE_KEY, email);
   },
 
   setUserId: (userId: string) => {
@@ -67,28 +76,32 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ userPort: port });
   },
 
-  login: (username: string, userId: string, token: string) => {
-    set({ username, userId, token, isAuthenticated: true });
+  login: (username: string, email: string, userId: string, token: string) => {
+    set({ username, email, userId, token, isAuthenticated: true });
     saveToLocalStorage(USERNAME_STORAGE_KEY, username);
+    saveToLocalStorage(EMAIL_STORAGE_KEY, email);
     saveToLocalStorage(USER_ID_KEY, userId);
     saveToLocalStorage(TOKEN_KEY, token);
   },
 
   logout: () => {
-    set({ username: null, userId: null, token: null, isAuthenticated: false, userPort: null });
+    set({ username: null, email: null, userId: null, token: null, isAuthenticated: false, userPort: null });
     removeFromLocalStorage(USERNAME_STORAGE_KEY);
+    removeFromLocalStorage(EMAIL_STORAGE_KEY);
     removeFromLocalStorage(USER_ID_KEY);
     removeFromLocalStorage(TOKEN_KEY);
   },
 
   initAuth: () => {
     const savedUsername = loadFromLocalStorage(USERNAME_STORAGE_KEY);
+    const savedEmail = loadFromLocalStorage(EMAIL_STORAGE_KEY);
     const savedUserId = loadFromLocalStorage(USER_ID_KEY);
     const savedToken = loadFromLocalStorage(TOKEN_KEY);
     const deviceId = getOrCreateDeviceId();
     
     set({ 
-      username: savedUsername, 
+      username: savedUsername,
+      email: savedEmail,
       userId: savedUserId, 
       token: savedToken,
       deviceId,

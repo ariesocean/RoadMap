@@ -433,7 +433,7 @@ const roadmapPlugin = {
           const userInfo = getUserInfo(result.userId);
           
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ ...result, port, username: userInfo.username }));
+          res.end(JSON.stringify({ ...result, port, username: userInfo.username, email: userInfo.email }));
         } catch (error) {
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Login failed' }));
@@ -470,7 +470,7 @@ const roadmapPlugin = {
           const userInfo = getUserInfo(result.userId);
           
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ ...result, port, username: userInfo.username }));
+          res.end(JSON.stringify({ ...result, port, username: userInfo.username, email: userInfo.email }));
         } catch (error) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Auto-login failed' }));
