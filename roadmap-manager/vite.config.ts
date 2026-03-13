@@ -5,6 +5,7 @@ import fs from 'fs'
 import http from 'http'
 import { spawn, execSync } from 'child_process'
 import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice, updateUsername, updatePassword, getUserInfo } from './src/services/server/userServiceServer'
+import { handleOpenCodeProxy } from './src/services/server/opencodeProxy'
 
 const config = require('./src/config.cjs')
 const PROJECT_DIR = process.env.PROJECT_DIR || config.projectDir
@@ -634,6 +635,35 @@ const roadmapPlugin = {
       } else {
         next();
       }
+    });
+
+    // Proxy middleware for /api/opencode/* - forwards to user's OpenCode Server
+    server.middlewares.use('/api/opencode', async (req: any, res: any, next: any) => {
+      const userId = req.headers['x-user-id'] as string;
+
+      if (!userId) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Authentication required' }));
+        return;
+      }
+
+      let bodyData = '';
+      if (req.method === 'POST' || req.method === 'PUT') {
+        const chunks: Buffer[] = [];
+        for await (const chunk of req) {
+          chunks.push(chunk);
+        }
+        bodyData = Buffer.concat(chunks).toString();
+      }
+
+      await handleOpenCodeProxy(
+        userId,
+        req.url,
+        req.method,
+        req.headers,
+        bodyData,
+        res
+      );
     });
 
     server.middlewares.use(async (req: any, res: any, next: any) => {

@@ -5,6 +5,8 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import * as http from 'http';
 import { spawn, execSync } from 'child_process';
+import * as url from 'url';
+import { handleOpenCodeProxy } from '../src/services/server/opencodeProxy';
 
 const app = express();
 app.use(cors());
@@ -1035,6 +1037,22 @@ app.get('/session', async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: String(error) });
   }
+});
+
+app.use('/api/opencode/*', async (req: Request, res: Response) => {
+  console.log('[Proxy] Request:', req.method, req.originalUrl);
+  const userId = req.headers['x-user-id'] as string || req.query.userId as string;
+
+  const bodyData = req.body && Object.keys(req.body).length > 0 ? JSON.stringify(req.body) : '';
+
+  await handleOpenCodeProxy(
+    userId,
+    req.originalUrl,
+    req.method,
+    req.headers as Record<string, string | string[] | undefined>,
+    bodyData,
+    res
+  );
 });
 
 app.use(express.static(path.join(__dirname, '../../dist')));

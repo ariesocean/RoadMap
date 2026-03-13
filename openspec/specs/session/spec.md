@@ -392,30 +392,35 @@ The system SHALL provide a manual connection state toggle that allows users to c
 - **AND** no data conflicts SHALL occur between devices
 
 ### Requirement: SDK Dynamic Port Configuration
-The system SHALL initialize the OpenCode SDK client with the correct server port for the current user.
+The system SHALL initialize the OpenCode SDK client to use a backend proxy for all API calls, enabling remote access via Cloudflare Tunnel.
 
-#### Scenario: SDK client initialization with user port
+#### Scenario: SDK client initialization with proxy
 - **WHEN** the SDK client is initialized via `getOpenCodeClient()`
-- **AND** the current user has an assigned port from authStore
-- **THEN** the client SHALL connect to `http://localhost:{userPort}`
-- **AND** the user SHALL be able to communicate with their isolated OpenCode server
+- **THEN** the client SHALL connect to `/api/opencode` (backend proxy)
+- **AND** all SDK requests SHALL be forwarded to the user's isolated OpenCode server
+- **AND** the SDK SHALL automatically include `userId` from authStore as a query parameter
 
-#### Scenario: SDK client initialization with default port
-- **WHEN** the SDK client is initialized via `getOpenCodeClient()`
-- **AND** no user is logged in (no userPort in authStore)
-- **THEN** the client SHALL connect to the default port `http://localhost:51432`
-- **AND** the system SHALL use the default OpenCode server
+#### Scenario: SDK proxy forwards to correct user port
+- **WHEN** the SDK makes a request to `/api/opencode/*`
+- **AND** the request includes `userId` as a query parameter
+- **THEN** the backend proxy SHALL look up the user's assigned port from `ports.json`
+- **AND** the proxy SHALL forward the request to `http://localhost:{userPort}/*`
+- **AND** the response SHALL be returned to the SDK client
 
-#### Scenario: Client instance reset on login
-- **WHEN** a user successfully logs in
-- **AND** the user has an assigned port
-- **THEN** `updateClientBaseUrl()` SHALL be called
-- **AND** the client instance SHALL be reset to null
-- **AND** the next `getOpenCodeClient()` call SHALL create a new instance with the user's port
+#### Scenario: SDK handles proxy errors when user not found
+- **WHEN** the backend proxy cannot find the user's port
+- **THEN** the SDK SHALL return a 404 error with message "User not found or port not assigned"
 
-#### Scenario: Client instance reset on auto-login
-- **WHEN** the application auto-login succeeds on startup
-- **AND** the user has an assigned port
-- **THEN** `updateClientBaseUrl()` SHALL be called
-- **AND** subsequent SDK calls SHALL use the correct user port
+#### Scenario: SDK handles proxy errors when user not logged in
+- **WHEN** a request is made to `/api/opencode/*`
+- **AND** no `userId` is provided in the query parameters
+- **THEN** the backend proxy SHALL return a 401 error with message "Authentication required"
+
+#### Scenario: SSE streams proxied correctly
+- **WHEN** the SDK subscribes to `/global/event` (SSE stream)
+- **AND** the request is made through the proxy
+- **THEN** the backend proxy SHALL stream events from the user's OpenCode server
+- **AND** the stream SHALL be passed through to the client without buffering
+
+(End of file - total 42 lines)
 

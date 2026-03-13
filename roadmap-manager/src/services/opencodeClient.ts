@@ -1,14 +1,16 @@
 import { createOpencodeClient, type Session } from '@opencode-ai/sdk/client';
 import { useAuthStore } from '@/store/authStore';
 
-const DEFAULT_PORT = 51432;
-
 function getBaseUrl(): string {
-  const userPort = useAuthStore.getState().userPort;
-  if (userPort) {
-    return `http://localhost:${userPort}`;
+  return '/api/opencode';
+}
+
+function getUserIdHeader(): Record<string, string> {
+  const userId = useAuthStore.getState().userId;
+  if (userId) {
+    return { 'x-user-id': userId };
   }
-  return `http://localhost:${DEFAULT_PORT}`;
+  return {};
 }
 
 let clientInstance: ReturnType<typeof createOpencodeClient> | null = null;
@@ -27,6 +29,7 @@ function getClient() {
   if (!clientInstance) {
     clientInstance = createOpencodeClient({
       baseUrl: getBaseUrl(),
+      headers: getUserIdHeader(),
     });
   }
   return clientInstance;
