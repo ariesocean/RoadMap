@@ -5,7 +5,7 @@ export interface ModelConfig {
 }
 
 export const AVAILABLE_MODELS: ModelConfig[] = [
-  { providerID: 'minimax-cn-coding-plan', modelID: 'MiniMax-M2.5', displayName: 'MiniMax M2.5' },
+  { providerID: 'minimax-cn-coding-plan', modelID: 'MiniMax-M2.5-highspeed', displayName: 'MiniMax M2.5' },
   { providerID: 'minimax-cn-coding-plan', modelID: 'MiniMax-M2.1', displayName: 'MiniMax M2.1' },
   { providerID: 'kimi-for-coding', modelID: 'k2p5', displayName: 'K2P5' },
   { providerID: 'bailian-coding-plan', modelID: 'qwen3.5-plus', displayName: 'Qwen3.5 Plus' },
