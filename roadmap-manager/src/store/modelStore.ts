@@ -20,10 +20,13 @@ export const useModelStore = create<ModelStore>()(
   )
 );
 
-// Initialize with the first model if none is selected
+// Initialize with the first model if none is selected, or if the saved model is no longer valid
 export const initializeModelStore = () => {
   const { selectedModel } = useModelStore.getState();
-  if (!selectedModel) {
+  const isValidModel = selectedModel && 
+    AVAILABLE_MODELS.some(m => m.providerID === selectedModel.providerID && m.modelID === selectedModel.modelID);
+  
+  if (!selectedModel || !isValidModel) {
     useModelStore.setState({ selectedModel: AVAILABLE_MODELS[0] });
   }
 };
