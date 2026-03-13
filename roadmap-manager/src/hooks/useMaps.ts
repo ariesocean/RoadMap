@@ -74,19 +74,19 @@ export const useMaps = () => {
         // Guard: Skip archive if lastEditedMapId doesn't match currentMap
         // This prevents stale content from overwriting newer edits on multi-device scenarios
         if (latestLastEditedMapId !== currentMap.id) {
-          console.log(`[Maps] Skipped archive: lastEditedMapId (${latestLastEditedMapId}) doesn't match currentMap.id (${currentMap.id})`);
+
           showToastNotification('地图切换冲突：其他设备已切换地图，跳过存档以防止数据丢失', 'warning');
         } else {
           const currentContent = await readRoadmapFile();
           await writeMapFile(currentMap, currentContent);
-          console.log(`[Maps] Archived current content to: ${currentMap.filename}`);
+
         }
       }
 
       // 2. Load new map content into roadmap.md
       const newContent = await readMapFile(map);
       await writeRoadmapFile(newContent, null); // Don't auto-save when loading a new map
-      console.log(`[Maps] Loaded new map: ${map.filename}`);
+
 
       // 3. Update current map in store
       setCurrentMap(map);
@@ -98,7 +98,6 @@ export const useMaps = () => {
       await refreshTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to switch map');
-      console.error('[Maps] Error switching map:', err);
     } finally {
       setSwitching(false);
       setLoading(false);
@@ -114,7 +113,7 @@ export const useMaps = () => {
       const newMap = await createMap(name);
       if (newMap) {
         addMap(newMap);
-        console.log(`[Maps] Created new map: ${newMap.filename}`);
+
 
         // Auto-select the newly created map
         await handleMapSelect(newMap);
@@ -142,7 +141,7 @@ export const useMaps = () => {
           await refreshTasks();
         }
         removeMap(map.id);
-        console.log(`[Maps] Deleted map: ${map.filename}`);
+
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete map');
@@ -164,7 +163,7 @@ export const useMaps = () => {
         if (currentMap?.id === map.id) {
           setCurrentMap(renamedMap);
         }
-        console.log(`[Maps] Renamed map: ${map.filename} -> ${renamedMap.filename}`);
+
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to rename map');
@@ -180,9 +179,9 @@ export const useMaps = () => {
     try {
       const content = await readRoadmapFile();
       await writeMapFile(currentMap, content);
-      console.log(`[Maps] Saved current map: ${currentMap.filename}`);
+
     } catch (err) {
-      console.error('[Maps] Error saving current map:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save map');
     }
   }, [currentMap]);
 

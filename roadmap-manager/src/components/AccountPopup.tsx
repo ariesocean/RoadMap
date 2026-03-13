@@ -163,7 +163,6 @@ export const AccountPopup: React.FC = () => {
       if (currentMap) {
         const currentContent = await readRoadmapFile();
         await writeMapFile(currentMap, currentContent);
-        console.log(`[Maps] Saved content to: ${currentMap.filename}`);
       }
 
       // Stop OpenCode server for this user

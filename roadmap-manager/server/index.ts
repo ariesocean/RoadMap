@@ -521,7 +521,6 @@ function killOpenCodeProcess(port: number): void {
     const output = execSync(`pgrep -f "opencode.*serve.*--port ${port}"`, { encoding: 'utf-8' });
     if (output.trim()) {
       execSync(`kill ${output.trim()}`);
-      console.log(`[Kill] Stopped opencode serve on port ${port}`);
     }
   } catch {
     // pgrep 没找到进程，忽略即可
@@ -1040,7 +1039,6 @@ app.get('/session', async (req: Request, res: Response) => {
 });
 
 app.use('/api/opencode/*', async (req: Request, res: Response) => {
-  console.log('[Proxy] Request:', req.method, req.originalUrl);
   const userId = req.headers['x-user-id'] as string || req.query.userId as string;
 
   const bodyData = req.body && Object.keys(req.body).length > 0 ? JSON.stringify(req.body) : '';

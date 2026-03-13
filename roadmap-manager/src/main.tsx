@@ -81,7 +81,7 @@ const initializeMapsOnReconnect = async () => {
           console.error('Failed to load map content into roadmap.md:', writeErr);
         }
       } else {
-        console.warn(`[Maps] Target map "${lastEditedMapId}" not found in available maps`);
+        // Map not found, will use default
       }
     }
 
