@@ -858,7 +858,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     const userInfo = getUserInfo(result.userId);
     
     res.setHeader('Content-Type', 'application/json');
-    res.json({ ...result, port, username: userInfo.username });
+    res.json({ ...result, port, username: userInfo.username, email: userInfo.email });
   } catch (error) {
     res.status(401).json({ error: error instanceof Error ? error.message : 'Login failed' });
   }
@@ -886,7 +886,7 @@ app.post('/api/auth/auto-login', async (req: Request, res: Response) => {
     const userInfo = getUserInfo(result.userId);
     
     res.setHeader('Content-Type', 'application/json');
-    res.json({ ...result, port, username: userInfo.username });
+    res.json({ ...result, port, username: userInfo.username, email: userInfo.email });
   } catch (error) {
     res.status(500).json({ error: 'Auto-login failed' });
   }
