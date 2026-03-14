@@ -5,6 +5,7 @@ import { useTaskStore } from '@/store/taskStore';
 import { useSession } from '@/hooks/useSession';
 import { useSessionStore } from '@/store/sessionStore';
 import { useMaps } from '@/hooks/useMaps';
+import { useI18nStore } from '@/store/i18nStore';
 import { SessionList } from './SessionList';
 import { ModelSelector } from './ModelSelector';
 
@@ -14,6 +15,7 @@ export const InputArea: React.FC = () => {
   const { submitPrompt, isProcessing, error, registerOnSubmitPromptComplete, unregisterOnSubmitPromptComplete } = useTaskStore();
   const { clearCurrentSession } = useSession();
   const { currentMap, saveCurrentMap } = useMaps();
+  const { t } = useI18nStore();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -90,7 +92,7 @@ export const InputArea: React.FC = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Enter a prompt to create or update tasks..."
+                placeholder={t('inputPlaceholder')}
                 disabled={isProcessing}
                 rows={1}
                 className="w-full resize-none bg-transparent text-primary-text dark:text-dark-primary-text placeholder:text-placeholder-text/60 focus:outline-none text-sm leading-relaxed disabled:opacity-60"
@@ -118,7 +120,7 @@ export const InputArea: React.FC = () => {
                   <button
                     onClick={handleNewSession}
                     className="hidden sm:block p-1.5 sm:p-1.75 md:p-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-                    title="New conversation"
+                    title={t('newConversationTooltip')}
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-secondary-text/50 dark:text-dark-secondary-text/50" />

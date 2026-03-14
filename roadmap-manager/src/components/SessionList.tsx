@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Plus, RefreshCw, MessageSquare, Trash2 } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { getSessionTitle } from '@/utils/sessionUtils';
 
 interface SessionListProps {
@@ -37,6 +38,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18nStore();
 
   const userId = useAuthStore.getState().userId;
   const allSessions = Object.values(sessions)
@@ -120,7 +122,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
       >
         <MessageSquare className="w-3.5 h-3.5 opacity-60" />
         <span className="truncate max-w-[60px] sm:max-w-[160px]">
-          {currentSession?.title ? getSessionTitle(currentSession.title) : 'New Conversation'}
+          {currentSession?.title ? getSessionTitle(currentSession.title) : t('newConversation')}
         </span>
         <ChevronDown className="w-3 h-3 opacity-60" />
       </button>
@@ -134,14 +136,14 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                 className="flex items-center gap-2 px-3 py-2 text-xs text-primary dark:text-primary-dark hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg rounded transition-colors"
               >
               <Plus className="w-4 h-4" />
-              New Conversation
+              {t('newConversation')}
             </button>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleManualRefresh}
                 className={`p-1 rounded hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors ${isLoadingServerSessions ? 'cursor-wait' : ''}`}
-                title="Refresh sessions"
+                title={t('refreshSessions')}
                 disabled={isLoadingServerSessions}
               >
                 <RefreshCw className={`w-4 h-4 text-secondary-text transition-all ${isLoadingServerSessions ? 'animate-spin' : ''}`} />
@@ -150,7 +152,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
           </div>
 
           <div className="p-2 text-xs text-secondary-text bg-gray-50 dark:bg-gray-800">
-            {allSessions.length} sessions
+            {allSessions.length} session{allSessions.length !== 1 ? 's' : ''}
           </div>
 
           <div className="max-h-64 overflow-y-auto session-dropdown-scroll">
@@ -179,7 +181,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
                             ? 'text-red-600 scale-110'
                             : 'text-red-400/15 hover:text-red-500 dark:text-red-500/15 dark:hover:text-red-400'
                         }`}
-                        title={confirmDeleteSessionId === session.id ? 'Click again to confirm' : 'Delete session'}
+                        title={confirmDeleteSessionId === session.id ? t('clickAgainToConfirm') : t('deleteSession')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -190,7 +192,7 @@ export const SessionList: React.FC<SessionListProps> = ({ onSelect }) => {
             })}
             {allSessions.length === 0 && (
               <div className="px-3 py-4 text-xs text-secondary-text text-center">
-                No sessions found
+                {t('noSessionsFound')}
               </div>
             )}
           </div>

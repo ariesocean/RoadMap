@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2, Edit2, FolderOpen, Check, Menu } from 'lucide-react';
 import { useMapsStore, type MapInfo } from '@/store/mapsStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 const mapsSidebarStyles = `
   .maps-sidebar-scroll::-webkit-scrollbar {
@@ -63,6 +64,8 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
     toggleSidebar,
     error,
   } = useMapsStore();
+
+  const { t } = useI18nStore();
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -154,7 +157,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
           type="button"
           onClick={toggleSidebar}
           className="sidebar-toggle flex items-center justify-center rounded-md text-secondary-text dark:text-dark-secondary-text hover:text-primary-text dark:hover:text-dark-primary-text hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-          title="Expand sidebar"
+          title={t('expandSidebar')}
         >
           <Menu className="w-[clamp(16px,1.8vw,20px)] h-[clamp(16px,1.8vw,20px)]" />
         </button>
@@ -170,7 +173,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
         type="button"
         onClick={toggleSidebar}
         className="sidebar-toggle flex items-center justify-center rounded-md text-secondary-text dark:text-dark-secondary-text hover:text-primary-text dark:hover:text-dark-primary-text hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-        title="Collapse sidebar"
+        title={t('collapseSidebar')}
       >
         <Menu className="w-[clamp(16px,1.8vw,20px)] h-[clamp(16px,1.8vw,20px)]" />
       </button>
@@ -187,7 +190,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
             className="sidebar-btn w-full flex items-center justify-center gap-[clamp(6px,0.8vw,8px)] rounded text-secondary-text dark:text-dark-secondary-text hover:text-primary-text dark:hover:text-dark-primary-text hover:bg-card-bg dark:hover:bg-dark-card-bg transition-colors"
           >
             <Plus className="w-[clamp(16px,1.8vw,20px)] h-[clamp(16px,1.8vw,20px)]" />
-            <span>New Map</span>
+            <span>{t('newMap')}</span>
           </button>
         </div>
 
@@ -212,7 +215,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                   setShowCreateInput(false);
                 }
               }}
-              placeholder="Map name..."
+              placeholder={t('mapNamePlaceholder')}
               className="w-full px-[clamp(8px,1vw,12px)] py-[clamp(6px,0.8vw,10px)] rounded bg-card-bg dark:bg-dark-card-bg text-primary-text dark:text-dark-primary-text placeholder-placeholder-text dark:placeholder-dark-placeholder-text border border-border-color dark:border-dark-border-color focus:border-primary focus:outline-none"
               style={{ fontSize: 'clamp(12px, 1.3vw, 14px)' }}
             />
@@ -224,7 +227,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
           {availableMaps.length === 0 ? (
             <div className="px-[clamp(10px,1.2vw,14px)] py-8 text-center">
               <FolderOpen className="sidebar-icon mx-auto mb-2 text-placeholder-text dark:text-dark-placeholder-text" />
-              <p className="text-placeholder-text dark:text-dark-placeholder-text" style={{ fontSize: 'clamp(10px, 1vw, 12px)' }}>No maps found</p>
+              <p className="text-placeholder-text dark:text-dark-placeholder-text" style={{ fontSize: 'clamp(10px, 1vw, 12px)' }}>{t('noMapsFound')}</p>
             </div>
           ) : (
             <div className="space-y-[clamp(4px,0.5vw,6px)]">
@@ -271,7 +274,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                                 type="button"
                                 onClick={(e) => handleRenameClick(e, map)}
                                 className="p-[clamp(2px,0.3vw,4px)] rounded hover:bg-primary/20 transition-colors"
-                                title="Rename"
+                                title={t('rename')}
                               >
                                 <Edit2 className="w-[clamp(10px,1.2vw,14px)] h-[clamp(10px,1.2vw,14px)]" />
                               </button>
@@ -279,7 +282,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                                 type="button"
                                 onClick={(e) => handleDeleteClick(e, map)}
                                 className="p-[clamp(2px,0.3vw,4px)] rounded hover:bg-primary/20 transition-colors"
-                                title="Delete"
+                                title={t('deleteMap')}
                               >
                                 <Trash2 className="w-[clamp(10px,1.2vw,14px)] h-[clamp(10px,1.2vw,14px)]" />
                               </button>
@@ -292,7 +295,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                               style={{ fontSize: 'clamp(11px, 1.3vw, 13px)' }}
                             >
                               <Check className="w-[clamp(14px,1.6vw,18px)] h-[clamp(14px,1.6vw,18px)]" />
-                              Confirm
+                              {t('confirmDelete')}
                             </button>
                           )}
                         </div>

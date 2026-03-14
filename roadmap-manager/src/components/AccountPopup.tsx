@@ -8,6 +8,7 @@ import { LogOut, User, Key } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMapsStore } from '@/store/mapsStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { removeFromLocalStorage } from '@/utils/storage';
 import { readRoadmapFile, writeMapFile } from '@/services/fileService';
 import { PasswordInput } from '@/components/PasswordInput';
@@ -28,6 +29,7 @@ export const AccountPopup: React.FC = () => {
   const email = useAuthStore((state) => state.email);
   const setUsername = useAuthStore((state) => state.setUsername);
   const { setLoadingEnabled, setCurrentMap, resetLastEditedMapIdLoaded, currentMap, setSidebarCollapsed } = useMapsStore.getState();
+  const { t } = useI18nStore();
   const popupRef = React.useRef<HTMLDivElement>(null);
 
   // Close popup when clicking outside
@@ -94,9 +96,9 @@ export const AccountPopup: React.FC = () => {
       setUsername(newUsername.trim());
       setShowUsernameEdit(false);
       setNewUsername('');
-      setSuccess('Username updated successfully');
+      setSuccess(t('usernameUpdated'));
     } catch (err) {
-      setError('Failed to update username');
+      setError(t('updateFailed'));
     }
   };
 
@@ -148,9 +150,9 @@ export const AccountPopup: React.FC = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
-      setSuccess('Password updated successfully');
+      setSuccess(t('passwordUpdated'));
     } catch (err) {
-      setError('Failed to update password');
+      setError(t('updateFailed'));
     }
   };
 
@@ -209,7 +211,7 @@ export const AccountPopup: React.FC = () => {
         onClick={handleTogglePopup}
         className="cursor-pointer hover:opacity-80 transition-opacity"
       >
-        <span className="text-sm text-secondary-text dark:text-dark-secondary-text">
+        <span className="text-sm font-medium text-secondary-text dark:text-dark-secondary-text">
           {username || 'User'}
         </span>
       </div>
@@ -256,7 +258,7 @@ export const AccountPopup: React.FC = () => {
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
                 >
                   <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Change Username</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{t('changeUsername')}</span>
                 </button>
               ) : (
                 <form onSubmit={handleUpdateUsername} className="p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
@@ -265,7 +267,7 @@ export const AccountPopup: React.FC = () => {
                     type="text"
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
-                    placeholder="New username"
+                    placeholder={t('newUsername')}
                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50"
                     autoFocus
                   />
@@ -274,14 +276,14 @@ export const AccountPopup: React.FC = () => {
                       type="submit"
                       className="flex-1 px-3 py-1.5 text-xs font-medium bg-[#0066ff] text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
-                      Confirm
+                      {t('confirm')}
                     </button>
                     <button
                       type="button"
                       onClick={() => { setShowUsernameEdit(false); setNewUsername(''); setError(null); setSuccess(null); }}
                       className="flex-1 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
-                      Cancel
+                      {t('cancel')}
                     </button>
                   </div>
                 </form>
@@ -294,7 +296,7 @@ export const AccountPopup: React.FC = () => {
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
                 >
                   <Key className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Change Password</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{t('changePassword')}</span>
                 </button>
               ) : (
                 <form onSubmit={handleUpdatePassword} className="p-2 rounded-lg bg-gray-50 dark:bg-gray-800 space-y-2">
@@ -303,7 +305,7 @@ export const AccountPopup: React.FC = () => {
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Current password"
+                    placeholder={t('currentPassword')}
                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50"
                     autoFocus
                   />
@@ -311,10 +313,10 @@ export const AccountPopup: React.FC = () => {
                     id="new-password-input"
                     value={newPassword}
                     onChange={setNewPassword}
-                    placeholder="New password"
+                    placeholder={t('newPassword')}
                     confirmValue={confirmNewPassword}
                     confirmOnChange={setConfirmNewPassword}
-                    confirmPlaceholder="Confirm new password"
+                    confirmPlaceholder={t('confirmNewPassword')}
                     error={error && error.includes('match') ? error : null}
                   />
                   <div className="flex gap-2">
@@ -322,14 +324,14 @@ export const AccountPopup: React.FC = () => {
                       type="submit"
                       className="flex-1 px-3 py-1.5 text-xs font-medium bg-[#0066ff] text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
-                      Confirm
+                      {t('confirm')}
                     </button>
                     <button
                       type="button"
                       onClick={() => { setShowPasswordEdit(false); setCurrentPassword(''); setNewPassword(''); setConfirmNewPassword(''); setError(null); setSuccess(null); }}
                       className="flex-1 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
-                      Cancel
+                      {t('cancel')}
                     </button>
                   </div>
                 </form>
@@ -341,7 +343,7 @@ export const AccountPopup: React.FC = () => {
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
               >
                 <LogOut className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-red-600 dark:text-red-400">Logout</span>
+                <span className="text-sm text-red-600 dark:text-red-400">{t('logout')}</span>
               </button>
             </div>
           </div>

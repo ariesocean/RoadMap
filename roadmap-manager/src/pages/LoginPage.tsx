@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { useMapsStore } from '@/store/mapsStore';
 import { listMaps, readMapFile, writeRoadmapFile } from '@/services/fileService';
 import type { MapInfo } from '@/services/fileService';
@@ -50,6 +51,7 @@ export const LoginPage: React.FC = () => {
 
   const { toggleConnected, refreshTasks } = useTaskStore.getState();
   const { theme, setTheme } = useThemeStore();
+  const { language, setLanguage, t } = useI18nStore();
   const { setLoadingEnabled, setAvailableMaps, setCurrentMap, loadLastEditedMapId } = useMapsStore.getState();
 
   // Sync theme with themeStore
@@ -61,6 +63,11 @@ export const LoginPage: React.FC = () => {
     const newTheme = isDarkMode ? 'light' : 'dark';
     setIsDarkMode(!isDarkMode);
     setTheme(newTheme);
+  };
+
+  const handleLanguageToggle = () => {
+    const newLang = language === 'en' ? 'zh' : 'en';
+    setLanguage(newLang);
   };
 
   // Initialize maps on login - same logic as when switching to connected
@@ -219,8 +226,18 @@ export const LoginPage: React.FC = () => {
       <button
         onClick={handleThemeToggle}
         className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${isDarkMode ? 'hover:bg-[#2d2d2d] text-gray-400 hover:text-white' : 'hover:bg-gray-200 text-gray-500 hover:text-gray-900'}`}
+        title={t('toggleTheme')}
       >
         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
+
+      {/* Language Toggle */}
+      <button
+        onClick={handleLanguageToggle}
+        className={`absolute top-6 right-16 px-3 py-1.5 rounded-md transition-all duration-200 text-sm font-semibold border ${isDarkMode ? 'bg-[#252525] border-[#333] hover:bg-[#2d2d2d] text-white' : 'bg-gray-100 border-gray-200 hover:bg-gray-200 text-gray-900'}`}
+        title={language === 'en' ? 'Switch to Chinese' : '切换到英文'}
+      >
+        <span>{language === 'en' ? 'EN' : '中'}</span>
       </button>
 
       {/* Login Card */}
@@ -236,31 +253,31 @@ export const LoginPage: React.FC = () => {
           <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-[#0066ff] rounded-xl flex items-center justify-center shadow-md shadow-blue-600/20">
             <ListTodo className="text-white" size={20} />
           </div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Roadmap Manager</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{t('loginTitle')}</h1>
         </div>
 
         {/* AI Assistant Tagline */}
         <div className="mb-6 sm:mb-7 md:mb-8">
           <p className="text-sm sm:text-base font-medium mb-1">
             <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-              Your AI Personal Task Assistant
+              {t('loginTagline')}
             </span>
           </p>
           <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            Turn natural language into structured tasks and notes
+            {t('loginSubTagline')}
           </p>
         </div>
 
         {/* Login Form */}
         <form className="space-y-4" onSubmit={handleLogin}>
           <div>
-            <label htmlFor="login-username" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Username or Email</label>
+            <label htmlFor="login-username" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('usernameOrEmail')}</label>
             <input
               id="login-username"
               type="text"
               value={loginUsername}
               onChange={(e) => setLoginUsername(e.target.value)}
-              placeholder="Enter your username"
+              placeholder={t('enterUsername')}
               disabled={isLoggingIn}
               className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 isDarkMode
@@ -271,8 +288,8 @@ export const LoginPage: React.FC = () => {
           </div>
           <div>
             <div className="flex justify-between items-center mb-1.5">
-              <label htmlFor="login-password" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Password</label>
-              <a href="#" className="text-sm text-[#0066ff] hover:text-blue-500 hover:underline">Forgot password?</a>
+              <label htmlFor="login-password" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('password')}</label>
+              <a href="#" className="text-sm text-[#0066ff] hover:text-blue-500 hover:underline">{t('forgotPassword')}</a>
             </div>
             <div className="relative">
               <input
@@ -311,15 +328,15 @@ export const LoginPage: React.FC = () => {
           )}
 
           <button disabled={isLoggingIn} className="w-full bg-[#0066ff] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors mt-2 shadow-md shadow-blue-600/20">
-            {isLoggingIn ? 'Signing In...' : 'Sign In'}
+            {isLoggingIn ? t('signingIn') : t('signIn')}
           </button>
         </form>
 
         <div className="mt-6 sm:mt-7 md:mt-8 text-center">
           <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            Don't have an account?{' '}
+            {t('noAccount')}{' '}
             <button onClick={() => { setShowRegister(true); setRegisterError(null); setRegisterSuccess(null); }} className="text-[#0066ff] hover:text-blue-500 font-medium hover:underline">
-              Sign up
+              {t('signUp')}
             </button>
           </p>
         </div>
@@ -344,20 +361,20 @@ export const LoginPage: React.FC = () => {
             </button>
 
             <div className="mb-6">
-              <h2 className="text-xl font-semibold tracking-tight mb-1">Create an Account</h2>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Join Roadmap Manager to organize your tasks.</p>
+              <h2 className="text-xl font-semibold tracking-tight mb-1">{t('createAccount')}</h2>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{t('joinTagline')}</p>
             </div>
 
             <form className="space-y-4" onSubmit={handleRegister} autoComplete="off">
               <div>
-                <label htmlFor="register-username" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Username</label>
+                <label htmlFor="register-username" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('username')}</label>
                 <input
                   id="register-username"
                   type="text"
                   autoComplete="new-username"
                   value={registerUsername}
                   onChange={(e) => setRegisterUsername(e.target.value)}
-                  placeholder="Choose a username"
+                  placeholder={t('chooseUsername')}
                   className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors ${
                     isDarkMode
                       ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
@@ -366,14 +383,14 @@ export const LoginPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="register-email" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Email</label>
+                <label htmlFor="register-email" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('email')}</label>
                 <input
                   id="register-email"
                   type="email"
                   autoComplete="new-email"
                   value={registerEmail}
                   onChange={(e) => setRegisterEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={t('enterEmail')}
                   className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors ${
                     isDarkMode
                       ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
@@ -382,15 +399,15 @@ export const LoginPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="register-password" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Password</label>
+                <label htmlFor="register-password" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('password')}</label>
                 <PasswordInput
                   id="register-password"
                   value={registerPassword}
                   onChange={setRegisterPassword}
-                  placeholder="Create a password (min 6 characters)"
+                  placeholder={t('createPassword')}
                   confirmValue={registerConfirmPassword}
                   confirmOnChange={setRegisterConfirmPassword}
-                  confirmPlaceholder="Confirm your password"
+                  confirmPlaceholder={t('confirmPassword')}
                   autoComplete="new-password"
                   error={registerError && registerError.includes('match') ? registerError : null}
                 />
@@ -398,7 +415,7 @@ export const LoginPage: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1">
-                    <label htmlFor="register-invitation-code" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Invitation Code</label>
+                    <label htmlFor="register-invitation-code" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('invitationCode')}</label>
                     <span className="text-red-500">*</span>
                   </div>
                   <button
@@ -406,7 +423,7 @@ export const LoginPage: React.FC = () => {
                     onClick={() => setShowInvitationHelp(true)}
                     className="text-xs text-[#0066ff] hover:text-blue-500 underline"
                   >
-                    How to get invitation code?
+                    {t('howToGetInvitationCode')}
                   </button>
                 </div>
                 <input
@@ -415,7 +432,7 @@ export const LoginPage: React.FC = () => {
                   autoComplete="new-invitation-code"
                   value={registerInvitationCode}
                   onChange={(e) => setRegisterInvitationCode(e.target.value)}
-                  placeholder="Enter invitation code"
+                  placeholder={t('enterInvitationCode')}
                   className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors ${
                     isDarkMode
                       ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
@@ -440,10 +457,10 @@ export const LoginPage: React.FC = () => {
                       : 'border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button className="flex-1 bg-[#0066ff] hover:bg-blue-600 text-white font-medium py-2.5 rounded-xl transition-colors shadow-md shadow-blue-600/20">
-                  Sign Up
+                  {t('signUp')}
                 </button>
               </div>
             </form>
@@ -467,11 +484,11 @@ export const LoginPage: React.FC = () => {
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-[#0066ff]/20' : 'bg-blue-50'}`}>
                 <MessageCircle className="text-[#0066ff]" size={20} />
               </div>
-              <h2 className="text-lg font-semibold">Get Invitation Code</h2>
+              <h2 className="text-lg font-semibold">{t('getInvitationCode')}</h2>
             </div>
 
             <p className={`text-sm mb-5 leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              This app is currently by invitation only. Please contact the author on WeChat to get an invitation code.
+              {t('invitationCodeHelp')}
             </p>
 
             <button
@@ -493,12 +510,12 @@ export const LoginPage: React.FC = () => {
                   {copiedWeChatId ? (
                     <>
                       <Check size={18} />
-                      <span className="text-sm">Copied!</span>
+                      <span className="text-sm">{t('copied')}</span>
                     </>
                   ) : (
                     <>
                       <Copy size={18} />
-                      <span className="text-sm">Copy</span>
+                      <span className="text-sm">{t('copy')}</span>
                     </>
                   )}
                 </div>
@@ -509,7 +526,7 @@ export const LoginPage: React.FC = () => {
               onClick={() => setShowInvitationHelp(false)}
               className="w-full mt-5 bg-[#0066ff] hover:bg-blue-600 text-white font-medium py-2.5 rounded-xl transition-all duration-200 shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30"
             >
-              Got it
+              {t('gotIt')}
             </button>
           </motion.div>
         </div>

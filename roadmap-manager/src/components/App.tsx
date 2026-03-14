@@ -10,6 +10,7 @@ import { useMapsStore } from '@/store/mapsStore';
 import { useTaskStore } from '@/store/taskStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useSession } from '@/hooks/useSession';
+import { useI18nStore } from '@/store/i18nStore';
 import { initOpencodeSDK, closeOpencodeSDK } from '@/services/opencodeSDK';
 import { initializeModelStore } from '@/store/modelStore';
 
@@ -18,6 +19,7 @@ export const App: React.FC = () => {
   const { theme, toggleTheme } = useThemeStore();
   const { cleanupAllSessions } = useSession();
   const { isSidebarCollapsed } = useMapsStore();
+  const { t, language, setLanguage } = useI18nStore();
   const {
     handleMapSelect,
     handleCreateMap,
@@ -83,6 +85,14 @@ export const App: React.FC = () => {
           {/* Right Section */}
           <div className="flex-1 flex items-center justify-end gap-4">
             <button
+              onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+              className="px-3 py-1.5 rounded-md text-sm font-semibold text-secondary-text dark:text-dark-secondary-text hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors -mr-5"
+              title={language === 'en' ? 'Switch to Chinese' : '切换到英文'}
+            >
+              {language === 'en' ? 'EN' : '中'}
+            </button>
+
+            <button
               onClick={toggleTheme}
               className="p-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
               title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
@@ -100,7 +110,7 @@ export const App: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tasks..."
+                placeholder={t('searchTasks')}
                 className="w-[88px] sm:w-40 md:w-44 lg:w-48 pl-9 pr-4 py-2 text-sm search-input"
               />
             </div>

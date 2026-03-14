@@ -2,10 +2,12 @@ import React from 'react';
 import { ListTodo, Search, Sun, Moon } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 export const Header: React.FC = () => {
   const { searchQuery, setSearchQuery, isConnected } = useTaskStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { t, language, setLanguage } = useI18nStore();
 
   return (
     <header className="fixed top-0 left-0 right-0 h-14 header z-50 transition-colors duration-300">
@@ -19,9 +21,17 @@ export const Header: React.FC = () => {
         
         <div className="flex items-center gap-4">
           <button
+            onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+            className="px-3 py-1.5 rounded-md bg-secondary-bg dark:bg-dark-secondary-bg border border-border-color dark:border-dark-border-color hover:bg-border-color dark:hover:bg-dark-border-color transition-all duration-200 text-sm font-semibold"
+            title={language === 'en' ? 'Switch to Chinese' : '切换到英文'}
+          >
+            <span className="text-primary-text dark:text-dark-primary-text">{language === 'en' ? 'EN' : '中'}</span>
+          </button>
+
+          <button
             onClick={toggleTheme}
             className="p-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            title={t('toggleTheme')}
           >
             {theme === 'light' ? (
               <Moon className="w-5 h-5 text-secondary-text dark:text-dark-secondary-text transition-colors duration-300" />
@@ -36,7 +46,7 @@ export const Header: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tasks..."
+              placeholder={t('searchTasks')}
               className="w-32 sm:w-48 pl-9 pr-4 py-2 text-sm search-input transition-all duration-300"
             />
           </div>
@@ -48,7 +58,7 @@ export const Header: React.FC = () => {
               }`}
             />
             <span className="text-xs text-secondary-text dark:text-dark-secondary-text transition-colors duration-300">
-              {isConnected ? 'Connected' : 'Offline'}
+              {isConnected ? t('connected') : t('offline')}
             </span>
           </div>
         </div>

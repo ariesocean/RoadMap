@@ -25,6 +25,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { Subtask } from '@/store/types';
 import { useTaskStore } from '@/store/taskStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 interface SubtaskListProps {
   subtasks: Subtask[];
@@ -104,6 +105,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
   listeners
 }) => {
   const { toggleSubtask, updateSubtaskContent } = useTaskStore();
+  const { t } = useI18nStore();
   const [internalEditing, setInternalEditing] = useState(false);
   const isEditing = controlledIsEditing !== undefined ? controlledIsEditing : internalEditing;
   const setIsEditing = (editing: boolean) => {
@@ -237,7 +239,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
               <button
                 onClick={handleDelete}
                 className="p-0.5 sm:p-0.75 md:p-1 text-red-500 hover:text-red-600 transition-colors"
-                title="Delete subtask"
+                title={t('deleteSubtask')}
               >
                 <Trash className="w-3 h-3 sm:w-3.5 md:w-4 lg:w-4" />
               </button>
@@ -277,6 +279,7 @@ const SubtaskItemContent: React.FC<SortableSubtaskItemProps & {
 
 export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) => {
   const { reorderSubtasks, addSubtask } = useTaskStore();
+  const { t } = useI18nStore();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [localSubtasks, setLocalSubtasks] = useState(subtasks);
   const [isInNestingMode, setIsInNestingMode] = useState(false);
@@ -458,7 +461,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
           onChange={(e) => setNewSubtaskContent(e.target.value)}
           onKeyDown={handleAddKeyDown}
           onBlur={handleAddBlur}
-          placeholder="输入任务内容..."
+          placeholder={t('enterSubtaskContent')}
           className="flex-1 text-xs sm:text-sm md:text-sm bg-white dark:bg-dark-secondary-bg border border-primary rounded px-1.5 sm:px-2 py-0.5 sm:py-1 outline-none text-primary-text dark:text-dark-primary-text"
         />
       </div>
@@ -468,7 +471,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ subtasks, taskId }) =>
         className="mt-2 sm:mt-2.5 md:mt-3 lg:mt-3 pt-1.5 sm:pt-2 md:pt-2 lg:pt-2.5 border-t border-card-border dark:border-dark-card-border hover:border-primary dark:hover:border-primary cursor-pointer group transition-colors duration-200"
       >
         <span className="text-[10px] sm:text-xs md:text-xs lg:text-sm text-primary font-bold opacity-0 group-hover:opacity-100 flex justify-center mt-0.5 sm:mt-1 transition-all duration-200 drop-shadow-sm">
-          ADD TASK
+          {t('addTask')}
         </span>
       </div>
     )}
