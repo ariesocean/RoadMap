@@ -295,7 +295,7 @@ export const MapsSidebar: React.FC<MapsSidebarProps> = ({
                               style={{ fontSize: 'clamp(11px, 1.3vw, 13px)' }}
                             >
                               <Check className="w-[clamp(14px,1.6vw,18px)] h-[clamp(14px,1.6vw,18px)]" />
-                              {t('confirmDelete')}
+                              {t('confirm')}
                             </button>
                           )}
                         </div>

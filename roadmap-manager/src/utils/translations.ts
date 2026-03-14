@@ -211,10 +211,6 @@ export const translations = {
     en: 'Please enter a valid email',
     zh: '请输入有效的邮箱地址',
   },
-  passwordTooShort: {
-    en: 'Password must be at least 6 characters',
-    zh: '密码至少6个字符',
-  },
   passwordMismatch: {
     en: 'Passwords do not match',
     zh: '两次密码不一致',
@@ -239,6 +235,14 @@ export const translations = {
   username: {
     en: 'Username',
     zh: '用户名',
+  },
+  invalidCredentials: {
+    en: 'Please check your username or password',
+    zh: '请检查您的用户名或密码',
+  },
+  invalidUsername: {
+    en: 'Invalid username (only letters, numbers, underscore and hyphen allowed, 3-32 characters)',
+    zh: '用户名无效（仅支持字母、数字、下划线和连字符，3-32个字符）',
   },
   howToGetInvitationCode: {
     en: 'How to get invitation code?',
@@ -322,10 +326,6 @@ export const translations = {
     en: 'Enter a prompt to create or update tasks...',
     zh: '输入提示以创建或更新任务...',
   },
-  newConversationTooltip: {
-    en: 'New conversation',
-    zh: '新对话',
-  },
 
   // MapsSidebar.tsx (8 items)
   newMap: {
@@ -355,10 +355,6 @@ export const translations = {
   deleteMap: {
     en: 'Delete',
     zh: '删除',
-  },
-  confirmDelete: {
-    en: 'Confirm',
-    zh: '确认',
   },
 
   // SessionList.tsx (5 items)

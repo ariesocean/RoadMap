@@ -120,7 +120,7 @@ export const InputArea: React.FC = () => {
                   <button
                     onClick={handleNewSession}
                     className="hidden sm:block p-1.5 sm:p-1.75 md:p-2 rounded-md hover:bg-secondary-bg dark:hover:bg-dark-secondary-bg transition-colors"
-                    title={t('newConversationTooltip')}
+                    title={t('newConversation')}
                     type="button"
                   >
                     <Plus className="w-3.5 h-3.5 text-secondary-text/50 dark:text-dark-secondary-text/50" />

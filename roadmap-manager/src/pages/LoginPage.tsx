@@ -123,7 +123,7 @@ export const LoginPage: React.FC = () => {
     setLoginError(null);
 
     if (!loginUsername.trim() || !loginPassword.trim()) {
-      setLoginError('Please check your username or password');
+      setLoginError(t('invalidCredentials'));
       return;
     }
 
@@ -206,7 +206,12 @@ export const LoginPage: React.FC = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        setRegisterError(error.error || 'Registration failed');
+        const errorMessage = error.error || 'Registration failed';
+        if (errorMessage.includes('Invalid username')) {
+          setRegisterError(t('invalidUsername'));
+        } else {
+          setRegisterError(errorMessage);
+        }
         return;
       }
 
@@ -265,7 +270,7 @@ export const LoginPage: React.FC = () => {
               {t('loginTagline')}
             </span>
           </p>
-          <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {t('loginSubTagline')}
           </p>
         </div>
@@ -337,7 +342,7 @@ export const LoginPage: React.FC = () => {
         </form>
 
         <div className="mt-6 sm:mt-7 md:mt-8 text-center">
-          <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {t('noAccount')}{' '}
             <button onClick={() => { setShowRegister(true); setRegisterError(null); setRegisterSuccess(null); }} className="text-[#0066ff] hover:text-blue-500 font-medium hover:underline">
               {t('signUp')}
