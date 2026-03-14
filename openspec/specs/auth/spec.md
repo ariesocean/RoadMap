@@ -161,6 +161,7 @@ The system SHALL allow users to register with username, password, and email.
 - **GIVEN** a user provides valid username, password, and email
 - **WHEN** the user submits the registration form
 - **THEN** the map-UserGuide.md file from the project root is copied to the user's directory
+- **AND** the created datetime in the copied map file is updated to the user's current local time
 - **AND** the roadmap-config.json is created with lastEditedMapId set to "UserGuide"
 - **AND** the UserGuide map becomes the default map for the new user
 

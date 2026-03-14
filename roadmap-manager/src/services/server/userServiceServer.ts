@@ -152,6 +152,21 @@ export async function registerUser(username: string, _email: string, _password: 
   const userGuideSource = path.join(PROJECT_DIR, 'map-UserGuide.md');
   if (fs.existsSync(userGuideSource)) {
     fs.copyFileSync(userGuideSource, path.join(userDir, 'map-UserGuide.md'));
+    
+    const userGuideDest = path.join(userDir, 'map-UserGuide.md');
+    let content = fs.readFileSync(userGuideDest, 'utf-8');
+    const now = new Date();
+    const formattedDate = now.toLocaleString('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).replace(/\//g, '-');
+    content = content.replace(/\[created: [^\]]+\]/, `[created: ${formattedDate}]`);
+    fs.writeFileSync(userGuideDest, content);
   }
 
   const port = ports.nextPort;
