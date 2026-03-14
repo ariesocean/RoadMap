@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 import { useResultModalStore, type ContentSegment } from '@/store/resultModalStore';
 import { useTaskStore } from '@/store/taskStore';
 import { useMaps } from '@/hooks/useMaps';
+import { useI18nStore } from '@/store/i18nStore';
 import { executeModalPrompt } from '@/services/opencodeAPI';
 
 const createSegment = (type: ContentSegment['type'], content: string, metadata?: ContentSegment['metadata']): ContentSegment => ({
@@ -30,6 +31,7 @@ export function useModalPrompt() {
 
   const { refreshTasks } = useTaskStore();
   const { currentMap, saveCurrentMap } = useMaps();
+  const { t } = useI18nStore();
 
   const lastSegmentTypeRef = useRef<string | null>(null);
 
@@ -70,7 +72,7 @@ export function useModalPrompt() {
         },
         () => {
           lastSegmentTypeRef.current = 'done';
-          appendSegment(createSegment('done', '完成!'));
+          appendSegment(createSegment('done', t('completed')));
           setPromptStreaming(false);
         },
         (error) => {

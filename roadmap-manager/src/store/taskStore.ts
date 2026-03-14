@@ -9,6 +9,7 @@ import { useSessionStore } from './sessionStore';
 import { useAuthStore } from './authStore';
 import { useModelStore } from './modelStore';
 import { useMapsStore } from './mapsStore';
+import { useI18nStore } from './i18nStore';
 import { toggleSubtaskCompletion } from '@/services/opencodeAPI';
 import { getOpenCodeClient, subscribeToEvents } from '@/services/opencodeClient';
 
@@ -258,7 +259,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         } else if (eventType === 'done' || eventType === 'success') {
           if (!isFinished) {
             isFinished = true;
-            appendSegment(createSegment('done', event.message || ''));
+            const completedText = useI18nStore.getState().t('completed');
+            appendSegment(createSegment('done', completedText));
             setStreaming(false);
             setTimeout(async () => {
               await refreshTasks();

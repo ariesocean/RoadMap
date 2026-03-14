@@ -3,7 +3,14 @@
 > **Deprecation Notice**: The `/api/execute-modal-prompt` and `/api/execute-navigate` endpoints have been removed from the codebase (vite.config.ts). The frontend now uses the OpenCode SDK directly. This spec is kept for historical reference only.
 
 ## Purpose
-TBD - created by archiving change add-modal-prompt-interface. Update Purpose after archive.
+Provides a modal interface for executing follow-up prompts to OpenCode with streaming event display. This spec covers:
+- **Modal Prompt Interface**: Display mode vs prompt mode switching in ResultModal
+- **Event Stream Display**: Visual styling for reasoning (white italic), text (bold white), tool results (cyan), done (green), and error (red) events
+- **Modal-Only Prompt API**: Dedicated API endpoint for executing prompts within modal context with SSE streaming
+- **Event Deduplication**: Prevents duplicate content from being displayed during prompt processing
+- **Auto-Save**: Automatically saves roadmap.md content to current map file after modal prompt execution
+
+Note: The `/api/execute-modal-prompt` and `/api/execute-navigate` endpoints have been removed. The frontend now uses OpenCode SDK directly (see `session` spec).
 ## Requirements
 ### Requirement: Modal Prompt Interface
 The ResultModal component SHALL provide a prompt-only input interface when opened in prompt mode, allowing users to send follow-up messages to the OpenCode server without closing the modal.
@@ -25,41 +32,6 @@ The ResultModal component SHALL provide a prompt-only input interface when opene
 - **THEN** the response streams into the modal content area
 - **AND** the input field shows a loading indicator during processing
 - **AND** the user can continue to submit additional prompts in the same session
-
-### ADDED Requirement: Event Stream Display
-The modal SHALL display streaming events with distinct visual styling based on event type.
-
-#### Scenario: Reasoning displayed in white italic
-- **WHEN** a reasoning event is received during streaming
-- **THEN** the content SHALL be displayed with white text and italic styling
-- **AND** prefixed with "Thinking: "
-
-#### Scenario: Text displayed in bold white
-- **WHEN** a text event is received during streaming
-- **THEN** the content SHALL be displayed with bold white text
-
-#### Scenario: Tool results displayed in cyan
-- **WHEN** a tool-result event is received during streaming
-- **THEN** the tool name SHALL be displayed in cyan color
-- **AND** prefixed with "tool {name}"
-
-#### Scenario: Done status displayed in green
-- **WHEN** a done event is received
-- **THEN** "✅ Completed!" or custom message SHALL be displayed in green
-
-#### Scenario: Error displayed in red
-- **WHEN** an error event is received
-- **THEN** the error message SHALL be displayed in red
-- **AND** prefixed with "❌ "
-
-#### Scenario: Session info in header
-- **WHEN** the modal opens with session info
-- **THEN** a header SHALL show Session title, Prompt, and Model info
-- **AND** the header SHALL be styled with a border separator
-
-#### Scenario: Hidden event types
-- **WHEN** tool-call, step-start, step-end, or message-complete events are received
-- **THEN** these events SHALL NOT be displayed in the modal
 
 ### Requirement: Modal-Only Prompt API
 The system SHALL provide a dedicated API endpoint for executing prompts within the modal context, separate from the main navigation flow.
@@ -158,4 +130,23 @@ When a modal prompt completes execution, the system SHALL automatically save the
 - **AND** no currentMap is selected
 - **THEN** roadmap.md SHALL be updated
 - **AND** no save to map file SHALL occur
+
+### Requirement: Auto-Scroll During Streaming
+The modal SHALL automatically scroll to the bottom of the content area when new streaming content arrives, ensuring the latest content is always visible to the user.
+
+#### Scenario: Auto-scroll during SSE streaming
+- **WHEN** new segments are added to the content area during streaming
+- **THEN** the content area SHALL automatically scroll to display the newly added content
+- **AND** the user SHALL see the latest streaming response in real-time
+
+#### Scenario: Preserve manual scroll position when not streaming
+- **WHEN** the user manually scrolls up in the content area
+- **AND** no new content is being streamed
+- **THEN** the scroll position SHALL be preserved
+- **AND** new content arriving later SHALL trigger auto-scroll again
+
+#### Scenario: Auto-scroll in prompt mode
+- **WHEN** streaming response arrives while in prompt mode
+- **THEN** the content area SHALL scroll to bottom to show the response
+- **AND** the user can continue typing after streaming completes
 

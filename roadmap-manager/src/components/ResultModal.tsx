@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { Loader2, Send, Sparkles, X } from 'lucide-react';
 import { useResultModalStore } from '@/store/resultModalStore';
 import { useModalPrompt } from '@/hooks/useModalPrompt';
+import { useI18nStore } from '@/store/i18nStore';
 import { getSessionTitle } from '@/utils/sessionUtils';
 
 const HIDDEN_TYPES = ['step-start', 'step-end', 'message-complete'] as const;
@@ -23,13 +24,18 @@ export const ResultModal: React.FC = () => {
     setPromptInput,
     submitPrompt,
   } = useModalPrompt();
-  const preRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18nStore();
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen && preRef.current) {
-      preRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (sentinelRef.current && (isStreaming || promptStreaming)) {
+      sentinelRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (sentinelRef.current && segments.length > 0) {
+      setTimeout(() => {
+        sentinelRef.current?.scrollIntoView({ behavior: 'auto' });
+      }, 0);
     }
-  }, [segments, isOpen, promptStreaming]);
+  }, [segments, isOpen, isStreaming, promptStreaming]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -62,22 +68,21 @@ export const ResultModal: React.FC = () => {
         </div>
         <div className="px-3 sm:px-4 md:px-5 py-2 sm:py-3 md:py-3.5 lg:py-4">
           <div
-            ref={preRef}
             className="text-[11px] sm:text-[12px] md:text-[13px] whitespace-pre-wrap break-all font-mono bg-gray-50 dark:bg-gray-900 p-2 sm:p-3 md:p-4 rounded max-h-[40vh] sm:max-h-[45vh] md:max-h-[50vh] overflow-auto scrollbar-thin"
           >
             {sessionInfo && (
               <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm md:text-base">
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">Session: </span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('session')}: </span>
                   <span className="text-gray-700 dark:text-gray-300">{getSessionTitle(sessionInfo.title)}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">Prompt: </span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('prompt')}: </span>
                   <span className="text-gray-700 dark:text-gray-300">{sessionInfo.prompt}</span>
                 </div>
                 {modelInfo && (
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Model: </span>
+                    <span className="text-gray-500 dark:text-gray-400">{t('model')}: </span>
                     <span className="text-gray-700 dark:text-gray-300">{modelInfo.providerID}/{modelInfo.modelID}</span>
                   </div>
                 )}
@@ -85,7 +90,7 @@ export const ResultModal: React.FC = () => {
             )}
             {segments.length === 0 ? (
               <span className="text-gray-500 dark:text-gray-400">
-                {isProcessing ? 'Waiting for response...' : 'Task completed'}
+                {isProcessing ? t('waitingForResponse') : t('taskCompleted')}
               </span>
             ) : (
               segments.map((segment, index) => {
@@ -135,6 +140,7 @@ export const ResultModal: React.FC = () => {
                 );
               })
             )}
+            <div ref={sentinelRef} />
           </div>
         </div>
 

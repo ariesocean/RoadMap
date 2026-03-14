@@ -308,6 +308,34 @@ export const translations = {
     en: 'Delete subtask',
     zh: '删除子任务',
   },
+
+  // Common
+  completed: {
+    en: 'Done!',
+    zh: '完成!',
+  },
+
+  // ResultModal
+  session: {
+    en: 'Session',
+    zh: '会话',
+  },
+  prompt: {
+    en: 'Prompt',
+    zh: '提示',
+  },
+  model: {
+    en: 'Model',
+    zh: '模型',
+  },
+  waitingForResponse: {
+    en: 'Waiting for response...',
+    zh: '等待响应...',
+  },
+  taskCompleted: {
+    en: 'Task completed',
+    zh: '任务完成',
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

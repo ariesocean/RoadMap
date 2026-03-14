@@ -1,7 +1,14 @@
 # session Specification
 
 ## Purpose
-TBD - created by archiving change add-session-management. Update Purpose after archive.
+Manages user sessions for conversation continuity with OpenCode server. This spec covers:
+- **Session Persistence**: Maintains session across app restarts using localStorage
+- **Session Creation**: Creates new sessions with auto-generated titles based on first user message
+- **Session Display**: Shows current session title in UI with new session icon
+- **Session Cleanup**: Cleans up sessions on app exit
+- **Session API Integration**: Integrates with OpenCode SDK for prompt execution and SSE event streaming
+
+The system uses official @opencode-ai.sdk with session.list(), session.create(), session.promptAsync(), and session.event() for SSE subscriptions.
 ## Requirements
 ### Requirement: Session Persistence
 The system SHALL maintain a persistent session across application restarts, preserving the sessionID and allowing continued conversation context.
