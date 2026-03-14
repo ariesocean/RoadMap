@@ -1,4 +1,4 @@
-# Roadmap Manager User Guide [created: 2026-03-11 15:53]
+# User Guide [created: 2026-03-11 15:53]
 > AI personal assistant - Turn natural language into structured tasks and notes
 
 ## Subtasks
@@ -29,7 +29,7 @@
 
 ---
 
-# Roadmap Manager 用户指南 [created: 2026-03-08 02:11] 
+# 用户指南 [created: 2026-03-08 02:11] 
 > 你的 AI 个人任务助手，把自然语言变成结构化的任务和笔记
 
 ## Subtasks
