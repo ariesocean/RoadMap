@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Eye, EyeOff } from 'lucide-react';
+import { X, Eye, EyeOff, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
@@ -56,33 +56,49 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isDarkMo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className={`w-full max-w-sm p-6 rounded-2xl shadow-2xl border ${
-          isDarkMode ? 'bg-[#252525] border-[#333]' : 'bg-white border-gray-100'
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+        className={`relative w-full max-w-md p-8 rounded-3xl border ${
+          isDarkMode
+            ? 'bg-[#1e1e1e] border-[#333] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]'
+            : 'bg-white border-gray-100 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)]'
         }`}
       >
+        {/* Close Button - Top Right */}
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 p-1.5 rounded-lg transition-colors ${
-            isDarkMode ? 'text-gray-400 hover:bg-[#333] hover:text-white' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'
+          disabled={isLoading}
+          className={`absolute top-5 right-5 p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+            isDarkMode
+              ? 'text-gray-500 hover:bg-[#2d2d2d] hover:text-gray-300'
+              : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
           }`}
         >
-          <X size={20} />
+          <X size={20} strokeWidth={1.5} />
         </button>
 
-        <h2 className="text-xl font-semibold tracking-tight mb-1">{t('resetPassword')}</h2>
-        <p className={`text-sm mb-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          {t('enterEmailAndResetCode')}
-        </p>
+        {/* Header - Centered */}
+        <div className="text-center mb-8">
+          <h2 className={`text-2xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            {t('resetPassword')}
+          </h2>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {t('enterEmailAndResetCode')}
+          </p>
+        </div>
 
-        <form className="space-y-4" onSubmit={handleVerify}>
-          <div>
-            <label htmlFor="reset-email" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+        {/* Form */}
+        <form className="space-y-5" onSubmit={handleVerify}>
+          {/* Email Field */}
+          <div className="space-y-2">
+            <label
+              htmlFor="reset-email"
+              className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+            >
               {t('email')}
             </label>
             <input
@@ -93,17 +109,25 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isDarkMo
               placeholder={t('enterEmail')}
               disabled={isLoading}
               autoComplete="off"
-              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/30 disabled:opacity-50 disabled:cursor-not-allowed ${
                 isDarkMode
-                  ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
+                  ? 'bg-[#252525] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
                   : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
               }`}
             />
           </div>
-          <div>
-            <label htmlFor="reset-code" className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              {t('resetCode')}
-            </label>
+
+          {/* Reset Code Field */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1">
+              <label
+                htmlFor="reset-code"
+                className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+              >
+                {t('resetCode')}
+              </label>
+              <span className="text-red-500">*</span>
+            </div>
             <div className="relative">
               <input
                 id="reset-code"
@@ -113,51 +137,59 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isDarkMo
                 placeholder={t('enterResetCode')}
                 disabled={isLoading}
                 autoComplete="off"
-                className={`w-full px-4 py-2.5 pr-10 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`w-full px-4 py-3 pr-11 rounded-xl border text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/30 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isDarkMode
-                    ? 'bg-[#1c1c1c] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
+                    ? 'bg-[#252525] border-[#333] text-white placeholder-gray-500 focus:border-[#0066ff]'
                     : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#0066ff]'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowResetCode(!showResetCode)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded transition-colors ${
+                  isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                }`}
               >
                 {showResetCode ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
             </div>
+
+            {/* Hint Text - Right aligned with icon */}
+            <div className={`flex items-center justify-end gap-1.5 text-xs ${isDarkMode ? 'text-[#0066ff]' : 'text-[#0066ff]'}`}>
+              <HelpCircle size={14} />
+              <span>{t('contactHarvey')}</span>
+            </div>
           </div>
 
-          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {t('contactHarvey')}
-          </p>
-
+          {/* Error Message */}
           {error && (
-            <div className={`p-3 rounded-lg text-sm ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-600'}`}>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`p-3.5 rounded-xl text-sm text-center ${isDarkMode ? 'bg-red-900/20 text-red-400 border border-red-900/30' : 'bg-red-50 text-red-600 border border-red-100'}`}
+            >
               {error}
-            </div>
+            </motion.div>
           )}
 
-          <div className="pt-2 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className={`flex-1 py-2.5 rounded-xl font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isDarkMode
-                  ? 'border-[#333] text-gray-300 hover:bg-[#333]'
-                  : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {t('cancel')}
-            </button>
+          {/* Submit Button - Full Width */}
+          <div className="pt-3">
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 bg-[#0066ff] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors shadow-md shadow-blue-600/20"
+              className="w-full bg-[#0066ff] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30"
             >
-              {isLoading ? t('verifying') : t('verifyResetCode')}
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  {t('verifying')}
+                </span>
+              ) : (
+                t('verifyResetCode')
+              )}
             </button>
           </div>
         </form>

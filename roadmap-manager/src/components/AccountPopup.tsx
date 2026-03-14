@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { LogOut, User, Key } from 'lucide-react';
+import { User, Key } from 'lucide-react';
 import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
 import { useMapsStore } from '@/store/mapsStore';
@@ -23,6 +23,7 @@ export const AccountPopup: React.FC = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { refreshTasks } = useTaskStore.getState();
   const username = useAuthStore((state) => state.username);
@@ -157,7 +158,9 @@ export const AccountPopup: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
     setError(null);
+    setIsLoggingOut(true);
 
     const { userId, logout } = useAuthStore.getState();
 
@@ -201,6 +204,8 @@ export const AccountPopup: React.FC = () => {
       setIsOpen(false);
     } catch (err) {
       setError('Failed to logout. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -340,10 +345,33 @@ export const AccountPopup: React.FC = () => {
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                disabled={isLoggingOut}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isLoggingOut
+                    ? ''
+                    : 'hover:bg-red-50 dark:hover:bg-red-900/20'
+                }`}
               >
-                <LogOut className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-red-600 dark:text-red-400">{t('logout')}</span>
+                <svg
+                  className={`w-4 h-4 text-red-500 ${isLoggingOut ? 'animate-spin' : ''}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  {isLoggingOut ? (
+                    <circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="20" strokeLinecap="round" />
+                  ) : (
+                    <>
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16,17 21,12 16,7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </>
+                  )}
+                </svg>
+                <span className="text-sm text-red-600 dark:text-red-400">
+                  {isLoggingOut ? t('loggingOut') : t('logout')}
+                  </span>
               </button>
             </div>
           </div>

@@ -76,8 +76,12 @@ export const translations = {
     zh: '验证',
   },
   resetPasswordSuccess: {
-    en: 'Password reset successfully! Redirecting to login...',
-    zh: '密码重置成功！正在跳转到登录页...',
+    en: 'Password reset successfully!',
+    zh: '密码重置成功！',
+  },
+  redirectingToLogin: {
+    en: 'Redirecting to login...',
+    zh: '正在跳转到登录页...',
   },
   backToLogin: {
     en: 'Back to Login',
@@ -275,6 +279,10 @@ export const translations = {
   logout: {
     en: 'Logout',
     zh: '退出登录',
+  },
+  loggingOut: {
+    en: 'Logging out...',
+    zh: '正在退出...',
   },
   newUsername: {
     en: 'New username',

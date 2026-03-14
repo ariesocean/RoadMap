@@ -329,9 +329,11 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          <button disabled={isLoggingIn} className="w-full bg-[#0066ff] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors mt-2 shadow-md shadow-blue-600/20">
-            {isLoggingIn ? t('signingIn') : t('signIn')}
-          </button>
+          <div className="pt-3">
+            <button disabled={isLoggingIn} className="w-full bg-[#0066ff] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30">
+              {isLoggingIn ? t('signingIn') : t('signIn')}
+            </button>
+          </div>
         </form>
 
         <div className="mt-6 sm:mt-7 md:mt-8 text-center">
@@ -478,10 +480,22 @@ export const LoginPage: React.FC = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`w-full max-w-sm p-6 rounded-2xl shadow-2xl border ${
+            className={`relative w-full max-w-sm p-6 rounded-2xl shadow-2xl border ${
               isDarkMode ? 'bg-[#252525] border-[#333]' : 'bg-white border-gray-100'
             }`}
           >
+            {/* Close Button - Top Right */}
+            <button
+              onClick={() => setShowInvitationHelp(false)}
+              className={`absolute top-4 right-4 p-1.5 rounded-lg transition-colors ${
+                isDarkMode
+                  ? 'text-gray-400 hover:bg-[#333] hover:text-white'
+                  : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <X size={20} strokeWidth={1.5} />
+            </button>
+
             <div className="flex items-center gap-3 mb-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-[#0066ff]/20' : 'bg-blue-50'}`}>
                 <MessageCircle className="text-[#0066ff]" size={20} />
