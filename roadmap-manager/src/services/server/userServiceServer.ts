@@ -165,7 +165,7 @@ export async function registerUser(username: string, _email: string, _password: 
       minute: '2-digit',
       hour12: false,
     }).replace(/\//g, '-');
-    content = content.replace(/\[created: [^\]]+\]/, `[created: ${formattedDate}]`);
+    content = content.replace(/\[created: [^\]]+\]/g, `[created: ${formattedDate}]`);
     fs.writeFileSync(userGuideDest, content);
   }
 
