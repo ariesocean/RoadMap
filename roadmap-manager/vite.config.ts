@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
 import http from 'http'
+import crypto from 'crypto'
 import { spawn, execSync } from 'child_process'
 import { registerUser, loginUser, autoLogin, getUserPort, getUserDir, getDevices, removeDevice, updateUsername, updatePassword, getUserInfo } from './src/services/server/userServiceServer'
 import { handleOpenCodeProxy } from './src/services/server/opencodeProxy'
@@ -10,6 +11,12 @@ import { handleOpenCodeProxy } from './src/services/server/opencodeProxy'
 const config = require('./src/config.cjs')
 const PROJECT_DIR = process.env.PROJECT_DIR || config.projectDir
 const USERS_DIR = process.env.USERS_DIR || config.usersDir || path.join(PROJECT_DIR, 'users')
+
+const resetTokens = new Map<string, { userId: string; expiresAt: number }>();
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const MIN_PASSWORD_LENGTH = 6;
 
 async function checkPort(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -631,6 +638,135 @@ const roadmapPlugin = {
         } catch (error) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to update password' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // POST /api/auth/verify-reset-code - verify email and reset code
+    server.middlewares.use('/api/auth/verify-reset-code', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const clientIp = req.socket.remoteAddress || 'unknown';
+          const now = Date.now();
+          
+          const rateLimitData = rateLimitMap.get(clientIp);
+          if (rateLimitData) {
+            if (now < rateLimitData.resetTime) {
+              if (rateLimitData.count >= RATE_LIMIT_MAX_REQUESTS) {
+                res.writeHead(429).end(JSON.stringify({ error: 'Too many requests, please try again later' }));
+                return;
+              }
+              rateLimitData.count++;
+            } else {
+              rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+            }
+          } else {
+            rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+          }
+
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          
+          const { email, resetCode } = body;
+          
+          if (!email || !resetCode) {
+            res.writeHead(400).end(JSON.stringify({ error: 'Email and reset code are required' }));
+            return;
+          }
+          
+          const inputHash = crypto.createHash('sha256').update(resetCode).digest('hex');
+          if (inputHash !== '5a8e26083c9e2c3e42281021175ae40c5c6a5b989455eeececd342f88d02b4b9') {
+            res.writeHead(400).end(JSON.stringify({ error: 'Invalid reset code' }));
+            return;
+          }
+          
+          const normalizedEmail = email.trim().toLowerCase();
+          const userDirs = fs.readdirSync(USERS_DIR).filter((f: string) => f !== 'ports.json');
+          let foundUserId: string | null = null;
+          
+          for (const dir of userDirs) {
+            const userPath = path.join(USERS_DIR, dir, 'user.json');
+            if (!fs.existsSync(userPath)) continue;
+            try {
+              const userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+              if (userData.email && userData.email.toLowerCase() === normalizedEmail) {
+                foundUserId = dir;
+                break;
+              }
+            } catch {
+              continue;
+            }
+          }
+          
+          if (!foundUserId) {
+            res.writeHead(404).end(JSON.stringify({ error: 'Email not found' }));
+            return;
+          }
+          
+          const token = crypto.randomBytes(32).toString('hex');
+          const expiresAt = Date.now() + 10 * 60 * 1000;
+          resetTokens.set(token, { userId: foundUserId, expiresAt });
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ token, expiresAt }));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to verify reset code' }));
+        }
+      } else {
+        next();
+      }
+    });
+
+    // POST /api/auth/reset-password - reset password with token
+    server.middlewares.use('/api/auth/reset-password', async (req: any, res: any, next: any) => {
+      if (req.method === 'POST') {
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          
+          const { token, newPassword } = body;
+          
+          if (!token || !newPassword) {
+            res.writeHead(400).end(JSON.stringify({ error: 'Token and new password are required' }));
+            return;
+          }
+          
+          const tokenData = resetTokens.get(token);
+          if (!tokenData) {
+            res.writeHead(400).end(JSON.stringify({ error: 'Invalid reset code' }));
+            return;
+          }
+          
+          if (Date.now() > tokenData.expiresAt) {
+            resetTokens.delete(token);
+            res.writeHead(400).end(JSON.stringify({ error: 'Reset token expired' }));
+            return;
+          }
+          
+          if (typeof newPassword !== 'string' || newPassword.length < MIN_PASSWORD_LENGTH) {
+            res.writeHead(400).end(JSON.stringify({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` }));
+            return;
+          }
+          
+          const userId = tokenData.userId;
+          const userPath = path.join(USERS_DIR, userId, 'user.json');
+          const userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+          
+          userData.passwordHash = crypto.createHash('sha256').update(newPassword).digest('hex');
+          fs.writeFileSync(userPath, JSON.stringify(userData, null, 2));
+          
+          resetTokens.delete(token);
+          
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to reset password' }));
         }
       } else {
         next();

@@ -15,11 +15,13 @@ import { listMaps, readMapFile, writeRoadmapFile } from '@/services/fileService'
 import type { MapInfo } from '@/services/fileService';
 import { saveToLocalStorage } from '@/utils/storage';
 import { PasswordInput } from '@/components/PasswordInput';
+import { ResetPasswordModal } from '@/components/ResetPasswordModal';
 import { updateClientBaseUrl } from '@/services/opencodeClient';
 
 export const LoginPage: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [showRegister, setShowRegister] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState<string | null>(null);
@@ -289,7 +291,7 @@ export const LoginPage: React.FC = () => {
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label htmlFor="login-password" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t('password')}</label>
-              <a href="#" className="text-sm text-[#0066ff] hover:text-blue-500 hover:underline">{t('forgotPassword')}</a>
+              <button type="button" onClick={() => setShowResetPassword(true)} className="text-sm text-[#0066ff] hover:text-blue-500 hover:underline">{t('forgotPassword')}</button>
             </div>
             <div className="relative">
               <input
@@ -530,6 +532,13 @@ export const LoginPage: React.FC = () => {
             </button>
           </motion.div>
         </div>
+      )}
+
+      {showResetPassword && (
+        <ResetPasswordModal
+          isDarkMode={isDarkMode}
+          onClose={() => setShowResetPassword(false)}
+        />
       )}
     </div>
   );

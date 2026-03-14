@@ -59,6 +59,98 @@ export const translations = {
     en: 'Forgot password?',
     zh: '忘记密码？',
   },
+  resetPassword: {
+    en: 'Reset Password',
+    zh: '重置密码',
+  },
+  enterResetCode: {
+    en: 'Enter reset code',
+    zh: '请输入重置码',
+  },
+  contactHarvey: {
+    en: 'Contact Harvey to get reset code',
+    zh: '联系 Harvey 获取重置码',
+  },
+  verifyResetCode: {
+    en: 'Verify',
+    zh: '验证',
+  },
+  resetPasswordSuccess: {
+    en: 'Password reset successfully! Redirecting to login...',
+    zh: '密码重置成功！正在跳转到登录页...',
+  },
+  backToLogin: {
+    en: 'Back to Login',
+    zh: '返回登录',
+  },
+  setNewPassword: {
+    en: 'Set New Password',
+    zh: '设置新密码',
+  },
+  newPassword: {
+    en: 'New Password',
+    zh: '新密码',
+  },
+  confirmNewPassword: {
+    en: 'Confirm New Password',
+    zh: '确认新密码',
+  },
+  enterNewPassword: {
+    en: 'Enter new password',
+    zh: '请输入新密码',
+  },
+  confirmPasswordPlaceholder: {
+    en: 'Confirm new password',
+    zh: '请确认新密码',
+  },
+  resetting: {
+    en: 'Resetting...',
+    zh: '正在重置...',
+  },
+  resetPasswordBtn: {
+    en: 'Reset Password',
+    zh: '重置密码',
+  },
+  fillAllFields: {
+    en: 'Please fill in all fields',
+    zh: '请填写所有字段',
+  },
+  passwordsDoNotMatch: {
+    en: 'Passwords do not match',
+    zh: '两次输入的密码不一致',
+  },
+  passwordMinLength: {
+    en: 'Password must be at least 6 characters',
+    zh: '密码至少需要6个字符',
+  },
+  resetTokenMissing: {
+    en: 'Reset token is missing. Please start the reset process again.',
+    zh: '重置令牌缺失，请重新开始重置流程。',
+  },
+  resetTokenExpired: {
+    en: 'Reset token has expired. Please start the reset process again.',
+    zh: '重置令牌已过期，请重新开始重置流程。',
+  },
+  resetPasswordFailed: {
+    en: 'Failed to reset password. Please try again.',
+    zh: '重置密码失败，请重试。',
+  },
+  verificationFailed: {
+    en: 'Failed to verify. Please try again.',
+    zh: '验证失败，请重试。',
+  },
+  verifying: {
+    en: 'Verifying...',
+    zh: '正在验证...',
+  },
+  resetCode: {
+    en: 'Reset Code',
+    zh: '重置码',
+  },
+  enterEmailAndResetCode: {
+    en: 'Enter your email and reset code',
+    zh: '请输入邮箱和重置码',
+  },
   noAccount: {
     en: "Don't have an account?",
     zh: '没有账号？',
@@ -191,14 +283,6 @@ export const translations = {
   currentPassword: {
     en: 'Current password',
     zh: '当前密码',
-  },
-  newPassword: {
-    en: 'New password',
-    zh: '新密码',
-  },
-  confirmNewPassword: {
-    en: 'Confirm new password',
-    zh: '确认新密码',
   },
   usernameUpdated: {
     en: 'Username updated successfully',

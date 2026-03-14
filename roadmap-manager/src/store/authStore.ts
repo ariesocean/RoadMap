@@ -6,6 +6,8 @@ const EMAIL_STORAGE_KEY = 'email';
 const USER_ID_KEY = 'userId';
 const TOKEN_KEY = 'authToken';
 const DEVICE_ID_KEY = 'deviceId';
+const RESET_TOKEN_KEY = 'resetToken';
+const RESET_TOKEN_EXPIRY_KEY = 'resetTokenExpiry';
 
 function getOrCreateDeviceId(): string {
   let deviceId = localStorage.getItem(DEVICE_ID_KEY);
@@ -32,12 +34,16 @@ export interface AuthState {
   deviceId: string;
   isAuthenticated: boolean;
   userPort: number | null;
+  resetToken: string | null;
+  resetTokenExpiry: number | null;
   
   setUsername: (username: string) => void;
   setEmail: (email: string) => void;
   setUserId: (userId: string) => void;
   setToken: (token: string) => void;
   setUserPort: (port: number) => void;
+  setResetToken: (token: string, expiry: number) => void;
+  clearResetToken: () => void;
   login: (username: string, email: string, userId: string, token: string) => void;
   logout: () => void;
   initAuth: () => void;
@@ -51,6 +57,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   deviceId: getOrCreateDeviceId(),
   isAuthenticated: false,
   userPort: null,
+  resetToken: null,
+  resetTokenExpiry: null,
 
   setUsername: (username: string) => {
     set({ username });
@@ -76,6 +84,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ userPort: port });
   },
 
+  setResetToken: (token: string, expiry: number) => {
+    set({ resetToken: token, resetTokenExpiry: expiry });
+    saveToLocalStorage(RESET_TOKEN_KEY, token);
+    saveToLocalStorage(RESET_TOKEN_EXPIRY_KEY, expiry.toString());
+  },
+
+  clearResetToken: () => {
+    set({ resetToken: null, resetTokenExpiry: null });
+    removeFromLocalStorage(RESET_TOKEN_KEY);
+    removeFromLocalStorage(RESET_TOKEN_EXPIRY_KEY);
+  },
+
   login: (username: string, email: string, userId: string, token: string) => {
     set({ username, email, userId, token, isAuthenticated: true });
     saveToLocalStorage(USERNAME_STORAGE_KEY, username);
@@ -97,6 +117,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     const savedEmail = loadFromLocalStorage(EMAIL_STORAGE_KEY);
     const savedUserId = loadFromLocalStorage(USER_ID_KEY);
     const savedToken = loadFromLocalStorage(TOKEN_KEY);
+    const savedResetToken = loadFromLocalStorage(RESET_TOKEN_KEY);
+    const savedResetTokenExpiry = loadFromLocalStorage(RESET_TOKEN_EXPIRY_KEY);
     const deviceId = getOrCreateDeviceId();
     
     set({ 
@@ -104,6 +126,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       email: savedEmail,
       userId: savedUserId, 
       token: savedToken,
+      resetToken: savedResetToken,
+      resetTokenExpiry: savedResetTokenExpiry ? parseInt(savedResetTokenExpiry) : null,
       deviceId,
       isAuthenticated: !!(savedUserId && savedToken)
     });

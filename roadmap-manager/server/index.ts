@@ -31,7 +31,18 @@ const ERRORS = {
   INVALID_USERNAME: 'Invalid username',
   INVALID_EMAIL: 'Invalid email',
   CORRUPTED_FILE: 'Corrupted data file',
+  INVALID_RESET_CODE: 'Invalid reset code',
+  RESET_TOKEN_EXPIRED: 'Reset token expired',
 } as const;
+
+const RESET_CODE_HASH = '5a8e26083c9e2c3e42281021175ae40c5c6a5b989455eeececd342f88d02b4b9';
+const RESET_TOKEN_EXPIRY_MS = 10 * 60 * 1000;
+const MIN_PASSWORD_LENGTH = 6;
+
+const resetTokens = new Map<string, { userId: string; expiresAt: number }>();
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 5;
 
 interface UserCredentials {
   username: string;
@@ -997,6 +1008,113 @@ app.post('/api/auth/password', (req: Request, res: Response) => {
     res.json({ success: true });
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to update password' });
+  }
+});
+
+app.post('/api/auth/verify-reset-code', async (req: Request, res: Response) => {
+  try {
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    
+    const rateLimitData = rateLimitMap.get(clientIp);
+    if (rateLimitData) {
+      if (now < rateLimitData.resetTime) {
+        if (rateLimitData.count >= RATE_LIMIT_MAX_REQUESTS) {
+          res.status(429).json({ error: 'Too many requests, please try again later' });
+          return;
+        }
+        rateLimitData.count++;
+      } else {
+        rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+      }
+    } else {
+      rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    }
+
+    const { email, resetCode } = req.body;
+
+    if (!email || !resetCode) {
+      res.status(400).json({ error: 'Email and reset code are required' });
+      return;
+    }
+
+    const inputHash = hashPassword(resetCode);
+    if (inputHash !== RESET_CODE_HASH) {
+      res.status(400).json({ error: ERRORS.INVALID_RESET_CODE });
+      return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const userDirs = fs.readdirSync(USERS_DIR).filter(f => f !== 'ports.json');
+    let foundUserId: string | null = null;
+
+    for (const dir of userDirs) {
+      const userPath = path.join(USERS_DIR, dir, 'user.json');
+      if (!fs.existsSync(userPath)) continue;
+      try {
+        const userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+        if (userData.email && userData.email.toLowerCase() === normalizedEmail) {
+          foundUserId = dir;
+          break;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    if (!foundUserId) {
+      res.status(404).json({ error: 'Email not found' });
+      return;
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = Date.now() + RESET_TOKEN_EXPIRY_MS;
+    resetTokens.set(token, { userId: foundUserId, expiresAt });
+
+    res.json({ token, expiresAt: expiresAt });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to verify reset code' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      res.status(400).json({ error: 'Token and new password are required' });
+      return;
+    }
+
+    const tokenData = resetTokens.get(token);
+    if (!tokenData) {
+      res.status(400).json({ error: ERRORS.INVALID_RESET_CODE });
+      return;
+    }
+
+    if (Date.now() > tokenData.expiresAt) {
+      resetTokens.delete(token);
+      res.status(400).json({ error: ERRORS.RESET_TOKEN_EXPIRED });
+      return;
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < MIN_PASSWORD_LENGTH) {
+      res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
+      return;
+    }
+
+    const userId = tokenData.userId;
+    const userPath = path.join(USERS_DIR, userId, 'user.json');
+    const userData = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
+
+    userData.passwordHash = hashPassword(newPassword);
+    fs.writeFileSync(userPath, JSON.stringify(userData, null, 2));
+
+    resetTokens.delete(token);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reset password' });
   }
 });
 
