@@ -39,21 +39,6 @@ const initConnectedState = async () => {
             updateClientBaseUrl();
           }
           
-          // Fetch latest user info to ensure email is synced
-          if (userId) {
-            try {
-              const userInfoResponse = await fetch(`/api/auth/user-info?userId=${userId}`);
-              if (userInfoResponse.ok) {
-                const userInfo = await userInfoResponse.json();
-                if (userInfo.email) {
-                  useAuthStore.getState().setEmail(userInfo.email);
-                }
-              }
-            } catch (e) {
-              console.error('Failed to fetch user info:', e);
-            }
-          }
-          
           useTaskStore.setState({ isConnected: true });
           initializeMapsOnReconnect();
           return;
