@@ -34,7 +34,9 @@ The system SHALL provide a login form that authenticates the user and grants acc
 #### Scenario: User logs in successfully
 - **GIVEN** user is on the login page
 - **WHEN** user enters username and password and clicks login
-- **THEN** the `isConnected` state SHALL be set to true (same as current Connected behavior)
+- **THEN** the Sign In button SHALL have card-stacked styling with shadow hover effects
+- **AND** the Sign In button SHALL have spacing (one empty line) above it
+- **AND** the `isConnected` state SHALL be set to true (same as current Connected behavior)
 - **AND** the username SHALL be stored in localStorage
 - **AND** user SHALL be redirected to the main interface
 - **AND** the username SHALL be displayed in the header
@@ -129,7 +131,9 @@ The system SHALL provide an account management popup that allows users to manage
 #### Scenario: User logs out
 - **GIVEN** account popup is open
 - **WHEN** user clicks the logout button
-- **THEN** the `isConnected` state SHALL be set to false (same as current Disconnected behavior)
+- **THEN** the logout button SHALL display a loading spinner and "Logging out..." text
+- **AND** the logout button SHALL be disabled during the logout process
+- **AND** the `isConnected` state SHALL be set to false (same as current Disconnected behavior)
 - **AND** the login state SHALL be cleared from localStorage
 - **AND** the username SHALL be cleared
 - **AND** the login page SHALL be displayed
@@ -189,6 +193,7 @@ The system SHALL require a valid invitation code for user registration to restri
 - **GIVEN** the registration modal is open
 - **WHEN** user clicks the "How to get invitation code?" link
 - **THEN** a help modal SHALL be displayed
+- **AND** the modal SHALL have a close (X) button in the top right corner
 - **AND** the modal SHALL explain that the app is currently by invitation only
 - **AND** the modal SHALL display the WeChat ID for contacting the author
 
@@ -407,10 +412,15 @@ The system SHALL provide a password reset mechanism using a hardcoded reset code
 #### Scenario: User clicks forgot password
 - **GIVEN** user is on the login page
 - **WHEN** user clicks "Forgot Password" link
-- **THEN** a reset password modal SHALL be displayed
+- **THEN** a reset password modal SHALL be displayed with card-stacked styling
 - **AND** the modal SHALL ask for email and reset code
-- **AND** the modal SHALL display hint text: "Contact Harvey to get reset code"
+- **AND** the "Reset Code" label SHALL include a red asterisk (*) indicating it is required
+- **AND** the hint text "Contact Harvey to get reset code" SHALL be displayed with a help icon (ⓘ) below the reset code input
+- **AND** the hint text SHALL be right-aligned
 - **AND** the modal SHALL have a close (X) button in the top right corner
+- **AND** the close button SHALL have disabled visual feedback when verifying
+- **AND** the Verify button SHALL have shadow hover effects without lift animation
+- **AND** there SHALL be spacing (one empty line) between the hint text and the Verify button
 
 #### Scenario: User enters valid email and reset code
 - **GIVEN** reset password modal is displayed
@@ -433,7 +443,8 @@ The system SHALL provide a password reset mechanism using a hardcoded reset code
 #### Scenario: User sets new password
 - **GIVEN** user has a valid temporary token
 - **WHEN** user enters a new password and confirms
-- **THEN** the password SHALL be updated in the system
+- **THEN** the set new password page SHALL be displayed with card-stacked styling and gradient top bar
+- **AND** the password SHALL be updated in the system
 - **AND** user SHALL be redirected to login page
 - **AND** user SHALL be able to login with new password
 
