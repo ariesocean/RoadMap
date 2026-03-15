@@ -9,11 +9,11 @@
   * [ ] "Cook lamb chops tonight; help me create a shopping list for Hema"
   * [ ] "Planning a trip to Sanya for May Day; what do I need to prepare?" > Action: Generate Sanya May Day checklist
 * [ ] ✨ Main Features
+  * [ ] Type your request in the input field (voice input recommended) and press **Enter** to send
   * [ ] Describe your thoughts; the AI will automatically generate structured tasks or notes.
   * [ ] Edit tasks: Manually add, delete, or modify tasks, or ask the AI to handle it for you.
   * [ ] Mark complete: Use the checkbox to mark a task as finished.
   * [ ] Reorder: Drag and drop tasks to reorganize their order and hierarchy.
-  * [ ] Archive main task: Notify the AI when a main task has been fully completed.
 * [ ] 📍 Multiple Maps
   * [ ] Expand the sidebar (top-left) to switch between different maps.
   * [ ] Create and manage multiple independent task lists (Maps).
@@ -40,11 +40,11 @@
   * [ ] "晚上打算在家烤羊排，帮我制作一份去盒马的购物清单"
   * [ ] "打算五一去三亚，需要准备什么" > 生成：五一三亚之旅准备清单
 * [ ] ✨ 主要功能说明
+  * [ ] 在输入框中输入内容（推荐语音输入法），按 **回车键** 发送
   * [ ] 用自然语言告诉 AI 你的想法，AI 自动创建结构化任务或者笔记
   * [ ] 编辑任务：你可以手动进行增删改的操作或者直接让AI 帮你完成
   * [ ] 标记完成：勾选checkbox标记任务完成
   * [ ] 调整顺序：拖拽任务改变排列顺序和层级
-  * [ ] 归档主任务：告诉 AI 某个主任务已全部完成
 * [ ] 📍 多地图功能
   * [ ] 点击左上角展开侧边栏切换不同地图
   * [ ] 支持创建多个独立的任务清单（Maps）
